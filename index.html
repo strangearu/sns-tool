@@ -3,415 +3,422 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#2563eb">
-<title>SNSクロス投稿ツール</title>
+<meta name="theme-color" content="#ffe9ef">
+<title>My Hub</title>
 <style>
   :root {
-    --bg: #f4f5f7;
-    --card: #ffffff;
-    --text: #1a1d24;
-    --sub: #6b7280;
-    --border: #e2e4e9;
-    --accent: #2563eb;
-    --ig1: #f58529; --ig2: #dd2a7b; --ig3: #8134af;
-    --red: #ff2442;
-    --weibo: #e6432e;
+    --bg:#f7f8fc; --bg2:#eef0f6; --card:#ffffff; --card2:#f3f5fb;
+    --text:#23283a; --sub:#737a8c; --line:#e7e9f1;
+    --accent:#ff2d55; --accent2:#e11d48; --gold:#c4860a; --ok:#16a34a; --blue:#2563eb; --purple:#7c3aed;
+    --shadow:0 2px 10px rgba(31,41,80,.06);
+    --nav-h: 64px;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body {
-    font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
-    background: var(--bg); color: var(--text);
-    padding: 20px 14px 60px;
+    font-family:"Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif;
+    background: radial-gradient(1100px 560px at 50% -180px, #ffe7ee 0%, var(--bg) 50%);
+    background-attachment: fixed;
+    color: var(--text); min-height: 100vh; padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
   }
-  .wrap { max-width: 1100px; margin: 0 auto; }
-  header { text-align: center; margin-bottom: 20px; }
-  header h1 { font-size: 21px; letter-spacing: .04em; }
-  header p { color: var(--sub); font-size: 12.5px; margin-top: 6px; }
+  .wrap { max-width: 620px; margin: 0 auto; padding: 16px 14px 30px; }
 
-  .panel {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 14px; padding: 16px; margin-bottom: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.04);
-  }
-  label.head { display: block; font-weight: 700; font-size: 13.5px; margin-bottom: 8px; }
-  textarea, input[type=text], input[type=url] {
-    width: 100%; border: 1px solid var(--border); border-radius: 10px;
-    padding: 11px 12px; font-size: 14px; line-height: 1.7; resize: vertical;
-    font-family: inherit; background: #fafbfc;
-  }
-  textarea:focus, input:focus { outline: 2px solid var(--accent); outline-offset: -1px; background: #fff; }
-  #src { min-height: 100px; }
+  /* タブ本体 */
+  .tab { display: none; }
+  .tab.active { display: block; animation: fade .2s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
-  .row { display: flex; gap: 8px; }
-  .row input { flex: 1; }
-  button {
-    border: none; border-radius: 10px; padding: 10px 18px;
-    font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit;
-    transition: opacity .15s; white-space: nowrap;
-  }
-  button:hover { opacity: .85; }
-  button:disabled { opacity: .5; cursor: wait; }
-  .btn-sub { background: #eef1f5; color: var(--text); font-size: 13px; }
-  .btn-main { background: var(--accent); color: #fff; font-size: 15px; padding: 12px 28px; }
+  .ph { text-align: center; padding: 6px 0 14px; }
+  .ph .brand { display:inline-block; font-size:10.5px; letter-spacing:.2em; font-weight:800; color:var(--accent2);
+    border:1px solid var(--accent); border-radius:99px; padding:4px 12px; margin-bottom:9px; text-transform:uppercase; }
+  .ph h1 { font-size:22px; font-weight:900; }
+  .ph h1 .red { color: var(--accent); }
+  .ph p { color: var(--sub); font-size:12px; margin-top:5px; }
 
-  .photos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-  .photos .thumb { position: relative; }
-  .photos img { width: 84px; height: 84px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); display: block; }
-  .photos .del {
-    position: absolute; top: -7px; right: -7px; width: 22px; height: 22px;
-    border-radius: 50%; background: var(--text); color: #fff; font-size: 13px;
-    line-height: 22px; text-align: center; padding: 0;
-  }
-  .upload-label {
-    display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
-    background: #eef1f5; border-radius: 10px; padding: 9px 16px;
-    font-size: 13px; font-weight: 700;
-  }
-  .upload-label input { display: none; }
+  .sec-title { font-size:12.5px; font-weight:800; color:var(--sub); letter-spacing:.05em; margin:20px 4px 9px; display:flex; align-items:center; gap:7px; }
+  .sec-title .r { margin-left:auto; }
+  .reset { color:var(--sub); font-size:11px; text-decoration:underline; cursor:pointer; background:none; border:none; }
 
-  .actions { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
-  .status { font-size: 13px; color: var(--sub); }
-  .status.error { color: #dc2626; font-weight: 700; }
+  /* EVOカウントダウン */
+  .countdown { background: linear-gradient(135deg,#fff1f4,#ffe2ea); border:1px solid var(--accent); border-radius:18px;
+    padding:16px; margin-bottom:8px; text-align:center; box-shadow:0 6px 22px rgba(255,45,85,.13); }
+  .countdown .lbl { font-size:11.5px; color:var(--accent2); font-weight:800; letter-spacing:.1em; }
+  .countdown .days { font-size:52px; font-weight:900; line-height:1; margin:5px 0; }
+  .countdown .days small { font-size:17px; font-weight:700; color:var(--sub); }
+  .countdown .date { font-size:11.5px; color:var(--sub); }
+  .countdown.passed .days { color:var(--gold); font-size:28px; }
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: none; flex-direction: column; }
-  .card.show { display: flex; }
-  .card-head { padding: 11px 15px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
-  .card-head .name { font-weight: 800; font-size: 15px; }
-  .card-head .lang { font-size: 11px; opacity: .9; background: rgba(255,255,255,.22); padding: 3px 10px; border-radius: 99px; }
-  .card.ig .card-head { background: linear-gradient(45deg, var(--ig1), var(--ig2), var(--ig3)); }
-  .card.red .card-head { background: var(--red); }
-  .card.weibo .card-head { background: var(--weibo); }
-  .card-body { padding: 13px 15px 15px; display: flex; flex-direction: column; gap: 9px; flex: 1; }
-  .card-body textarea { min-height: 190px; font-size: 13px; flex: 1; }
-  .field-label { font-size: 12px; color: var(--sub); font-weight: 700; }
-  .card-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .count { font-size: 12px; color: var(--sub); }
-  .count.over { color: #dc2626; font-weight: 700; }
-  .foot-btns { display: flex; gap: 8px; margin-left: auto; }
-  .copy-btn { background: var(--text); color: #fff; padding: 8px 18px; font-size: 13px; }
-  .copy-btn.done { background: #16a34a; }
-  .open-btn { background: #eef1f5; color: var(--text); padding: 8px 14px; font-size: 13px; text-decoration: none; border-radius: 10px; font-weight: 700; display: inline-flex; align-items: center; }
-  .hint { font-size: 11.5px; color: var(--sub); line-height: 1.6; }
+  /* チェックリスト共通 */
+  .list { display:grid; gap:9px; }
+  .item { background:var(--card); border:1px solid var(--line); border-radius:13px; padding:13px; display:flex; gap:11px; align-items:flex-start; box-shadow:var(--shadow); }
+  .item .chk { flex:none; width:23px; height:23px; border-radius:7px; border:2px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:13px; color:transparent; margin-top:1px; cursor:pointer; }
+  .item.done .chk { background:var(--ok); border-color:var(--ok); color:#0b1411; }
+  .item .body { flex:1; min-width:0; }
+  .item .body .t { font-weight:700; font-size:14px; line-height:1.5; outline:none; }
+  .item.done .body .t { text-decoration:line-through; color:var(--sub); }
+  .item .body .d { font-size:11.5px; color:var(--sub); margin-top:3px; line-height:1.5; }
+  .item .x { flex:none; background:none; border:none; color:var(--sub); font-size:18px; cursor:pointer; padding:0 2px; line-height:1; }
 
-  details.settings { margin-bottom: 16px; }
-  details.settings summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--sub); padding: 4px 2px; }
-  .settings-inner { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-top: 8px; display: grid; gap: 12px; }
-  .settings-inner label { font-size: 12px; font-weight: 700; color: var(--sub); display: block; margin-bottom: 4px; }
+  .prog { font-size:11.5px; color:var(--sub); font-weight:700; }
 
-  footer { text-align: center; margin-top: 24px; font-size: 12px; color: var(--sub); line-height: 1.8; }
+  /* やること: 追加フォーム */
+  .add { display:flex; gap:7px; margin-bottom:12px; }
+  .add input { flex:1; background:var(--card); border:1px solid var(--line); border-radius:11px; padding:11px; color:var(--text); font-size:14px; font-family:inherit; }
+  .add input:focus { outline:2px solid var(--accent); }
+  .add select { background:var(--card); border:1px solid var(--line); border-radius:11px; color:var(--text); font-size:13px; padding:0 6px; font-family:inherit; }
+  .add button { background:var(--accent); color:#fff; border:none; border-radius:11px; padding:0 16px; font-weight:800; font-size:18px; cursor:pointer; }
+  .catlabel { font-size:11.5px; font-weight:800; color:var(--accent2); margin:14px 4px 8px; letter-spacing:.05em; }
+  .empty { color:var(--sub); font-size:12.5px; text-align:center; padding:24px 10px; line-height:1.7; }
 
-  @media (max-width: 480px) {
-    body { padding: 14px 10px 50px; }
-    .panel { padding: 13px; }
-    .btn-main { width: 100%; }
-  }
+  /* ツール */
+  .tools { display:grid; grid-template-columns:1fr 1fr; gap:11px; }
+  .tool { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:15px 13px; text-decoration:none; color:var(--text); display:flex; flex-direction:column; gap:7px; min-height:98px; box-shadow:var(--shadow); }
+  .tool:active { transform:scale(.98); }
+  .tool .ico { font-size:24px; }
+  .tool .nm { font-weight:800; font-size:14px; }
+  .tool .ds { font-size:11px; color:var(--sub); line-height:1.5; }
+  .links { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:10px; }
+  .lnk { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px; text-decoration:none; color:var(--text); font-weight:700; font-size:13px; display:flex; align-items:center; gap:9px; box-shadow:var(--shadow); }
+  .lnk .li { font-size:17px; }
+  .lnk small { display:block; color:var(--sub); font-weight:500; font-size:10.5px; margin-top:1px; }
+
+  /* カード（早見表/ロードマップ/マインドセット） */
+  .card-x { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:15px; margin-bottom:11px; box-shadow:var(--shadow); }
+  .card-x .ct { font-size:14.5px; font-weight:800; margin-bottom:9px; display:flex; align-items:center; gap:8px; }
+  .card-x.accent { border-color:var(--accent); }
+  .card-x.gold .ct { color:var(--gold); }
+  .card-x.red .ct { color:var(--accent2); }
+  .card-x.blue .ct { color:var(--blue); }
+  .card-x.purple .ct { color:var(--purple); }
+  .card-x p { font-size:13px; line-height:1.7; color:var(--text); }
+  .card-x p.quote { font-size:13.5px; font-style:italic; color:var(--text); background:var(--card2); border-left:3px solid var(--accent); border-radius:0 8px 8px 0; padding:11px 13px; }
+  .card-x ul { list-style:none; display:grid; gap:7px; }
+  .card-x li { font-size:13px; color:var(--text); line-height:1.55; padding-left:18px; position:relative; }
+  .card-x li::before { content:"▸"; position:absolute; left:0; color:var(--accent); }
+  .card-x.gold li::before { color:var(--gold); }
+  .card-x.blue li::before { color:var(--blue); }
+  .card-x.purple li::before { color:var(--purple); }
+  .game { display:grid; gap:8px; }
+  .game .g { background:var(--card2); border-radius:10px; padding:10px 12px; font-size:12.5px; line-height:1.5; }
+  .game .g b { color:var(--gold); display:block; font-size:11px; margin-bottom:2px; letter-spacing:.05em; }
+
+  .rule { display:flex; gap:10px; padding:10px 0; border-top:1px solid var(--line); }
+  .rule:first-child { border-top:none; }
+  .rule .em { font-size:17px; flex:none; }
+  .rule .rt { font-size:13px; font-weight:700; line-height:1.5; }
+  .rule .rd { font-size:11.5px; color:var(--sub); margin-top:2px; line-height:1.5; }
+  .rule .rd b { color:var(--accent2); }
+
+  .ask { background:linear-gradient(135deg,#f6f1ff,#ece2ff); border:1px solid var(--purple); border-radius:14px; padding:16px; }
+  .ask .ct { color:var(--purple); }
+  .ask li::before { content:"❔"; }
+  .ask li { padding-left:24px; font-size:13.5px; font-weight:600; }
+
+  /* 下タブナビ */
+  nav { position:fixed; bottom:0; left:0; right:0; height:var(--nav-h); background:rgba(255,255,255,.94);
+    backdrop-filter:blur(12px); border-top:1px solid var(--line); display:flex; z-index:50;
+    box-shadow:0 -3px 16px rgba(31,41,80,.06);
+    padding-bottom: env(safe-area-inset-bottom, 0px); }
+  nav button { flex:1; background:none; border:none; color:var(--sub); font-family:inherit; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:10px; font-weight:700; padding:6px 2px; }
+  nav button .ni { font-size:19px; line-height:1; }
+  nav button.on { color:var(--accent); }
+  nav button.on .ni { transform:translateY(-1px); }
+
+  footer { text-align:center; color:var(--sub); font-size:10.5px; margin-top:24px; line-height:1.8; }
+
+  /* 鍵画面 */
+  #lock { position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; padding:24px;
+    background: radial-gradient(900px 500px at 50% -120px, #ffe0e9 0%, #f7f8fc 60%); }
+  #lock.hidden { display:none; }
+  .lock-card { background:#fff; border:1px solid var(--line); border-radius:22px; box-shadow:0 12px 40px rgba(31,41,80,.12);
+    padding:30px 22px; width:100%; max-width:330px; text-align:center; }
+  .lock-card .le { font-size:40px; }
+  .lock-card h2 { font-size:18px; font-weight:900; margin-top:8px; }
+  .lock-card h2 .red { color:var(--accent); }
+  .lock-card p { font-size:12.5px; color:var(--sub); margin:6px 0 16px; }
+  .lock-card input { width:100%; border:1px solid var(--line); border-radius:12px; padding:13px; font-size:16px;
+    text-align:center; background:#fafbfc; font-family:inherit; letter-spacing:.05em; }
+  .lock-card input:focus { outline:2px solid var(--accent); outline-offset:-1px; background:#fff; }
+  .lock-card button { width:100%; margin-top:12px; background:var(--accent); color:#fff; border:none; border-radius:12px;
+    padding:13px; font-size:15px; font-weight:800; cursor:pointer; font-family:inherit; }
+  .lock-card .err { color:#dc2626; font-weight:700; font-size:12.5px; min-height:18px; margin:10px 0 0; }
+  .relock { display:block; margin:14px auto 0; background:none; border:none; color:var(--sub); font-size:11.5px; text-decoration:underline; cursor:pointer; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>📤 SNSクロス投稿ツール</h1>
-    <p>Xの投稿を Instagram・小紅書・Weibo 向けに言語と形式を変えて作成します</p>
-  </header>
 
-  <div class="panel">
-    <label class="head">① ツイートURLから読み込み（本文と写真を自動取得）</label>
-    <div class="row">
-      <input type="url" id="tweet-url" placeholder="https://x.com/…/status/… を貼り付け" inputmode="url">
-      <button class="btn-sub" id="load-tweet">読み込み</button>
-    </div>
+<!-- 鍵画面 -->
+<div id="lock">
+  <div class="lock-card">
+    <div class="le">🔒</div>
+    <h2>My <span class="red">Hub</span></h2>
+    <p>パスコードを入力してください</p>
+    <input type="password" id="lock-input" placeholder="パスコード" autocomplete="off" autocapitalize="off" enterkeyhint="go">
+    <button id="lock-btn">開く</button>
+    <p class="err" id="lock-err"></p>
   </div>
-
-  <div class="panel">
-    <label class="head" for="src">② 投稿文（自動入力 or 手で貼り付け・空でもOK）</label>
-    <textarea id="src" placeholder="写真だけの投稿なら空のままでOK。下のメモ欄に内容を書けば本文に使われます"></textarea>
-
-    <div class="photos" id="photos"></div>
-    <div style="margin-top:10px">
-      <label class="upload-label">📷 写真を追加（メモを書くときの参考用）<input type="file" id="file-input" accept="image/*" multiple></label>
-    </div>
-
-    <label class="head" for="memo" style="margin-top:14px">③ 写真の内容メモ（上の写真を見ながら一言でOK・本文に使われます）</label>
-    <textarea id="memo" style="min-height:70px" placeholder="例: 真っ赤なドレスのコスプレ。スタジオで撮影、ライティングがお気に入り"></textarea>
-
-    <div class="actions">
-      <button class="btn-main" id="convert">✨ 各SNS向けに作成</button>
-      <span class="status" id="status"></span>
-    </div>
-  </div>
-
-  <details class="settings">
-    <summary>⚙️ 定番ハッシュタグを編集（自動で末尾に追加されます）</summary>
-    <div class="settings-inner">
-      <div>
-        <label for="tags-ig">Instagram 定番タグ（スペース区切り・#不要）</label>
-        <input type="text" id="tags-ig">
-      </div>
-      <div>
-        <label for="tags-red">小紅書 定番タグ</label>
-        <input type="text" id="tags-red">
-      </div>
-      <div>
-        <label for="tags-weibo">Weibo 定番タグ</label>
-        <input type="text" id="tags-weibo">
-      </div>
-      <button class="btn-sub" id="save-settings" style="background:var(--accent);color:#fff;justify-self:start;">保存</button>
-    </div>
-  </details>
-
-  <div class="grid">
-    <!-- Instagram -->
-    <div class="card ig" id="card-ig">
-      <div class="card-head"><span class="name">Instagram</span><span class="lang">日本語＋英語</span></div>
-      <div class="card-body">
-        <textarea id="out-ig"></textarea>
-        <div class="card-foot">
-          <span class="count" id="count-ig"></span>
-          <div class="foot-btns">
-            <a class="open-btn" href="https://www.instagram.com/" target="_blank">開く ↗</a>
-            <button class="copy-btn" data-target="out-ig">コピー</button>
-          </div>
-        </div>
-        <p class="hint">📷 上限2,200字・タグ最大30個。コピー後そのままIGアプリへ。</p>
-      </div>
-    </div>
-
-    <!-- 小紅書 -->
-    <div class="card red" id="card-red">
-      <div class="card-head"><span class="name">小紅書 RED</span><span class="lang">中国語（簡体字）</span></div>
-      <div class="card-body">
-        <span class="field-label">タイトル（20字以内）</span>
-        <input type="text" id="title-red">
-        <span class="field-label">本文</span>
-        <textarea id="out-red"></textarea>
-        <div class="card-foot">
-          <span class="count" id="count-red"></span>
-          <div class="foot-btns">
-            <button class="copy-btn" data-target="title-red" style="background:#6b7280">題コピー</button>
-            <a class="open-btn" href="https://creator.xiaohongshu.com/publish/publish" target="_blank">開く ↗</a>
-            <button class="copy-btn" data-target="out-red">コピー</button>
-          </div>
-        </div>
-        <p class="hint">📕 本文上限1,000字。タイトルは投稿画面の別欄に貼り付けてください。</p>
-      </div>
-    </div>
-
-    <!-- Weibo -->
-    <div class="card weibo" id="card-weibo">
-      <div class="card-head"><span class="name">Weibo 微博</span><span class="lang">中国語（簡体字）</span></div>
-      <div class="card-body">
-        <textarea id="out-weibo"></textarea>
-        <div class="card-foot">
-          <span class="count" id="count-weibo"></span>
-          <div class="foot-btns">
-            <a class="open-btn" href="https://weibo.com/" target="_blank">開く ↗</a>
-            <button class="copy-btn" data-target="out-weibo">コピー</button>
-          </div>
-        </div>
-        <p class="hint">🔶 140字超は「全文を表示」で折りたたみ。話題タグは #タグ# 形式。</p>
-      </div>
-    </div>
-  </div>
-
-  <footer>
-    📱 このページはブラウザだけで動きます（PC不要・どこからでも使えます）。<br>
-    スマホのホーム画面に追加しておくとアプリのように使えます。
-  </footer>
 </div>
 
+<div class="wrap">
+
+  <!-- ===== 今日 ===== -->
+  <section class="tab active" id="tab-today">
+    <div class="ph">
+      <h1>My <span class="red">Hub</span></h1>
+      <p>今日もおつかれさま 🌸</p>
+    </div>
+    <div class="countdown" id="countdown">
+      <div class="lbl">🔥 EVO LAS VEGAS まで</div>
+      <div class="days" id="cd-days">--</div>
+      <div class="date" id="cd-date">2026年6月26日</div>
+    </div>
+
+    <div class="sec-title">✅ 今日のアクション <span class="r"><button class="reset" id="reset-actions">リセット</button></span></div>
+    <div class="list" id="actions"></div>
+
+    <div class="sec-title">📋 投稿ルール早見表（データで証明済み）</div>
+    <div class="card-x">
+      <div class="rule"><span class="em">📸</span><div><div class="rt">毎日最低1枚は写真を投稿</div><div class="rd">写真付き=バズ率<b>29.8%</b>／テキストのみ=<b>0.2%</b>。写真1枚はテキストの12倍</div></div></div>
+      <div class="rule"><span class="em">🌅</span><div><div class="rt">写真は朝9〜11時に「おはよ」形式で</div><div class="rd">「おはよ＋写真」は<b>35.5%</b>・中央値639いいね</div></div></div>
+      <div class="rule"><span class="em">1️⃣</span><div><div class="rt">写真は1投稿1枚</div><div class="rd">3枚まとめ=バズ率<b>0%</b>。4枚撮ったら4日に分けて出す</div></div></div>
+      <div class="rule"><span class="em">🏷️</span><div><div class="rt">必ずタグを付ける</div><div class="rd">タグあり=<b>23%</b>／なし=<b>8.3%</b>。#スト6 #StreetFighter6</div></div></div>
+      <div class="rule"><span class="em">🚫</span><div><div class="rt">22〜23時に良い写真を使わない</div><div class="rd">夜遅い投稿はバズ率<b>4.8〜5.3%</b>。良い在庫は朝に温存</div></div></div>
+      <div class="rule"><span class="em">💰</span><div><div class="rt">FANBOX告知は月2回以上</div><div class="rd">FANBOX投稿はバズ率<b>36.4%</b>と最高クラス</div></div></div>
+    </div>
+  </section>
+
+  <!-- ===== やること ===== -->
+  <section class="tab" id="tab-todo">
+    <div class="ph"><h1>✅ やることリスト</h1><p>自由に追加・編集・削除できます（この端末に保存）</p></div>
+    <div class="add">
+      <input id="todo-input" placeholder="やることを入力…" enterkeyhint="done">
+      <select id="todo-cat">
+        <option value="毎日">毎日</option>
+        <option value="今週">今週</option>
+        <option value="プロジェクト">案件</option>
+        <option value="いつか">いつか</option>
+      </select>
+      <button id="todo-add">＋</button>
+    </div>
+    <div class="sec-title">📝 リスト <span class="r prog" id="todo-prog"></span></div>
+    <div id="todo-list"></div>
+    <div class="sec-title" style="margin-top:18px"><button class="reset" id="todo-clear">完了したものを全部消す</button></div>
+  </section>
+
+  <!-- ===== 計画（ロードマップ） ===== -->
+  <section class="tab" id="tab-plan">
+    <div class="ph"><h1>🗺 ロードマップ</h1><p>定期的に見返して、ブレない</p></div>
+
+    <div id="plan-content"></div>
+  </section>
+
+  <!-- ===== 心得（マインドセット） ===== -->
+  <section class="tab" id="tab-mind">
+    <div class="ph"><h1>🧠 マインドセット</h1><p>迷ったら、ここに戻る</p></div>
+
+    <div id="mind-content"></div>
+  </section>
+
+  <!-- ===== ツール ===== -->
+  <section class="tab" id="tab-tools">
+    <div class="ph"><h1>🔧 ツール</h1><p>マネージャー機能</p></div>
+    <div class="tools">
+      <a class="tool" href="crosspost.html"><span class="ico">📤</span><span class="nm">SNSクロス投稿</span><span class="ds">X→IG/小紅書/Weibo に変換</span></a>
+      <a class="tool" href="https://scintillating-arithmetic-9c22e4.netlify.app/index.html" rel="noopener"><span class="ico">📊</span><span class="nm">バズ分析</span><span class="ds">当たる型をデータで確認</span></a>
+      <a class="tool" href="invoice.html"><span class="ico">🧾</span><span class="nm">請求書を作る</span><span class="ds">宛先と品目→PDF</span></a>
+      <a class="tool" href="mail.html"><span class="ico">✉️</span><span class="nm">メール返信</span><span class="ds">返信案づくりを手伝う</span></a>
+    </div>
+    <div class="sec-title">💰 収益・公式</div>
+    <div class="links">
+      <a class="lnk" href="https://atatadayo.fanbox.cc/" rel="noopener"><span class="li">💎</span><span>FANBOX<small>限定コンテンツ</small></span></a>
+      <a class="lnk" href="https://ayanebusters.booth.pm" rel="noopener"><span class="li">🛍️</span><span>BOOTH<small>グッズ・チェキ</small></span></a>
+      <a class="lnk" href="https://www.amazon.jp/hz/wishlist/ls/1LE50MIK18L5D" rel="noopener"><span class="li">🎁</span><span>欲しい物リスト<small>Amazon</small></span></a>
+      <a class="lnk" href="https://atatadayo.pages.dev" rel="noopener"><span class="li">🏠</span><span>公式HP<small>信頼装置</small></span></a>
+    </div>
+
+    <div class="sec-title">📺 配信・動画</div>
+    <div class="links">
+      <a class="lnk" href="https://twitch.tv/atatadayo" rel="noopener"><span class="li">🎮</span><span>Twitch<small>2.8万人</small></span></a>
+      <a class="lnk" href="https://youtube.com/@atatadayo0909" rel="noopener"><span class="li">▶️</span><span>YouTube<small>動画・アーカイブ</small></span></a>
+      <a class="lnk" href="https://www.tiktok.com/@atatadayo" rel="noopener"><span class="li">🎵</span><span>TikTok<small>ショート動画</small></span></a>
+    </div>
+
+    <div class="sec-title">🐦 SNS</div>
+    <div class="links">
+      <a class="lnk" href="https://x.com/atata_dayo" rel="noopener"><span class="li">🐦</span><span>X (Twitter)<small>8.7万人</small></span></a>
+      <a class="lnk" href="https://www.instagram.com/atatadayo/" rel="noopener"><span class="li">📷</span><span>Instagram<small>4.5万人</small></span></a>
+    </div>
+
+    <div class="sec-title">🇨🇳 中国圏</div>
+    <div class="links">
+      <a class="lnk" href="https://www.xiaohongshu.com/user/profile/642699610000000012011c64" rel="noopener"><span class="li">📕</span><span>小紅書 RED<small>写真・日常</small></span></a>
+      <a class="lnk" href="https://weibo.com/u/7737210867" rel="noopener"><span class="li">🌐</span><span>Weibo<small>最新情報</small></span></a>
+      <a class="lnk" href="https://space.bilibili.com/3546597218584661" rel="noopener"><span class="li">📺</span><span>bilibili<small>動画投稿</small></span></a>
+    </div>
+    <button class="relock" id="relock">🔒 ロックする（共有端末・パスコード変更時）</button>
+    <footer>📱 ホーム画面に追加して毎日開く</footer>
+  </section>
+</div>
+
+<!-- 下タブナビ -->
+<nav id="nav">
+  <button data-tab="today" class="on"><span class="ni">🎯</span>今日</button>
+  <button data-tab="todo"><span class="ni">✅</span>やること</button>
+  <button data-tab="plan"><span class="ni">🗺</span>計画</button>
+  <button data-tab="mind"><span class="ni">🧠</span>心得</button>
+  <button data-tab="tools"><span class="ni">🔧</span>ツール</button>
+</nav>
+
 <script>
-const DEFAULT_TAGS = {
-  ig:    "cosplay cosplayphoto portrait portraitphotography コスプレ ポートレート",
-  red:   "cosplay 二次元 人像摄影 摄影 日本",
-  weibo: "cosplay 二次元 摄影"
-};
-const LIMITS = { ig: 2200, red: 1000, weibo: 2000 };
-let photos = [];  // 参考表示用: {url} | {dataUrl}
+  const $ = id => document.getElementById(id);
 
-const $ = id => document.getElementById(id);
-
-// ---- 初期化 ----
-function init() {
-  const saved = JSON.parse(localStorage.getItem("crosspost-tags") || "{}");
-  for (const k of ["ig", "red", "weibo"]) $("tags-" + k).value = saved[k] ?? DEFAULT_TAGS[k];
-}
-init();
-
-$("save-settings").addEventListener("click", () => {
-  const data = {};
-  for (const k of ["ig", "red", "weibo"]) data[k] = $("tags-" + k).value.trim();
-  localStorage.setItem("crosspost-tags", JSON.stringify(data));
-  setStatus("ハッシュタグ設定を保存しました ✅");
-});
-
-// ---- 翻訳（Google翻訳をブラウザから直接呼ぶ） ----
-async function translate(text, target) {
-  if (!text.trim()) return "";
-  const url = "https://translate.googleapis.com/translate_a/single"
-    + "?client=gtx&sl=auto&dt=t&tl=" + encodeURIComponent(target)
-    + "&q=" + encodeURIComponent(text);
-  const r = await fetch(url);
-  if (!r.ok) throw new Error("翻訳サーバーに接続できませんでした");
-  const data = await r.json();
-  return data[0].map(seg => seg[0]).filter(Boolean).join("");
-}
-
-// ---- ツイート読み込み（vxtwitterをブラウザから直接呼ぶ） ----
-$("load-tweet").addEventListener("click", async () => {
-  const url = $("tweet-url").value.trim();
-  const m = url.match(/(?:twitter\.com|x\.com)\/[^/]+\/status\/(\d+)/);
-  if (!m) { setStatus("ツイートURLの形式が正しくありません", true); return; }
-  const btn = $("load-tweet");
-  btn.disabled = true;
-  setStatus("ツイートを取得中…");
-  try {
-    const r = await fetch("https://api.vxtwitter.com/Twitter/status/" + m[1]);
-    if (!r.ok) throw new Error("ツイートを取得できませんでした");
-    const data = await r.json();
-    $("src").value = data.text || "";
-    photos = (data.media_extended || [])
-      .filter(mm => mm.type === "image")
-      .slice(0, 4)
-      .map(mm => ({ url: mm.url }));
-    renderPhotos();
-    setStatus(`読み込みました ✅（写真${photos.length}枚）`);
-  } catch (e) {
-    setStatus("エラー: " + e.message + "（本文の貼り付けと写真の手動追加でも作成できます）", true);
-  } finally {
-    btn.disabled = false;
+  /* ===== タブ切り替え ===== */
+  const navBtns = document.querySelectorAll("#nav button");
+  function showTab(name) {
+    document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.id === "tab-" + name));
+    navBtns.forEach(b => b.classList.toggle("on", b.dataset.tab === name));
+    localStorage.setItem("hub-tab", name);
+    window.scrollTo(0, 0);
   }
-});
+  navBtns.forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
+  showTab(localStorage.getItem("hub-tab") || "today");
 
-// ---- 写真の参考表示（端末内だけ・どこにも送信しません） ----
-$("file-input").addEventListener("change", (ev) => {
-  for (const file of [...ev.target.files]) {
-    if (photos.length >= 4) break;
-    const reader = new FileReader();
-    reader.onload = () => { photos.push({ dataUrl: reader.result }); renderPhotos(); };
-    reader.readAsDataURL(file);
+  /* ===== EVOカウントダウン ===== */
+  (function () {
+    const target = new Date("2026-06-26T00:00:00+09:00");
+    const days = Math.ceil((target - new Date()) / 86400000);
+    const cd = $("countdown"), el = $("cd-days");
+    if (days > 0) el.innerHTML = days + '<small> 日</small>';
+    else if (days === 0) { el.textContent = "本番！🔥"; cd.classList.add("passed"); }
+    else { el.textContent = "お疲れ様！"; cd.classList.add("passed"); $("cd-date").textContent = "次の戦いへ"; }
+  })();
+
+  /* ===== 今日のアクション（固定・日付別） ===== */
+  const ACTIONS = [
+    { t: "📸 撮影会の写真を1枚、朝9〜11時に投稿", d: "「おはよ」形式＋#スト6 タグ。残りは在庫に温存" },
+    { t: "🔥 EVOカウントダウンを絡める", d: "「おはよ！EVOあと◯日〜！」（実績5,049いいね）" },
+    { t: "📺 夕方〜夜に3〜4時間配信", d: "企画を1つ持って。同接1000人超を狙う" },
+    { t: "🎵 TikTok撮影・投稿", d: "週3本ペース。ルーティン化が1年後の証拠" },
+    { t: "🇨🇳 Weibo・RED更新／中国語クロス投稿", d: "SNSクロス投稿ツールで同時展開" },
+    { t: "💎 FANBOX・連絡チェック", d: "告知が今週まだなら1本。DM/メールは即レス" },
+  ];
+  const today = new Date().toISOString().slice(0, 10);
+  const AKEY = "ayane-actions-" + today;
+  let aState = JSON.parse(localStorage.getItem(AKEY) || "[]");
+  function renderActions() {
+    const box = $("actions"); box.innerHTML = "";
+    ACTIONS.forEach((a, i) => {
+      const done = aState.includes(i);
+      const div = document.createElement("div");
+      div.className = "item" + (done ? " done" : "");
+      div.innerHTML = `<div class="chk">✓</div><div class="body"><div class="t">${a.t}</div><div class="d">${a.d}</div></div>`;
+      div.querySelector(".chk").addEventListener("click", () => {
+        aState = aState.includes(i) ? aState.filter(x => x !== i) : [...aState, i];
+        localStorage.setItem(AKEY, JSON.stringify(aState)); renderActions();
+      });
+      box.appendChild(div);
+    });
   }
-  ev.target.value = "";
-});
+  renderActions();
+  $("reset-actions").addEventListener("click", () => { aState = []; localStorage.setItem(AKEY, "[]"); renderActions(); });
 
-function renderPhotos() {
-  const box = $("photos");
-  box.innerHTML = "";
-  photos.forEach((p, i) => {
-    const div = document.createElement("div");
-    div.className = "thumb";
-    const img = document.createElement("img");
-    img.src = p.url || p.dataUrl;
-    const del = document.createElement("button");
-    del.className = "del";
-    del.textContent = "×";
-    del.addEventListener("click", () => { photos.splice(i, 1); renderPhotos(); });
-    div.append(img, del);
-    box.appendChild(div);
+  /* ===== やることリスト（自由編集） ===== */
+  const CATS = ["毎日", "今週", "プロジェクト", "いつか"];
+  const CATLABEL = { "毎日": "🔁 毎日", "今週": "📅 今週", "プロジェクト": "💼 案件", "いつか": "🌱 いつか" };
+  const TKEY = "ayane-todos";
+  let todos = JSON.parse(localStorage.getItem(TKEY) || "null");
+  if (todos === null) {  // 初回シード
+    todos = [
+      { id: u(), t: "夕方〜夜に3〜4時間配信", c: "毎日", done: false },
+      { id: u(), t: "Weibo・RED を更新", c: "毎日", done: false },
+      { id: u(), t: "DM・メールに即レス", c: "毎日", done: false },
+      { id: u(), t: "ゲームショウ向けPRツイート", c: "今週", done: false },
+      { id: u(), t: "FANBOXを更新", c: "今週", done: false },
+      { id: u(), t: "撮影スケジュールを立てる", c: "今週", done: false },
+    ];
+    saveTodos();
+  }
+  function u() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  function saveTodos() { localStorage.setItem(TKEY, JSON.stringify(todos)); }
+  function renderTodos() {
+    const wrap = $("todo-list"); wrap.innerHTML = "";
+    const total = todos.length, done = todos.filter(t => t.done).length;
+    $("todo-prog").textContent = total ? `${done}/${total} 完了` : "";
+    if (!total) { wrap.innerHTML = '<div class="empty">まだ何もありません。<br>上の欄から追加してみましょう ✍️</div>'; return; }
+    CATS.forEach(cat => {
+      const items = todos.filter(t => t.c === cat);
+      if (!items.length) return;
+      const h = document.createElement("div"); h.className = "catlabel"; h.textContent = CATLABEL[cat];
+      wrap.appendChild(h);
+      const list = document.createElement("div"); list.className = "list";
+      items.forEach(it => {
+        const div = document.createElement("div");
+        div.className = "item" + (it.done ? " done" : "");
+        div.innerHTML = `<div class="chk">✓</div><div class="body"><div class="t" contenteditable="true" spellcheck="false"></div></div><button class="x">×</button>`;
+        div.querySelector(".t").textContent = it.t;
+        div.querySelector(".chk").addEventListener("click", () => { it.done = !it.done; saveTodos(); renderTodos(); });
+        div.querySelector(".x").addEventListener("click", () => { todos = todos.filter(t => t.id !== it.id); saveTodos(); renderTodos(); });
+        const ed = div.querySelector(".t");
+        ed.addEventListener("blur", () => { const v = ed.textContent.trim(); if (v) { it.t = v; saveTodos(); } else { todos = todos.filter(t => t.id !== it.id); saveTodos(); renderTodos(); } });
+        ed.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); ed.blur(); } });
+        list.appendChild(div);
+      });
+      wrap.appendChild(list);
+    });
+  }
+  function addTodo() {
+    const v = $("todo-input").value.trim(); if (!v) return;
+    todos.push({ id: u(), t: v, c: $("todo-cat").value, done: false });
+    $("todo-input").value = ""; saveTodos(); renderTodos();
+  }
+  $("todo-add").addEventListener("click", addTodo);
+  $("todo-input").addEventListener("keydown", e => { if (e.key === "Enter") addTodo(); });
+  $("todo-clear").addEventListener("click", () => { todos = todos.filter(t => !t.done); saveTodos(); renderTodos(); });
+  renderTodos();
+
+  /* ===== 鍵（パスコードでロードマップ・心得を復号） ===== */
+  const ENC = {
+    salt: "T9aNjCrC9tyewXgRvf4tLw==",
+    iv: "+pEA/NiIZrjkwV6e",
+    iter: 200000,
+    ct: "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"
+  };
+  const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  async function decryptHub(pass) {
+    const enc = new TextEncoder();
+    const km = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);
+    const key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: b64(ENC.salt), iterations: ENC.iter, hash: "SHA-256" },
+      km, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+    const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(ENC.iv) }, key, b64(ENC.ct));
+    return JSON.parse(new TextDecoder().decode(pt));
+  }
+  async function unlock(pass) {
+    let data;
+    try { data = await decryptHub(pass); }
+    catch (e) { return false; }
+    $("plan-content").innerHTML = data.roadmap;
+    $("mind-content").innerHTML = data.mindset;
+    localStorage.setItem("hub-pass", pass);
+    $("lock").classList.add("hidden");
+    return true;
+  }
+  $("lock-btn").addEventListener("click", async () => {
+    $("lock-err").textContent = "確認中…";
+    const ok = await unlock($("lock-input").value);
+    $("lock-err").textContent = ok ? "" : "パスコードが違います";
+    if (!ok) { $("lock-input").value = ""; $("lock-input").focus(); }
   });
-}
+  $("lock-input").addEventListener("keydown", e => { if (e.key === "Enter") $("lock-btn").click(); });
+  $("relock").addEventListener("click", () => { localStorage.removeItem("hub-pass"); location.reload(); });
+  // 自端末で記憶していれば自動解錠、なければ鍵画面
+  (async () => {
+    const saved = localStorage.getItem("hub-pass");
+    if (saved && await unlock(saved)) return;
+    if (saved) localStorage.removeItem("hub-pass");
+    setTimeout(() => $("lock-input").focus(), 100);
+  })();
 
-// ---- メイン: 作成 ----
-$("convert").addEventListener("click", async () => {
-  const raw = $("src").value;
-  const memo = $("memo").value.trim();
-  if (!raw.trim() && !memo) {
-    setStatus("投稿文か「写真の内容メモ」を入力してください", true);
-    return;
-  }
-  const btn = $("convert");
-  btn.disabled = true;
-  setStatus("翻訳中…（数秒かかります）");
-  try {
-    await convertSimple(raw, memo);
-    setStatus("変換が完了しました ✅ 各欄は手直しできます");
-  } catch (e) {
-    setStatus("エラー: " + e.message, true);
-  } finally {
-    btn.disabled = false;
-  }
-});
-
-function uniq(arr) { return [...new Set(arr)]; }
-function getDefaultTags(key) {
-  return $("tags-" + key).value.trim().split(/[\s,、]+/).filter(Boolean);
-}
-
-async function convertSimple(raw, memo) {
-  const cleaned = raw.replace(/https?:\/\/t\.co\/\S+/g, "").trim();
-  const tagRe = /[#＃]([^\s#＃]+)/g;
-  const srcTags = [...cleaned.matchAll(tagRe)].map(m => m[1]);
-  const tweetBody = cleaned.replace(tagRe, "").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
-  const body = [tweetBody, memo].filter(Boolean).join("\n");
-
-  const [en, zh, tagsZhRaw] = await Promise.all([
-    translate(body, "en"),
-    translate(body, "zh-CN"),
-    srcTags.length ? translate(srcTags.join("\n"), "zh-CN") : Promise.resolve("")
-  ]);
-  let tagsZh = tagsZhRaw.split("\n").map(t => t.replace(/\s+/g, "").trim()).filter(Boolean);
-  if (tagsZh.length !== srcTags.length) tagsZh = srcTags;
-
-  const igTags = uniq([...srcTags, ...getDefaultTags("ig")]).slice(0, 30);
-  $("out-ig").value = body + "\n.\n" + en + "\n\n" + igTags.map(t => "#" + t).join(" ");
-
-  const redTags = uniq([...tagsZh, ...getDefaultTags("red")]);
-  const zhLines = zh.split("\n").map(l => l.trim()).filter(Boolean);
-  const titleLine = zhLines.find(l => [...l].length >= 4) || zhLines[0] || "";
-  $("title-red").value = [...titleLine].slice(0, 20).join("");
-  $("out-red").value = zh + "\n\n" + redTags.map(t => "#" + t).join(" ");
-
-  const wbTags = uniq([...tagsZh, ...getDefaultTags("weibo")]);
-  $("out-weibo").value = zh + "\n\n" + wbTags.map(t => "#" + t + "#").join(" ");
-
-  for (const k of ["ig", "red", "weibo"]) {
-    $("card-" + k).classList.add("show");
-    updateCount(k);
-  }
-}
-
-// ---- 文字数カウント ----
-function updateCount(key) {
-  const len = [...$("out-" + key).value].length;
-  const el = $("count-" + key);
-  el.textContent = `${len} / ${LIMITS[key]}字`;
-  el.classList.toggle("over", len > LIMITS[key]);
-}
-for (const k of ["ig", "red", "weibo"]) {
-  $("out-" + k).addEventListener("input", () => updateCount(k));
-}
-
-// ---- コピー ----
-async function copyText(text) {
-  if (navigator.clipboard && window.isSecureContext) {
-    await navigator.clipboard.writeText(text);
-    return;
-  }
-  const ta = document.createElement("textarea");
-  ta.value = text;
-  ta.style.position = "fixed";
-  ta.style.opacity = "0";
-  document.body.appendChild(ta);
-  ta.focus(); ta.select();
-  document.execCommand("copy");
-  document.body.removeChild(ta);
-}
-document.querySelectorAll(".copy-btn").forEach(btn => {
-  btn.addEventListener("click", async () => {
-    const orig = btn.textContent;
-    try {
-      await copyText($(btn.dataset.target).value);
-      btn.textContent = "✓"; btn.classList.add("done");
-    } catch (e) { btn.textContent = "失敗"; }
-    setTimeout(() => { btn.textContent = orig; btn.classList.remove("done"); }, 1600);
-  });
-});
-
-function setStatus(msg, isError) {
-  const el = $("status");
-  el.textContent = msg;
-  el.className = "status" + (isError ? " error" : "");
-}
 </script>
 </body>
 </html>

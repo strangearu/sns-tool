@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>メール返信ヘルパー — あやね マネージャーHub</title>
+<style>
+  :root { --bg:#f4f5f7; --card:#fff; --text:#1a1d24; --sub:#6b7280; --border:#e2e4e9; --accent:#7c3aed; --accent-d:#6d28d9; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family:"Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif; background:var(--bg); color:var(--text); padding:18px 14px 60px; }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  .back { color: var(--accent); text-decoration: none; font-weight: 700; font-size: 13px; }
+  h1 { font-size: 20px; margin: 10px 0 4px; }
+  .lead { color: var(--sub); font-size: 12.5px; margin-bottom: 16px; line-height: 1.6; }
+
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  label { display: block; font-size: 12.5px; font-weight: 700; color: var(--sub); margin: 12px 0 6px; }
+  label:first-child { margin-top: 0; }
+  textarea, input, select { width: 100%; border: 1px solid var(--border); border-radius: 9px; padding: 11px; font-size: 14px; font-family: inherit; background: #fafbfc; line-height: 1.6; }
+  textarea:focus, input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; background: #fff; }
+  #received { min-height: 120px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip { border: 1px solid var(--border); background: #fafbfc; border-radius: 99px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .chip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  button { border: none; border-radius: 10px; padding: 12px 20px; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; }
+  .btn-main { background: var(--accent); color: #fff; width: 100%; font-size: 15px; }
+  .btn-sub { background: #eef1f5; color: var(--text); }
+
+  .result { margin-top: 14px; display: none; }
+  .result.show { display: block; }
+  .promptbox { background: #1a1d24; color: #e7eaf3; border-radius: 12px; padding: 14px; font-size: 12.5px; line-height: 1.65; white-space: pre-wrap; max-height: 280px; overflow: auto; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .steps { display: grid; gap: 10px; margin-top: 12px; }
+  .step { display: flex; gap: 11px; align-items: flex-start; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 13px; }
+  .step .n { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+  .step .st { font-size: 13.5px; font-weight: 700; line-height: 1.5; }
+  .step .sd { font-size: 12px; color: var(--sub); margin-top: 2px; line-height: 1.5; }
+  .step .go { margin-top: 8px; display: inline-flex; gap: 6px; align-items: center; background: var(--accent); color: #fff; text-decoration: none; border-radius: 9px; padding: 9px 16px; font-weight: 800; font-size: 13px; }
+  .btn-copy { background: #fff; color: var(--accent); border: 1px solid var(--accent); margin-top: 10px; }
+  .btn-copy.done { background: #16a34a; color: #fff; border-color: #16a34a; }
+
+  .tmpl-list { display: grid; gap: 8px; }
+  .tmpl { background: #fafbfc; border: 1px solid var(--border); border-radius: 10px; padding: 12px; cursor: pointer; }
+  .tmpl:active { background: #eef1f5; }
+  .tmpl .tt { font-weight: 800; font-size: 13.5px; }
+  .tmpl .td { font-size: 11.5px; color: var(--sub); margin-top: 2px; }
+  details summary { cursor: pointer; font-weight: 800; font-size: 14px; }
+  .out { margin-top: 12px; }
+  .out textarea { min-height: 200px; font-size: 13px; }
+  .hint { font-size: 11.5px; color: var(--sub); line-height: 1.6; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← マネージャーHubに戻る</a>
+  <h1>✉️ メール返信ヘルパー</h1>
+  <p class="lead">受信メールと「どう返したいか」を入れると、Claude用の<b>相談プロンプト</b>を自動で作ります。コピーして無料のClaudeアプリに貼れば、丁寧な返信案ができます。</p>
+
+  <div class="panel">
+    <label>① 受信したメール（貼り付け）</label>
+    <textarea id="received" placeholder="相手から届いたメールをそのまま貼り付けてください"></textarea>
+
+    <label>② どう返したい？（選ぶ・複数OK）</label>
+    <div class="chips" id="intent-chips"></div>
+
+    <label>③ 補足・条件（任意）</label>
+    <input id="extra" placeholder="例: ギャラは5万希望／その日は午後なら空いてる／日程の候補を3つ出して">
+
+    <label>④ トーン</label>
+    <select id="tone">
+      <option value="丁寧でフォーマル">丁寧でフォーマル（初めての相手・企業向け）</option>
+      <option value="丁寧だけど親しみやすい">丁寧だけど親しみやすい（やり取りのある相手）</option>
+      <option value="きっぱり・簡潔">きっぱり・簡潔（お断りや条件提示）</option>
+    </select>
+
+    <div style="margin-top:16px"><button class="btn-main" id="gen">🤖 Claude用プロンプトを作る</button></div>
+
+    <div class="result" id="result">
+      <div class="promptbox" id="promptbox"></div>
+      <button class="btn-copy" id="copy">📋 プロンプトをコピー</button>
+      <div class="steps">
+        <div class="step"><div class="n">1</div><div><div class="st">「プロンプトをコピー」を押す</div><div class="sd">上の紫のボタンでプロンプトをコピーします</div></div></div>
+        <div class="step"><div class="n">2</div><div><div class="st">Claudeを開いて貼り付け→送信</div><div class="sd">無料のClaudeアプリ、またはブラウザのclaude.aiでOK</div><a class="go" href="https://claude.ai/new" target="_blank">Claudeを開く ↗</a></div></div>
+        <div class="step"><div class="n">3</div><div><div class="st">返信案が出たら、整えて送信</div><div class="sd">気に入らなければ「もっと丁寧に」「短く」などClaudeに追加で頼めます</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <details class="panel">
+    <summary>⚡ 定型文テンプレ（AI不要・すぐ使える）</summary>
+    <div style="margin-top:12px">
+      <p class="hint">よくある返信のたたき台。タップして下に表示→手直しして使えます。</p>
+      <div class="tmpl-list" id="tmpl-list"></div>
+      <div class="out" id="tmpl-out" style="display:none">
+        <label>たたき台（手直ししてコピー）</label>
+        <textarea id="tmpl-text"></textarea>
+        <button class="btn-copy" id="tmpl-copy" style="width:100%;margin-top:8px">📋 コピー</button>
+      </div>
+    </div>
+  </details>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+
+  // ---- 返信の意図チップ ----
+  const INTENTS = ["前向きに引き受ける","丁寧にお断りする","条件・ギャラを交渉する","日程を調整する","質問・確認する","お礼を伝える","検討中（一旦保留）"];
+  let intents = [];
+  const chipBox = $("intent-chips");
+  INTENTS.forEach(t => {
+    const c = document.createElement("div");
+    c.className = "chip"; c.textContent = t;
+    c.addEventListener("click", () => {
+      if (intents.includes(t)) { intents = intents.filter(x => x !== t); c.classList.remove("on"); }
+      else { intents.push(t); c.classList.add("on"); }
+    });
+    chipBox.appendChild(c);
+  });
+
+  // ---- プロンプト生成 ----
+  const PERSONA = `あなたは私の優秀な秘書です。私は「あやね（綾音）」という、コスプレイヤー / 格闘ゲーマー / モデルとして活動している個人事業主です。格ゲー（ストリートファイター6）のコスプレと実際の大会出場で活動しており、企業のイベント出演・配信タイアップ・撮影モデル・コスプレイベント出演などの依頼を受けています。EVO Japan審査員などの実績があります。`;
+
+  $("gen").addEventListener("click", () => {
+    const received = $("received").value.trim();
+    if (!received) { alert("受信したメールを貼り付けてください"); return; }
+    const intentText = intents.length ? intents.join("、") : "（相手の内容に応じて適切に）";
+    const extra = $("extra").value.trim();
+    const tone = $("tone").value;
+
+    const prompt =
+`${PERSONA}
+
+以下のメールに対する返信文を、日本語で作成してください。
+
+# 返信の方針
+${intentText}
+${extra ? "\n# 条件・補足\n" + extra : ""}
+# トーン
+${tone}
+
+# 守ってほしいこと
+- 日本のビジネスメールとして自然な構成（宛名・挨拶・本文・結び・署名欄）にする
+- 失礼がなく、かつ私らしい誠実さが伝わる文章にする
+- 金額や日程など未確定の部分は、私が後で埋められるよう [ ] で空欄にしておく
+- 返信文だけを出力する（解説は不要）
+
+# 受信したメール
+"""
+${received}
+"""`;
+
+    $("promptbox").textContent = prompt;
+    $("result").classList.add("show");
+    $("result").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+
+  $("copy").addEventListener("click", () => copyToClipboard($("promptbox").textContent, $("copy")));
+
+  // ---- 定型文テンプレ ----
+  const TEMPLATES = [
+    { t: "撮影・出演を引き受ける", d: "前向きにお受けする返信", body:
+`[相手のお名前] 様
+
+お世話になっております。あやねです。
+この度は[案件名]のご依頼をいただき、誠にありがとうございます。
+
+ぜひ前向きにお引き受けさせていただきたく存じます。
+詳細につきまして、以下の点を確認させてください。
+
+・日時：[日時]
+・場所：[場所]
+・ご予算（出演料）：[金額]
+・当日の流れ・衣装の指定：[内容]
+
+何卒よろしくお願いいたします。
+
+あやね` },
+    { t: "丁寧にお断りする", d: "角が立たない辞退の返信", body:
+`[相手のお名前] 様
+
+お世話になっております。あやねです。
+この度は[案件名]のお声がけをいただき、誠にありがとうございます。
+
+大変光栄なお話なのですが、[理由（スケジュールの都合 等）]により、
+今回は残念ながらお引き受けすることが難しい状況です。
+せっかくお声がけいただいたにもかかわらず、申し訳ございません。
+
+またご縁がありましたら、ぜひよろしくお願いいたします。
+
+あやね` },
+    { t: "ギャラ・条件を交渉する", d: "条件をすり合わせる返信", body:
+`[相手のお名前] 様
+
+お世話になっております。あやねです。
+ご依頼いただきありがとうございます。前向きに検討しております。
+
+つきましては、条件についてご相談させてください。
+・出演料：[希望額]を希望しております
+・[その他の条件]
+
+ご検討いただけますと幸いです。よろしくお願いいたします。
+
+あやね` },
+    { t: "日程を調整する", d: "候補日を提示する返信", body:
+`[相手のお名前] 様
+
+お世話になっております。あやねです。
+日程につきまして、以下の候補でしたら調整可能です。
+
+・[候補日1]
+・[候補日2]
+・[候補日3]
+
+ご都合のよい日をお知らせいただけますでしょうか。
+よろしくお願いいたします。
+
+あやね` },
+    { t: "お礼を伝える", d: "イベント後などのお礼", body:
+`[相手のお名前] 様
+
+お世話になっております。あやねです。
+先日は[案件名]にて大変お世話になりました。
+
+[感想・一言]。おかげさまで素晴らしい時間となりました。
+またご一緒できる機会を楽しみにしております。
+
+引き続きどうぞよろしくお願いいたします。
+
+あやね` },
+  ];
+  const list = $("tmpl-list");
+  TEMPLATES.forEach(tp => {
+    const d = document.createElement("div");
+    d.className = "tmpl";
+    d.innerHTML = `<div class="tt">${tp.t}</div><div class="td">${tp.d}</div>`;
+    d.addEventListener("click", () => {
+      $("tmpl-text").value = tp.body;
+      $("tmpl-out").style.display = "block";
+      $("tmpl-out").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+    list.appendChild(d);
+  });
+  $("tmpl-copy").addEventListener("click", () => copyToClipboard($("tmpl-text").value, $("tmpl-copy")));
+
+  // ---- コピー（http/スマホ対応） ----
+  async function copyToClipboard(text, btn) {
+    try {
+      if (navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(text);
+      else {
+        const ta = document.createElement("textarea");
+        ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        document.execCommand("copy"); document.body.removeChild(ta);
+      }
+      if (btn) { const o = btn.textContent; btn.textContent = "✓ コピーしました"; btn.classList.add("done");
+        setTimeout(() => { btn.textContent = o; btn.classList.remove("done"); }, 1800); }
+    } catch (e) { if (btn) btn.textContent = "コピー失敗（長押しで選択してください）"; }
+  }
+</script>
+</body>
+</html>

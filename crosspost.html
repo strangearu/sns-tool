@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2563eb">
+<title>SNSクロス投稿ツール</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --text: #1a1d24;
+    --sub: #6b7280;
+    --border: #e2e4e9;
+    --accent: #2563eb;
+    --ig1: #f58529; --ig2: #dd2a7b; --ig3: #8134af;
+    --red: #ff2442;
+    --weibo: #e6432e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+    background: var(--bg); color: var(--text);
+    padding: 20px 14px 60px;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 20px; }
+  header h1 { font-size: 21px; letter-spacing: .04em; }
+  header p { color: var(--sub); font-size: 12.5px; margin-top: 6px; }
+
+  .panel {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px; margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  }
+  label.head { display: block; font-weight: 700; font-size: 13.5px; margin-bottom: 8px; }
+  textarea, input[type=text], input[type=url] {
+    width: 100%; border: 1px solid var(--border); border-radius: 10px;
+    padding: 11px 12px; font-size: 14px; line-height: 1.7; resize: vertical;
+    font-family: inherit; background: #fafbfc;
+  }
+  textarea:focus, input:focus { outline: 2px solid var(--accent); outline-offset: -1px; background: #fff; }
+  #src { min-height: 100px; }
+
+  .row { display: flex; gap: 8px; }
+  .row input { flex: 1; }
+  button {
+    border: none; border-radius: 10px; padding: 10px 18px;
+    font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit;
+    transition: opacity .15s; white-space: nowrap;
+  }
+  button:hover { opacity: .85; }
+  button:disabled { opacity: .5; cursor: wait; }
+  .btn-sub { background: #eef1f5; color: var(--text); font-size: 13px; }
+  .btn-main { background: var(--accent); color: #fff; font-size: 15px; padding: 12px 28px; }
+
+  .photos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .photos .thumb { position: relative; }
+  .photos img { width: 84px; height: 84px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); display: block; }
+  .photos .del {
+    position: absolute; top: -7px; right: -7px; width: 22px; height: 22px;
+    border-radius: 50%; background: var(--text); color: #fff; font-size: 13px;
+    line-height: 22px; text-align: center; padding: 0;
+  }
+  .upload-label {
+    display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    background: #eef1f5; border-radius: 10px; padding: 9px 16px;
+    font-size: 13px; font-weight: 700;
+  }
+  .upload-label input { display: none; }
+
+  .actions { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+  .status { font-size: 13px; color: var(--sub); }
+  .status.error { color: #dc2626; font-weight: 700; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: none; flex-direction: column; }
+  .card.show { display: flex; }
+  .card-head { padding: 11px 15px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
+  .card-head .name { font-weight: 800; font-size: 15px; }
+  .card-head .lang { font-size: 11px; opacity: .9; background: rgba(255,255,255,.22); padding: 3px 10px; border-radius: 99px; }
+  .card.ig .card-head { background: linear-gradient(45deg, var(--ig1), var(--ig2), var(--ig3)); }
+  .card.red .card-head { background: var(--red); }
+  .card.weibo .card-head { background: var(--weibo); }
+  .card-body { padding: 13px 15px 15px; display: flex; flex-direction: column; gap: 9px; flex: 1; }
+  .card-body textarea { min-height: 190px; font-size: 13px; flex: 1; }
+  .field-label { font-size: 12px; color: var(--sub); font-weight: 700; }
+  .card-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .count { font-size: 12px; color: var(--sub); }
+  .count.over { color: #dc2626; font-weight: 700; }
+  .foot-btns { display: flex; gap: 8px; margin-left: auto; }
+  .copy-btn { background: var(--text); color: #fff; padding: 8px 18px; font-size: 13px; }
+  .copy-btn.done { background: #16a34a; }
+  .open-btn { background: #eef1f5; color: var(--text); padding: 8px 14px; font-size: 13px; text-decoration: none; border-radius: 10px; font-weight: 700; display: inline-flex; align-items: center; }
+  .hint { font-size: 11.5px; color: var(--sub); line-height: 1.6; }
+
+  details.settings { margin-bottom: 16px; }
+  details.settings summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--sub); padding: 4px 2px; }
+  .settings-inner { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-top: 8px; display: grid; gap: 12px; }
+  .settings-inner label { font-size: 12px; font-weight: 700; color: var(--sub); display: block; margin-bottom: 4px; }
+
+  footer { text-align: center; margin-top: 24px; font-size: 12px; color: var(--sub); line-height: 1.8; }
+
+  @media (max-width: 480px) {
+    body { padding: 14px 10px 50px; }
+    .panel { padding: 13px; }
+    .btn-main { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p style="text-align:left;margin-bottom:10px"><a href="index.html" style="color:var(--accent);text-decoration:none;font-weight:700;font-size:13px">← マネージャーHubに戻る</a></p>
+    <h1>📤 SNSクロス投稿ツール</h1>
+    <p>Xの投稿を Instagram・小紅書・Weibo 向けに言語と形式を変えて作成します</p>
+  </header>
+
+  <div class="panel">
+    <label class="head">① ツイートURLから読み込み（本文と写真を自動取得）</label>
+    <div class="row">
+      <input type="url" id="tweet-url" placeholder="https://x.com/…/status/… を貼り付け" inputmode="url">
+      <button class="btn-sub" id="load-tweet">読み込み</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <label class="head" for="src">② 投稿文（自動入力 or 手で貼り付け・空でもOK）</label>
+    <textarea id="src" placeholder="写真だけの投稿なら空のままでOK。下のメモ欄に内容を書けば本文に使われます"></textarea>
+
+    <div class="photos" id="photos"></div>
+    <div style="margin-top:10px">
+      <label class="upload-label">📷 写真を追加（メモを書くときの参考用）<input type="file" id="file-input" accept="image/*" multiple></label>
+    </div>
+
+    <label class="head" for="memo" style="margin-top:14px">③ 写真の内容メモ（上の写真を見ながら一言でOK・本文に使われます）</label>
+    <textarea id="memo" style="min-height:70px" placeholder="例: 真っ赤なドレスのコスプレ。スタジオで撮影、ライティングがお気に入り"></textarea>
+
+    <div class="actions">
+      <button class="btn-main" id="convert">✨ 各SNS向けに作成</button>
+      <span class="status" id="status"></span>
+    </div>
+  </div>
+
+  <details class="settings">
+    <summary>⚙️ 定番ハッシュタグを編集（自動で末尾に追加されます）</summary>
+    <div class="settings-inner">
+      <div>
+        <label for="tags-ig">Instagram 定番タグ（スペース区切り・#不要）</label>
+        <input type="text" id="tags-ig">
+      </div>
+      <div>
+        <label for="tags-red">小紅書 定番タグ</label>
+        <input type="text" id="tags-red">
+      </div>
+      <div>
+        <label for="tags-weibo">Weibo 定番タグ</label>
+        <input type="text" id="tags-weibo">
+      </div>
+      <button class="btn-sub" id="save-settings" style="background:var(--accent);color:#fff;justify-self:start;">保存</button>
+    </div>
+  </details>
+
+  <div class="grid">
+    <!-- Instagram -->
+    <div class="card ig" id="card-ig">
+      <div class="card-head"><span class="name">Instagram</span><span class="lang">日本語＋英語</span></div>
+      <div class="card-body">
+        <textarea id="out-ig"></textarea>
+        <div class="card-foot">
+          <span class="count" id="count-ig"></span>
+          <div class="foot-btns">
+            <a class="open-btn" href="https://www.instagram.com/" target="_blank">開く ↗</a>
+            <button class="copy-btn" data-target="out-ig">コピー</button>
+          </div>
+        </div>
+        <p class="hint">📷 上限2,200字・タグ最大30個。コピー後そのままIGアプリへ。</p>
+      </div>
+    </div>
+
+    <!-- 小紅書 -->
+    <div class="card red" id="card-red">
+      <div class="card-head"><span class="name">小紅書 RED</span><span class="lang">中国語（簡体字）</span></div>
+      <div class="card-body">
+        <span class="field-label">タイトル（20字以内）</span>
+        <input type="text" id="title-red">
+        <span class="field-label">本文</span>
+        <textarea id="out-red"></textarea>
+        <div class="card-foot">
+          <span class="count" id="count-red"></span>
+          <div class="foot-btns">
+            <button class="copy-btn" data-target="title-red" style="background:#6b7280">題コピー</button>
+            <a class="open-btn" href="https://creator.xiaohongshu.com/publish/publish" target="_blank">開く ↗</a>
+            <button class="copy-btn" data-target="out-red">コピー</button>
+          </div>
+        </div>
+        <p class="hint">📕 本文上限1,000字。タイトルは投稿画面の別欄に貼り付けてください。</p>
+      </div>
+    </div>
+
+    <!-- Weibo -->
+    <div class="card weibo" id="card-weibo">
+      <div class="card-head"><span class="name">Weibo 微博</span><span class="lang">中国語（簡体字）</span></div>
+      <div class="card-body">
+        <textarea id="out-weibo"></textarea>
+        <div class="card-foot">
+          <span class="count" id="count-weibo"></span>
+          <div class="foot-btns">
+            <a class="open-btn" href="https://weibo.com/" target="_blank">開く ↗</a>
+            <button class="copy-btn" data-target="out-weibo">コピー</button>
+          </div>
+        </div>
+        <p class="hint">🔶 140字超は「全文を表示」で折りたたみ。話題タグは #タグ# 形式。</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    📱 このページはブラウザだけで動きます（PC不要・どこからでも使えます）。<br>
+    スマホのホーム画面に追加しておくとアプリのように使えます。
+  </footer>
+</div>
+
+<script>
+const DEFAULT_TAGS = {
+  ig:    "cosplay cosplayphoto portrait portraitphotography コスプレ ポートレート",
+  red:   "cosplay 二次元 人像摄影 摄影 日本",
+  weibo: "cosplay 二次元 摄影"
+};
+const LIMITS = { ig: 2200, red: 1000, weibo: 2000 };
+let photos = [];  // 参考表示用: {url} | {dataUrl}
+
+const $ = id => document.getElementById(id);
+
+// ---- 初期化 ----
+function init() {
+  const saved = JSON.parse(localStorage.getItem("crosspost-tags") || "{}");
+  for (const k of ["ig", "red", "weibo"]) $("tags-" + k).value = saved[k] ?? DEFAULT_TAGS[k];
+}
+init();
+
+$("save-settings").addEventListener("click", () => {
+  const data = {};
+  for (const k of ["ig", "red", "weibo"]) data[k] = $("tags-" + k).value.trim();
+  localStorage.setItem("crosspost-tags", JSON.stringify(data));
+  setStatus("ハッシュタグ設定を保存しました ✅");
+});
+
+// ---- 翻訳（Google翻訳をブラウザから直接呼ぶ） ----
+async function translate(text, target) {
+  if (!text.trim()) return "";
+  const url = "https://translate.googleapis.com/translate_a/single"
+    + "?client=gtx&sl=auto&dt=t&tl=" + encodeURIComponent(target)
+    + "&q=" + encodeURIComponent(text);
+  const r = await fetch(url);
+  if (!r.ok) throw new Error("翻訳サーバーに接続できませんでした");
+  const data = await r.json();
+  return data[0].map(seg => seg[0]).filter(Boolean).join("");
+}
+
+// ---- ツイート読み込み（vxtwitterをブラウザから直接呼ぶ） ----
+$("load-tweet").addEventListener("click", async () => {
+  const url = $("tweet-url").value.trim();
+  const m = url.match(/(?:twitter\.com|x\.com)\/[^/]+\/status\/(\d+)/);
+  if (!m) { setStatus("ツイートURLの形式が正しくありません", true); return; }
+  const btn = $("load-tweet");
+  btn.disabled = true;
+  setStatus("ツイートを取得中…");
+  try {
+    const r = await fetch("https://api.vxtwitter.com/Twitter/status/" + m[1]);
+    if (!r.ok) throw new Error("ツイートを取得できませんでした");
+    const data = await r.json();
+    $("src").value = data.text || "";
+    photos = (data.media_extended || [])
+      .filter(mm => mm.type === "image")
+      .slice(0, 4)
+      .map(mm => ({ url: mm.url }));
+    renderPhotos();
+    setStatus(`読み込みました ✅（写真${photos.length}枚）`);
+  } catch (e) {
+    setStatus("エラー: " + e.message + "（本文の貼り付けと写真の手動追加でも作成できます）", true);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// ---- 写真の参考表示（端末内だけ・どこにも送信しません） ----
+$("file-input").addEventListener("change", (ev) => {
+  for (const file of [...ev.target.files]) {
+    if (photos.length >= 4) break;
+    const reader = new FileReader();
+    reader.onload = () => { photos.push({ dataUrl: reader.result }); renderPhotos(); };
+    reader.readAsDataURL(file);
+  }
+  ev.target.value = "";
+});
+
+function renderPhotos() {
+  const box = $("photos");
+  box.innerHTML = "";
+  photos.forEach((p, i) => {
+    const div = document.createElement("div");
+    div.className = "thumb";
+    const img = document.createElement("img");
+    img.src = p.url || p.dataUrl;
+    const del = document.createElement("button");
+    del.className = "del";
+    del.textContent = "×";
+    del.addEventListener("click", () => { photos.splice(i, 1); renderPhotos(); });
+    div.append(img, del);
+    box.appendChild(div);
+  });
+}
+
+// ---- メイン: 作成 ----
+$("convert").addEventListener("click", async () => {
+  const raw = $("src").value;
+  const memo = $("memo").value.trim();
+  if (!raw.trim() && !memo) {
+    setStatus("投稿文か「写真の内容メモ」を入力してください", true);
+    return;
+  }
+  const btn = $("convert");
+  btn.disabled = true;
+  setStatus("翻訳中…（数秒かかります）");
+  try {
+    await convertSimple(raw, memo);
+    setStatus("変換が完了しました ✅ 各欄は手直しできます");
+  } catch (e) {
+    setStatus("エラー: " + e.message, true);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+function uniq(arr) { return [...new Set(arr)]; }
+function getDefaultTags(key) {
+  return $("tags-" + key).value.trim().split(/[\s,、]+/).filter(Boolean);
+}
+
+async function convertSimple(raw, memo) {
+  const cleaned = raw.replace(/https?:\/\/t\.co\/\S+/g, "").trim();
+  const tagRe = /[#＃]([^\s#＃]+)/g;
+  const srcTags = [...cleaned.matchAll(tagRe)].map(m => m[1]);
+  const tweetBody = cleaned.replace(tagRe, "").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  const body = [tweetBody, memo].filter(Boolean).join("\n");
+
+  const [en, zh, tagsZhRaw] = await Promise.all([
+    translate(body, "en"),
+    translate(body, "zh-CN"),
+    srcTags.length ? translate(srcTags.join("\n"), "zh-CN") : Promise.resolve("")
+  ]);
+  let tagsZh = tagsZhRaw.split("\n").map(t => t.replace(/\s+/g, "").trim()).filter(Boolean);
+  if (tagsZh.length !== srcTags.length) tagsZh = srcTags;
+
+  const igTags = uniq([...srcTags, ...getDefaultTags("ig")]).slice(0, 30);
+  $("out-ig").value = body + "\n.\n" + en + "\n\n" + igTags.map(t => "#" + t).join(" ");
+
+  const redTags = uniq([...tagsZh, ...getDefaultTags("red")]);
+  const zhLines = zh.split("\n").map(l => l.trim()).filter(Boolean);
+  const titleLine = zhLines.find(l => [...l].length >= 4) || zhLines[0] || "";
+  $("title-red").value = [...titleLine].slice(0, 20).join("");
+  $("out-red").value = zh + "\n\n" + redTags.map(t => "#" + t).join(" ");
+
+  const wbTags = uniq([...tagsZh, ...getDefaultTags("weibo")]);
+  $("out-weibo").value = zh + "\n\n" + wbTags.map(t => "#" + t + "#").join(" ");
+
+  for (const k of ["ig", "red", "weibo"]) {
+    $("card-" + k).classList.add("show");
+    updateCount(k);
+  }
+}
+
+// ---- 文字数カウント ----
+function updateCount(key) {
+  const len = [...$("out-" + key).value].length;
+  const el = $("count-" + key);
+  el.textContent = `${len} / ${LIMITS[key]}字`;
+  el.classList.toggle("over", len > LIMITS[key]);
+}
+for (const k of ["ig", "red", "weibo"]) {
+  $("out-" + k).addEventListener("input", () => updateCount(k));
+}
+
+// ---- コピー ----
+async function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  document.execCommand("copy");
+  document.body.removeChild(ta);
+}
+document.querySelectorAll(".copy-btn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const orig = btn.textContent;
+    try {
+      await copyText($(btn.dataset.target).value);
+      btn.textContent = "✓"; btn.classList.add("done");
+    } catch (e) { btn.textContent = "失敗"; }
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove("done"); }, 1600);
+  });
+});
+
+function setStatus(msg, isError) {
+  const el = $("status");
+  el.textContent = msg;
+  el.className = "status" + (isError ? " error" : "");
+}
+</script>
+</body>
+</html>
