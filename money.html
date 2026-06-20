@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#ffe9ef">
+<title>収益ダッシュボード</title>
+<style>
+  :root {
+    --bg:#f7f8fc; --card:#ffffff; --card2:#f3f5fb;
+    --text:#23283a; --sub:#737a8c; --line:#e7e9f1;
+    --accent:#ff2d55; --accent2:#e11d48; --gold:#c4860a; --ok:#16a34a; --blue:#2563eb; --purple:#7c3aed;
+    --shadow:0 2px 10px rgba(31,41,80,.06);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  body {
+    font-family:"Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif;
+    background: radial-gradient(1100px 560px at 50% -180px, #ffe7ee 0%, var(--bg) 50%);
+    background-attachment:fixed; color:var(--text); min-height:100vh; padding-bottom:40px;
+  }
+  .wrap { max-width:620px; margin:0 auto; padding:16px 14px 30px; }
+  .top { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .back { text-decoration:none; color:var(--sub); font-size:13px; font-weight:700; }
+  .ph { text-align:center; padding:6px 0 12px; }
+  .ph .brand { display:inline-block; font-size:10.5px; letter-spacing:.2em; font-weight:800; color:var(--accent2);
+    border:1px solid var(--accent); border-radius:99px; padding:4px 12px; margin-bottom:9px; text-transform:uppercase; }
+  .ph h1 { font-size:22px; font-weight:900; }
+  .ph h1 .red { color:var(--accent); }
+  .ph p { color:var(--sub); font-size:12px; margin-top:5px; }
+
+  .monthbar { display:flex; align-items:center; justify-content:center; gap:14px; margin:4px 0 14px; }
+  .monthbar button { background:var(--card); border:1px solid var(--line); border-radius:10px; width:34px; height:34px;
+    font-size:18px; color:var(--text); cursor:pointer; box-shadow:var(--shadow); }
+  .monthbar .m { font-weight:800; font-size:15px; min-width:120px; text-align:center; }
+
+  /* 合計ヒーロー */
+  .hero { background:linear-gradient(135deg,#fff1f4,#ffe2ea); border:1px solid var(--accent); border-radius:20px;
+    padding:20px 18px; text-align:center; box-shadow:0 6px 22px rgba(255,45,85,.13); margin-bottom:8px; }
+  .hero .lbl { font-size:11.5px; color:var(--accent2); font-weight:800; letter-spacing:.1em; }
+  .hero .big { font-size:42px; font-weight:900; line-height:1.05; margin:6px 0 2px; }
+  .hero .big small { font-size:18px; font-weight:800; color:var(--sub); }
+  .hero .goal { font-size:12.5px; color:var(--sub); }
+  .hero .goal b { color:var(--accent2); }
+  .track { height:14px; background:#ffffff; border:1px solid var(--line); border-radius:99px; overflow:hidden; margin:13px 0 8px; }
+  .track .fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--gold)); border-radius:99px; transition:width .4s; }
+  .hero .rate { font-size:13px; font-weight:800; }
+  .hero .gap { font-size:12px; color:var(--sub); margin-top:3px; }
+
+  .sec-title { font-size:12.5px; font-weight:800; color:var(--sub); letter-spacing:.05em; margin:20px 4px 9px; display:flex; align-items:center; gap:7px; }
+  .reset { color:var(--sub); font-size:11px; text-decoration:underline; cursor:pointer; background:none; border:none; }
+
+  /* 記録フォーム */
+  .rec { background:var(--card); border:1px solid var(--accent); border-radius:16px; padding:14px; box-shadow:var(--shadow); }
+  .rec .rt { font-size:13.5px; font-weight:800; margin-bottom:11px; display:flex; align-items:center; gap:7px; }
+  .rec .f { display:grid; gap:9px; }
+  .rec .seg { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+  .rec .seg button { border:1px solid var(--line); background:var(--card2); border-radius:10px; padding:9px 2px; font-size:11px;
+    font-weight:800; color:var(--sub); cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .rec .seg button .si { font-size:18px; }
+  .rec .seg button.on { border-color:var(--accent); background:#fff1f4; color:var(--accent2); }
+  .rec .amt { display:flex; align-items:center; gap:8px; border:1px solid var(--line); border-radius:11px; padding:0 12px; background:var(--card2); }
+  .rec .amt:focus-within { outline:2px solid var(--accent); background:#fff; }
+  .rec .amt .y { font-size:18px; font-weight:800; color:var(--sub); }
+  .rec .amt input { flex:1; border:none; background:none; padding:12px 0; font-size:22px; font-weight:800; color:var(--text); font-family:inherit; min-width:0; outline:none; }
+  .rec .twoflex { display:flex; gap:9px; }
+  .rec input.date { border:1px solid var(--line); border-radius:11px; padding:11px; font-size:13px; color:var(--text); font-family:inherit; background:var(--card2); }
+  .rec input.memo { flex:1; border:1px solid var(--line); border-radius:11px; padding:11px; font-size:13px; color:var(--text); font-family:inherit; background:var(--card2); min-width:0; }
+  .rec input.memo:focus, .rec input.date:focus { outline:2px solid var(--accent); background:#fff; }
+  .rec .addbtn { background:var(--accent); color:#fff; border:none; border-radius:12px; padding:13px; font-size:15px; font-weight:800; cursor:pointer; font-family:inherit; }
+  .rec .addbtn:active { transform:scale(.98); }
+
+  /* 履歴 */
+  .log { display:grid; gap:8px; }
+  .row { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:11px 13px; display:flex; align-items:center; gap:11px; box-shadow:var(--shadow); }
+  .row .lico { font-size:19px; flex:none; }
+  .row .lbody { flex:1; min-width:0; }
+  .row .lbody .ln { font-weight:800; font-size:13.5px; }
+  .row .lbody .ld { font-size:11px; color:var(--sub); margin-top:2px; }
+  .row .lamt { font-weight:900; font-size:15px; white-space:nowrap; }
+  .row .lx { background:none; border:none; color:var(--sub); font-size:17px; cursor:pointer; padding:0 2px; flex:none; }
+  .empty { color:var(--sub); font-size:12.5px; text-align:center; padding:22px 10px; line-height:1.7; }
+
+  /* 源サマリー */
+  .src { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:13px; margin-bottom:9px; box-shadow:var(--shadow); }
+  .src.lead { border-color:var(--accent); }
+  .src .row1 { display:flex; align-items:center; gap:9px; }
+  .src .ico { font-size:18px; }
+  .src .nm { font-weight:800; font-size:13.5px; }
+  .src .badge { font-size:9px; font-weight:800; color:#fff; background:var(--accent); border-radius:99px; padding:2px 6px; }
+  .src .amt { margin-left:auto; font-size:14px; font-weight:900; }
+  .src .amt small { font-size:11px; color:var(--sub); font-weight:700; }
+  .strack { height:8px; background:var(--card2); border-radius:99px; overflow:hidden; margin:9px 0 5px; }
+  .strack .sfill { height:100%; border-radius:99px; background:var(--ok); transition:width .4s; }
+  .src.lead .strack .sfill { background:var(--accent); }
+  .src .meta { display:flex; justify-content:space-between; font-size:10.5px; color:var(--sub); font-weight:700; }
+
+  .card-x { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:15px; margin-bottom:11px; box-shadow:var(--shadow); }
+  .card-x .ct { font-size:14px; font-weight:800; margin-bottom:9px; display:flex; align-items:center; gap:8px; }
+  .card-x.gold .ct { color:var(--gold); }
+  .card-x li { font-size:12.5px; color:var(--text); line-height:1.6; padding-left:18px; position:relative; list-style:none; margin-bottom:4px; }
+  .card-x li::before { content:"▸"; position:absolute; left:0; color:var(--accent); }
+  footer { text-align:center; color:var(--sub); font-size:10.5px; margin-top:24px; line-height:1.8; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a class="back" href="index.html">‹ ハブに戻る</a></div>
+  <div class="ph">
+    <span class="brand">Revenue Tracker</span>
+    <h1>月<span class="red">100万</span>への現在地</h1>
+    <p>振込が来たら1件ずつ記録。合計は自動で計算します。</p>
+  </div>
+
+  <div class="monthbar">
+    <button id="prev">‹</button>
+    <div class="m" id="month-label">--</div>
+    <button id="next">›</button>
+  </div>
+
+  <div class="hero">
+    <div class="lbl">💰 今月の合計</div>
+    <div class="big"><small>¥</small><span id="total">0</span></div>
+    <div class="goal">目標 <b>¥1,000,000</b> / 月</div>
+    <div class="track"><div class="fill" id="total-fill" style="width:0%"></div></div>
+    <div class="rate" id="rate">達成率 0%</div>
+    <div class="gap" id="gap">あと ¥1,000,000</div>
+  </div>
+
+  <!-- 記録フォーム -->
+  <div class="sec-title">➕ 収入を記録する</div>
+  <div class="rec">
+    <div class="rt">💴 振込・収入が入ったら、その都度ここに</div>
+    <div class="f">
+      <div class="seg" id="seg"></div>
+      <div class="amt"><span class="y">¥</span><input id="amt" type="number" inputmode="numeric" placeholder="金額" enterkeyhint="done"></div>
+      <div class="twoflex">
+        <input class="date" id="date" type="date">
+        <input class="memo" id="memo" placeholder="メモ（例: ◯◯案件、Fanbox6月分）">
+      </div>
+      <button class="addbtn" id="add">＋ 記録する</button>
+    </div>
+  </div>
+
+  <!-- 今月の履歴 -->
+  <div class="sec-title">🧾 今月の記録 <span style="margin-left:auto"><button class="reset" id="reset">今月を全消去</button></span></div>
+  <div class="log" id="log"></div>
+
+  <!-- 源ごとの集計 -->
+  <div class="sec-title">📊 収入源ごとの集計（目標との差）</div>
+  <div id="sources"></div>
+
+  <div class="card-x gold">
+    <div class="ct">🎯 今月の最優先（伸びしろ最大）</div>
+    <ul id="focus"></ul>
+  </div>
+
+  <div class="card-x">
+    <div class="ct">🧠 記録のコツ</div>
+    <ul>
+      <li>振込スクショは"記録"にならない。入金通知が来たら、その場で30秒だけここに打ち込む。</li>
+      <li>金額が不安定なのは当たり前。1件ずつ貯めれば、月末に「今月いくら入ったか」が自動で出る。</li>
+      <li>スクショは念のためスマホのアルバムに残しておけばOK。数字はこのアプリが管理する。</li>
+    </ul>
+  </div>
+
+  <footer>📱 ホーム画面に追加 ／ 記録はこの端末にだけ保存されます</footer>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const GOAL = 1000000;
+
+  const SOURCES = [
+    { key:"stream", ico:"📺", nm:"配信（投げ銭等）", target:200000, lead:false },
+    { key:"video",  ico:"🎬", nm:"YouTube / TikTok", target:300000, lead:true  },
+    { key:"event",  ico:"🎤", nm:"イベント・案件",   target:250000, lead:false },
+    { key:"fanbox", ico:"💎", nm:"FANBOX",          target:400000, lead:false },
+    { key:"other",  ico:"✨", nm:"その他",            target:0,      lead:false },
+  ];
+  const SMAP = Object.fromEntries(SOURCES.map(s => [s.key, s]));
+
+  const FOCUS = [
+    "🎬 TikTok/YouTubeショートを週3本ルーティン化（0→30万の本丸）",
+    "📺 配信は企画を1つ持って同接1000人超を狙う",
+    "💎 FANBOX告知を月2回以上（バズ率36%の最強枠）",
+  ];
+
+  let cur = new Date(); cur.setDate(1);
+  let pick = "stream"; // 選択中の源
+  const mkey = d => "ayane-money-" + d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0");
+  const yen = n => Number(n).toLocaleString("ja-JP");
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+
+  function load() { return JSON.parse(localStorage.getItem(mkey(cur)) || "[]"); }
+  function save(arr) { localStorage.setItem(mkey(cur), JSON.stringify(arr)); }
+
+  // 源セレクタ（毎回これだけ選ぶ）
+  function renderSeg() {
+    const seg = $("seg"); seg.innerHTML = "";
+    SOURCES.forEach(s => {
+      const b = document.createElement("button");
+      b.className = pick === s.key ? "on" : "";
+      b.innerHTML = `<span class="si">${s.ico}</span>${s.nm.replace("（投げ銭等）","").replace(" / ","/").replace("YouTube/TikTok","動画")}`;
+      b.addEventListener("click", () => { pick = s.key; renderSeg(); });
+      seg.appendChild(b);
+    });
+  }
+
+  function addEntry() {
+    const amount = Number($("amt").value || 0);
+    if (!amount) { $("amt").focus(); return; }
+    const arr = load();
+    arr.push({ id: uid(), key: pick, amount, date: $("date").value || todayStr(), memo: $("memo").value.trim() });
+    save(arr);
+    $("amt").value = ""; $("memo").value = "";
+    render();
+  }
+
+  function delEntry(id) {
+    save(load().filter(e => e.id !== id));
+    render();
+  }
+
+  function renderLog(arr) {
+    const box = $("log"); box.innerHTML = "";
+    if (!arr.length) { box.innerHTML = '<div class="empty">まだ記録がありません。<br>入金があったら上のフォームから記録しましょう 💴</div>'; return; }
+    [...arr].sort((a,b) => (b.date||"").localeCompare(a.date||"")).forEach(e => {
+      const s = SMAP[e.key] || SMAP.other;
+      const div = document.createElement("div");
+      div.className = "row";
+      const d = e.date ? e.date.slice(5).replace("-","/") : "";
+      div.innerHTML = `<span class="lico">${s.ico}</span>
+        <div class="lbody"><div class="ln">${s.nm}</div><div class="ld">${d}${e.memo ? " ・ " + esc(e.memo) : ""}</div></div>
+        <span class="lamt">¥${yen(e.amount)}</span><button class="lx">×</button>`;
+      div.querySelector(".lx").addEventListener("click", () => delEntry(e.id));
+      box.appendChild(div);
+    });
+  }
+
+  function renderSources(arr) {
+    const sums = {}; SOURCES.forEach(s => sums[s.key] = 0);
+    arr.forEach(e => { sums[e.key] = (sums[e.key] || 0) + e.amount; });
+    const box = $("sources"); box.innerHTML = "";
+    SOURCES.filter(s => s.target > 0).forEach(s => {
+      const v = sums[s.key] || 0;
+      const pct = Math.min(100, Math.round(v / s.target * 100));
+      const div = document.createElement("div");
+      div.className = "src" + (s.lead ? " lead" : "");
+      div.innerHTML = `
+        <div class="row1">
+          <span class="ico">${s.ico}</span><span class="nm">${s.nm}</span>
+          ${s.lead ? '<span class="badge">最優先</span>' : ''}
+          <span class="amt">¥${yen(v)} <small>/ ${yen(s.target)}</small></span>
+        </div>
+        <div class="strack"><div class="sfill" style="width:${pct}%"></div></div>
+        <div class="meta"><span>${pct}% 達成</span><span>あと ¥${yen(Math.max(0, s.target - v))}</span></div>`;
+      box.appendChild(div);
+    });
+  }
+
+  function renderTotals(arr) {
+    const total = arr.reduce((a,e) => a + e.amount, 0);
+    $("total").textContent = yen(total);
+    const pct = Math.round(total / GOAL * 100);
+    $("total-fill").style.width = Math.min(100, pct) + "%";
+    $("rate").textContent = "達成率 " + pct + "%";
+    const gap = GOAL - total;
+    $("gap").textContent = gap > 0 ? "あと ¥" + yen(gap) : "🎉 目標達成！＋¥" + yen(-gap);
+  }
+
+  function render() {
+    $("month-label").textContent = cur.getFullYear() + "年 " + (cur.getMonth()+1) + "月";
+    const arr = load();
+    renderTotals(arr);
+    renderLog(arr);
+    renderSources(arr);
+    const f = $("focus"); f.innerHTML = "";
+    FOCUS.forEach(x => { const li = document.createElement("li"); li.textContent = x; f.appendChild(li); });
+  }
+
+  function todayStr() { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); }
+  function esc(s) { return s.replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c])); }
+
+  $("add").addEventListener("click", addEntry);
+  $("amt").addEventListener("keydown", e => { if (e.key === "Enter") addEntry(); });
+  $("prev").addEventListener("click", () => { cur.setMonth(cur.getMonth()-1); render(); });
+  $("next").addEventListener("click", () => { cur.setMonth(cur.getMonth()+1); render(); });
+  $("reset").addEventListener("click", () => { if (confirm("今月の記録を全部消しますか？")) { save([]); render(); } });
+
+  $("date").value = todayStr();
+  renderSeg();
+  render();
+</script>
+</body>
+</html>
