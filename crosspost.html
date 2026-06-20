@@ -69,6 +69,11 @@
   }
   .upload-label input { display: none; }
 
+  .cats { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cat-btn { background: #eef1f5; color: var(--text); border: 1px solid var(--border); border-radius: 99px; padding: 8px 16px; font-size: 13px; font-weight: 700; }
+  .cat-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
+  .cat-tags { font-size: 11.5px; color: var(--sub); margin-top: 8px; line-height: 1.6; word-break: break-all; }
+
   .actions { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
   .status { font-size: 13px; color: var(--sub); }
   .status.error { color: #dc2626; font-weight: 700; }
@@ -136,9 +141,35 @@
     <label class="head" for="memo" style="margin-top:14px">③ 写真の内容メモ（上の写真を見ながら一言でOK・本文に使われます）</label>
     <textarea id="memo" style="min-height:70px" placeholder="例: 真っ赤なドレスのコスプレ。スタジオで撮影、ライティングがお気に入り"></textarea>
 
+    <label class="head" style="margin-top:14px">④ カテゴリ（小紅書のタグと封面文字が最適化されます）</label>
+    <div class="cats" id="cats"></div>
+    <div class="cat-tags" id="cat-tags"></div>
+
     <div class="actions">
-      <button class="btn-main" id="convert">✨ 各SNS向けに作成</button>
+      <button class="btn-main" id="ai-prompt">🤖 Claudeアプリで作る（無料・高品質）</button>
+      <button class="btn-sub" id="convert">⚡ 自動翻訳でサッと作る</button>
       <span class="status" id="status"></span>
+    </div>
+    <p class="hint" style="margin-top:8px">🤖 = Claudeアプリ用のプロンプトを作ります（写真はアプリ側で添付・課金なし）。⚡ = キー不要で今すぐ機械翻訳＋タグ＋封面文字。</p>
+
+    <!-- Claudeアプリ用プロンプト -->
+    <div id="ai-box" style="display:none;margin-top:14px">
+      <label class="head">📋 このプロンプトをコピー → Claudeアプリで写真を添付して貼り付け</label>
+      <textarea id="ai-prompt-text" style="min-height:150px;font-size:12px"></textarea>
+      <div class="actions">
+        <button class="btn-sub" id="ai-copy">📋 プロンプトをコピー</button>
+        <a class="open-btn" href="https://claude.ai/new" target="_blank">Claudeを開く ↗</a>
+      </div>
+      <ol style="font-size:12px;color:var(--sub);line-height:1.9;margin:10px 0 0 18px">
+        <li>「プロンプトをコピー」を押す</li>
+        <li>Claudeアプリ（または claude.ai）を開き、<b>写真を添付して</b>プロンプトを貼り付け→送信</li>
+        <li>返ってきた文章を全部コピーして、下の欄に貼り付け→「反映」</li>
+      </ol>
+      <label class="head" style="margin-top:12px">⬇️ Claudeの返事をここに貼り付け</label>
+      <textarea id="ai-reply" style="min-height:90px" placeholder="Claudeが作った文章をまるごと貼り付けてください（封面文字・タイトル・本文…が各欄に振り分けられます）"></textarea>
+      <div class="actions">
+        <button class="btn-main" id="ai-apply">✅ 各SNS欄に反映</button>
+      </div>
     </div>
   </div>
 
@@ -182,19 +213,26 @@
     <div class="card red" id="card-red">
       <div class="card-head"><span class="name">小紅書 RED</span><span class="lang">中国語（簡体字）</span></div>
       <div class="card-body">
-        <span class="field-label">タイトル（20字以内）</span>
-        <input type="text" id="title-red">
+        <span class="field-label">封面文字（サムネ画像に乗せる・12字以内）🔑</span>
+        <div class="row">
+          <input type="text" id="cover-red" placeholder="例: 春丽cos正片来啦💙">
+          <button class="copy-btn" data-target="cover-red" style="background:#6b7280">コピー</button>
+        </div>
+        <span class="field-label">タイトル（20字以内・検索キーワードを入れる）</span>
+        <div class="row">
+          <input type="text" id="title-red">
+          <button class="copy-btn" data-target="title-red" style="background:#6b7280">コピー</button>
+        </div>
         <span class="field-label">本文</span>
         <textarea id="out-red"></textarea>
         <div class="card-foot">
           <span class="count" id="count-red"></span>
           <div class="foot-btns">
-            <button class="copy-btn" data-target="title-red" style="background:#6b7280">題コピー</button>
             <a class="open-btn" href="https://creator.xiaohongshu.com/publish/publish" target="_blank">開く ↗</a>
-            <button class="copy-btn" data-target="out-red">コピー</button>
+            <button class="copy-btn" data-target="out-red">本文コピー</button>
           </div>
         </div>
-        <p class="hint">📕 本文上限1,000字。タイトルは投稿画面の別欄に貼り付けてください。</p>
+        <p class="hint">📕 封面文字は画像編集で表紙に載せる用。タイトル・本文は投稿画面の各欄へ。本文上限1,000字。</p>
       </div>
     </div>
 
@@ -228,6 +266,40 @@ const DEFAULT_TAGS = {
   weibo: "cosplay 二次元 摄影"
 };
 const LIMITS = { ig: 2200, red: 1000, weibo: 2000 };
+
+// ---- カテゴリ別タグ・封面文字（app.pyのCATEGORIESと同じ正本をブラウザ内に埋め込み） ----
+const CATEGORIES = {
+  // ig = 韓国リーチ用の韓国語タグ＋世界で伸びる英語タグ混在 / weibo = 中国で伸びる话题・超话タグ混在
+  chunli: {
+    label: "春麗・格ゲーコス",
+    red: ["cosplay","cos正片","春丽","春丽cos","街头霸王","街霸6","sf6","不知火舞","格斗游戏","二次元","日本coser","游戏cos"],
+    ig: ["cosplay","chunli","chunlicosplay","streetfighter","streetfighter6","sf6","fgc","cosplayphotography","cosplayer","gamecosplay","코스프레","춘리","스트리트파이터","일본코스프레","게임코스프레","코스어","소통","선팔","コスプレ","春麗"],
+    weibo: ["cosplay","cos正片","春丽","街头霸王","街霸6","不知火舞","格斗游戏","二次元","coser","cosplay超话","动漫","漫展"],
+    coverSamples: ["春丽cos正片来啦💙","日本coser挑战春丽","这套春丽你打几分？","街霸春丽👊"]
+  },
+  daily: {
+    label: "日常・ファン化",
+    red: ["日常","日常碎片","生活记录","vlog","日系穿搭","ootd","日本生活","coser日常","自拍","女生日常","分享生活","二次元"],
+    ig: ["dailylife","ootd","cosplayer","cosplay","japanesegirl","lifestyle","selfie","instagood","코스프레","데일리","일상","셀카","데일리룩","일상스타그램","얼스타그램","소통","선팔","맞팔","좋아요반사","日常","コーデ"],
+    weibo: ["日常","生活记录","每日穿搭","穿搭日记","coser日常","自拍","女生日常","分享生活","二次元日常"],
+    coverSamples: ["coser的日常碎片","今天的穿搭🌷","下播啦~","日本生活vlog"]
+  },
+  studio: {
+    label: "スタジオ撮影・摄影",
+    red: ["人像摄影","摄影","棚拍","摄影棚","写真","日系写真","布光","摄影分享","模特","约拍","cos摄影","作品分享"],
+    ig: ["portrait","portraitphotography","studiophotography","cosplay","photoshoot","lighting","behindthescenes","cosplayphotography","photographer","인물사진","스튜디오","코스프레","코스프레촬영","포트레이트","사진작가","소통","선팔","撮影","作例"],
+    weibo: ["人像摄影","摄影","棚拍","摄影棚","写真","日系写真","布光","约拍","摄影师","人像摄影超话"],
+    coverSamples: ["棚拍练习","这组布光好绝","人像写真分享","约拍作品来啦📷"]
+  },
+  generic: {
+    label: "汎用（コスプレ撮影）",
+    red: ["cosplay","cos正片","二次元","人像摄影","摄影","日本coser","写真"],
+    ig: ["cosplay","cosplayphoto","portrait","portraitphotography","코스프레","일본코스프레","코스어","소통","コスプレ","ポートレート"],
+    weibo: ["cosplay","cos正片","二次元","人像摄影","摄影","日本coser","coser","漫展"],
+    coverSamples: []
+  }
+};
+let curCat = localStorage.getItem("crosspost-cat") || "chunli";
 let photos = [];  // 参考表示用: {url} | {dataUrl}
 
 const $ = id => document.getElementById(id);
@@ -236,14 +308,44 @@ const $ = id => document.getElementById(id);
 function init() {
   const saved = JSON.parse(localStorage.getItem("crosspost-tags") || "{}");
   for (const k of ["ig", "red", "weibo"]) $("tags-" + k).value = saved[k] ?? DEFAULT_TAGS[k];
+  renderCats();
 }
 init();
+
+// ---- カテゴリ選択 ----
+function renderCats() {
+  const box = $("cats");
+  box.innerHTML = "";
+  if (!CATEGORIES[curCat]) curCat = "chunli";
+  for (const key of Object.keys(CATEGORIES)) {
+    const b = document.createElement("button");
+    b.className = "cat-btn" + (key === curCat ? " active" : "");
+    b.textContent = CATEGORIES[key].label;
+    b.addEventListener("click", () => {
+      curCat = key;
+      localStorage.setItem("crosspost-cat", key);
+      renderCats();
+    });
+    box.appendChild(b);
+  }
+  const c = CATEGORIES[curCat];
+  $("cat-tags").textContent = "📕 小紅書タグ: " + c.red.map(t => "#" + t).join(" ");
+  const cover = $("cover-red");
+  if (cover && c.coverSamples && c.coverSamples.length) {
+    cover.placeholder = "例: " + c.coverSamples.join(" / ");
+  }
+}
+
+function catTags(platform) {
+  const c = CATEGORIES[curCat];
+  return c && c[platform] ? c[platform].slice() : [];
+}
 
 $("save-settings").addEventListener("click", () => {
   const data = {};
   for (const k of ["ig", "red", "weibo"]) data[k] = $("tags-" + k).value.trim();
   localStorage.setItem("crosspost-tags", JSON.stringify(data));
-  setStatus("ハッシュタグ設定を保存しました ✅");
+  setStatus("設定を保存しました ✅");
 });
 
 // ---- 翻訳（Google翻訳をブラウザから直接呼ぶ） ----
@@ -285,15 +387,38 @@ $("load-tweet").addEventListener("click", async () => {
 });
 
 // ---- 写真の参考表示（端末内だけ・どこにも送信しません） ----
-$("file-input").addEventListener("change", (ev) => {
+$("file-input").addEventListener("change", async (ev) => {
   for (const file of [...ev.target.files]) {
     if (photos.length >= 4) break;
-    const reader = new FileReader();
-    reader.onload = () => { photos.push({ dataUrl: reader.result }); renderPhotos(); };
-    reader.readAsDataURL(file);
+    try {
+      photos.push({ dataUrl: await shrinkImage(file) });
+    } catch (e) {
+      const reader = new FileReader();
+      await new Promise(res => { reader.onload = () => { photos.push({ dataUrl: reader.result }); res(); }; reader.readAsDataURL(file); });
+    }
+    renderPhotos();
   }
   ev.target.value = "";
 });
+
+// 大きすぎる写真を縮小（AI送信を軽く・速く）
+function shrinkImage(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 1280;
+      let { width: w, height: h } = img;
+      if (Math.max(w, h) > MAX) { const s = MAX / Math.max(w, h); w = Math.round(w * s); h = Math.round(h * s); }
+      const c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      c.getContext("2d").drawImage(img, 0, 0, w, h);
+      resolve(c.toDataURL("image/jpeg", 0.85));
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
 
 function renderPhotos() {
   const box = $("photos");
@@ -312,15 +437,15 @@ function renderPhotos() {
   });
 }
 
-// ---- メイン: 作成 ----
+// ---- ⚡ 無料の自動翻訳 ----
 $("convert").addEventListener("click", async () => {
   const raw = $("src").value;
   const memo = $("memo").value.trim();
+  const btn = $("convert");
   if (!raw.trim() && !memo) {
     setStatus("投稿文か「写真の内容メモ」を入力してください", true);
     return;
   }
-  const btn = $("convert");
   btn.disabled = true;
   setStatus("翻訳中…（数秒かかります）");
   try {
@@ -331,6 +456,81 @@ $("convert").addEventListener("click", async () => {
   } finally {
     btn.disabled = false;
   }
+});
+
+// ---- 🤖 Claudeアプリ用プロンプトを作る（課金なし。写真はアプリ側で添付） ----
+const RED_MARK = "===封面文字===", TITLE_MARK = "===タイトル===",
+      BODY_MARK = "===小紅書本文===", IG_MARK = "===Instagram===", WB_MARK = "===Weibo===";
+
+function buildClaudePrompt() {
+  const cat = CATEGORIES[curCat] || CATEGORIES.generic;
+  const raw = $("src").value.replace(/https?:\/\/t\.co\/\S+/g, "").trim();
+  const memo = $("memo").value.trim();
+  let p = "あなたはコスプレ撮影クリエイターの中国SNS投稿を作るアシスタントです。目的は中国（小紅書）でのフォロワー獲得。\n";
+  p += "このメッセージに添付した写真と下の情報をもとに、各SNS向けの投稿文を作ってください。写真からキャラ・衣装・雰囲気を読み取り、確信のない固有名詞は推測しないこと。\n\n";
+  p += "【元の投稿/メモ】\n" + (raw || "（なし）") + (memo ? "\n（撮影メモ・最優先で反映）" + memo : "") + "\n\n";
+  p += "【カテゴリ】" + cat.label + "\n";
+  p += "【小紅書の方針】封面文字＝サムネに乗せる12字以内のフック（クリック率が決まる最重要）。タイトル＝20字以内で検索キーワード（キャラ名・作品名）必須。本文＝広告でなく友達への「分享」トーン、絵文字入り、保存したくなる情報やコメントを誘う問いかけ（例「你们觉得呢？」）を入れる。露出は控えめに（審査・限流対策）。外部SNSのIDは書かない。\n";
+  if (cat.coverSamples && cat.coverSamples.length) p += "【封面文字の例】" + cat.coverSamples.join(" / ") + "\n";
+  p += "【タグ候補（参考リスト・この中から内容に合うものだけ選ぶ。全部は付けない）】\n";
+  p += "・小紅書(8〜12個): " + cat.red.map(t => "#" + t).join(" ") + "\n";
+  p += "・Instagram(15〜25個): " + cat.ig.map(t => "#" + t).join(" ") + "\n";
+  p += "・Weibo(5〜8個): " + cat.weibo.map(t => "#" + t + "#").join(" ") + "\n";
+  p += "【タグの方針（重要）】タグは毎回その投稿の内容に合わせてあなたが取捨選択すること。候補は参考で、全部付ける必要はない。\n";
+  p += "・内容に合わないタグは絶対に付けない（例: コスプレでない投稿に #cosplay/#코스프레、春麗が写っていないのに #春丽 は付けない。日常やオフ投稿にコスプレタグを付けない）。\n";
+  p += "・写真・本文から確実に分かるイベント名・キャラ名・作品名だけをタグにする。該当しなければ付けない。確信できない固有名詞も付けない。\n";
+  p += "・言語: Instagramは英語＋韓国語の両方（例 #chunli #춘리 #streetfighter #스트리트파이터）、小紅書・Weiboは簡体字（例 #春丽# #街霸6# #漫展#）。コスプレ投稿のときだけ #cosplay/#코스프레 を入れる。\n\n";
+  p += "必ず下の形式で、見出し行（===…===）はそのままコピーして出力してください:\n";
+  p += RED_MARK + "\n（12字以内）\n";
+  p += TITLE_MARK + "\n（20字以内・検索KW入り）\n";
+  p += BODY_MARK + "\n（簡体字の本文＋末尾に#タグ）\n";
+  p += IG_MARK + "\n（日本語本文→英訳→#タグ）\n";
+  p += WB_MARK + "\n（簡体字の本文＋#タグ#）";
+  return p;
+}
+
+$("ai-prompt").addEventListener("click", () => {
+  const raw = $("src").value.trim(), memo = $("memo").value.trim();
+  if (!raw && !memo && !photos.length) {
+    setStatus("写真を足すか、投稿文・メモを入れてからどうぞ（写真はClaudeアプリ側で添付します）", true);
+    return;
+  }
+  $("ai-prompt-text").value = buildClaudePrompt();
+  $("ai-box").style.display = "block";
+  setStatus("プロンプトを作りました📋 コピーしてClaudeアプリへ");
+  $("ai-box").scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
+
+$("ai-copy").addEventListener("click", () => copyBtn($("ai-prompt-text").value, $("ai-copy")));
+
+// Claudeの返事を各欄に振り分け
+function section(text, start, ...ends) {
+  const i = text.indexOf(start);
+  if (i < 0) return "";
+  let from = i + start.length, to = text.length;
+  for (const e of ends) { const j = text.indexOf(e, from); if (j >= 0 && j < to) to = j; }
+  return text.slice(from, to).trim();
+}
+
+$("ai-apply").addEventListener("click", () => {
+  const t = $("ai-reply").value;
+  if (!t.trim()) { setStatus("Claudeの返事を貼り付けてください", true); return; }
+  const cover = section(t, RED_MARK, TITLE_MARK, BODY_MARK, IG_MARK, WB_MARK);
+  const title = section(t, TITLE_MARK, BODY_MARK, IG_MARK, WB_MARK);
+  const body = section(t, BODY_MARK, IG_MARK, WB_MARK);
+  const ig = section(t, IG_MARK, WB_MARK);
+  const wb = section(t, WB_MARK);
+  if (!cover && !title && !body && !ig && !wb) {
+    setStatus("見出し（===…===）が見つかりません。Claudeの返事を見出しごとまるごと貼り付けてください", true);
+    return;
+  }
+  $("cover-red").value = cover;
+  $("title-red").value = title;
+  $("out-red").value = body;
+  $("out-ig").value = ig;
+  $("out-weibo").value = wb;
+  for (const k of ["ig", "red", "weibo"]) { $("card-" + k).classList.add("show"); updateCount(k); }
+  setStatus("各SNS欄に反映しました ✅ 手直ししてコピーしてください");
 });
 
 function uniq(arr) { return [...new Set(arr)]; }
@@ -353,16 +553,17 @@ async function convertSimple(raw, memo) {
   let tagsZh = tagsZhRaw.split("\n").map(t => t.replace(/\s+/g, "").trim()).filter(Boolean);
   if (tagsZh.length !== srcTags.length) tagsZh = srcTags;
 
-  const igTags = uniq([...srcTags, ...getDefaultTags("ig")]).slice(0, 30);
+  const igTags = uniq([...srcTags, ...catTags("ig"), ...getDefaultTags("ig")]).slice(0, 30);
   $("out-ig").value = body + "\n.\n" + en + "\n\n" + igTags.map(t => "#" + t).join(" ");
 
-  const redTags = uniq([...tagsZh, ...getDefaultTags("red")]);
+  const redTags = uniq([...catTags("red"), ...tagsZh, ...getDefaultTags("red")]).slice(0, 12);
   const zhLines = zh.split("\n").map(l => l.trim()).filter(Boolean);
   const titleLine = zhLines.find(l => [...l].length >= 4) || zhLines[0] || "";
   $("title-red").value = [...titleLine].slice(0, 20).join("");
+  $("cover-red").value = [...titleLine].slice(0, 12).join("");  // 無料モードは題を流用（手直し前提）
   $("out-red").value = zh + "\n\n" + redTags.map(t => "#" + t).join(" ");
 
-  const wbTags = uniq([...tagsZh, ...getDefaultTags("weibo")]);
+  const wbTags = uniq([...catTags("weibo"), ...tagsZh, ...getDefaultTags("weibo")]).slice(0, 8);
   $("out-weibo").value = zh + "\n\n" + wbTags.map(t => "#" + t + "#").join(" ");
 
   for (const k of ["ig", "red", "weibo"]) {
@@ -397,15 +598,16 @@ async function copyText(text) {
   document.execCommand("copy");
   document.body.removeChild(ta);
 }
+async function copyBtn(text, btn) {
+  const orig = btn.textContent;
+  try {
+    await copyText(text);
+    btn.textContent = "✓ コピーしました"; btn.classList.add("done");
+  } catch (e) { btn.textContent = "失敗（長押しで選択）"; }
+  setTimeout(() => { btn.textContent = orig; btn.classList.remove("done"); }, 1800);
+}
 document.querySelectorAll(".copy-btn").forEach(btn => {
-  btn.addEventListener("click", async () => {
-    const orig = btn.textContent;
-    try {
-      await copyText($(btn.dataset.target).value);
-      btn.textContent = "✓"; btn.classList.add("done");
-    } catch (e) { btn.textContent = "失敗"; }
-    setTimeout(() => { btn.textContent = orig; btn.classList.remove("done"); }, 1600);
-  });
+  btn.addEventListener("click", () => copyBtn($(btn.dataset.target).value, btn));
 });
 
 function setStatus(msg, isError) {
