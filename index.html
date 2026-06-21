@@ -2,9 +2,16 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#ffe9ef">
 <title>My Hub</title>
+<!-- PWA（ホーム画面アプリ化） -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="My Hub">
+<meta name="mobile-web-app-capable" content="yes">
 <style>
   :root {
     --bg:#f7f8fc; --bg2:#eef0f6; --card:#ffffff; --card2:#f3f5fb;
@@ -272,6 +279,11 @@
 
 <script>
   const $ = id => document.getElementById(id);
+
+  /* ===== Service Worker 登録（アプリ化・オフライン対応） ===== */
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  }
 
   /* ===== タブ切り替え ===== */
   const navBtns = document.querySelectorAll("#nav button");
