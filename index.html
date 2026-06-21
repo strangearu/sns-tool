@@ -76,6 +76,15 @@
   .catlabel { font-size:11.5px; font-weight:800; color:var(--accent2); margin:14px 4px 8px; letter-spacing:.05em; }
   .empty { color:var(--sub); font-size:12.5px; text-align:center; padding:24px 10px; line-height:1.7; }
 
+  /* メモ */
+  .memo-add { width:100%; background:var(--accent); color:#fff; border:none; border-radius:12px; padding:13px; font-weight:800; font-size:14.5px; cursor:pointer; font-family:inherit; margin-bottom:14px; }
+  .memo-add:active { transform:scale(.99); }
+  .memo { background:var(--card); border:1px solid var(--line); border-radius:13px; padding:12px 13px; margin-bottom:10px; box-shadow:var(--shadow); }
+  .memo textarea { width:100%; border:none; background:none; resize:none; font-family:inherit; font-size:14px; line-height:1.65; color:var(--text); outline:none; min-height:46px; overflow:hidden; display:block; }
+  .memo .mfoot { display:flex; align-items:center; margin-top:7px; padding-top:8px; border-top:1px solid var(--line); }
+  .memo .md { font-size:11px; color:var(--sub); font-weight:700; }
+  .memo .mx { margin-left:auto; background:none; border:none; color:var(--sub); font-size:11.5px; text-decoration:underline; cursor:pointer; font-family:inherit; }
+
   /* ツール */
   .tools { display:grid; grid-template-columns:1fr 1fr; gap:11px; }
   .tool { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:15px 13px; text-decoration:none; color:var(--text); display:flex; flex-direction:column; gap:7px; min-height:98px; box-shadow:var(--shadow); }
@@ -212,6 +221,13 @@
     <div class="sec-title" style="margin-top:18px"><button class="reset" id="todo-clear">完了したものを全部消す</button></div>
   </section>
 
+  <!-- ===== メモ ===== -->
+  <section class="tab" id="tab-memo">
+    <div class="ph"><h1>📝 メモ</h1><p>買い物・今日のこと・思いつき、なんでも自由に</p></div>
+    <button class="memo-add" id="memo-add">＋ 新しいメモ</button>
+    <div id="memo-list"></div>
+  </section>
+
   <!-- ===== 計画（ロードマップ） ===== -->
   <section class="tab" id="tab-plan">
     <div class="ph"><h1>🗺 ロードマップ</h1><p>定期的に見返して、ブレない</p></div>
@@ -272,6 +288,7 @@
 <nav id="nav">
   <button data-tab="today" class="on"><span class="ni">🎯</span>今日</button>
   <button data-tab="todo"><span class="ni">✅</span>やること</button>
+  <button data-tab="memo"><span class="ni">📝</span>メモ</button>
   <button data-tab="plan"><span class="ni">🗺</span>計画</button>
   <button data-tab="mind"><span class="ni">🧠</span>心得</button>
   <button data-tab="tools"><span class="ni">🔧</span>ツール</button>
@@ -388,6 +405,43 @@
   $("todo-input").addEventListener("keydown", e => { if (e.key === "Enter") addTodo(); });
   $("todo-clear").addEventListener("click", () => { todos = todos.filter(t => !t.done); saveTodos(); renderTodos(); });
   renderTodos();
+
+  /* ===== メモ（自由メモ・買い物リスト等） ===== */
+  (function () {
+    const MKEY = "ayane-memos";
+    let memos = JSON.parse(localStorage.getItem(MKEY) || "[]");
+    const wrap = $("memo-list");
+    const saveM = () => localStorage.setItem(MKEY, JSON.stringify(memos));
+    function fmt(ts) { const d = new Date(ts); return (d.getMonth()+1) + "/" + d.getDate() + " " + String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0"); }
+    function grow(ta) { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; }
+    function render() {
+      wrap.innerHTML = "";
+      if (!memos.length) { wrap.innerHTML = '<div class="empty">メモはまだありません。<br>「＋ 新しいメモ」で追加できます ✍️</div>'; return; }
+      memos.forEach(m => {
+        const card = document.createElement("div");
+        card.className = "memo";
+        card.innerHTML = '<textarea placeholder="ここに自由に書く…（買い物リスト・今日やること・思いつき）"></textarea><div class="mfoot"><span class="md"></span><button class="mx">削除</button></div>';
+        const ta = card.querySelector("textarea");
+        ta.value = m.t;
+        card.querySelector(".md").textContent = "更新 " + fmt(m.u);
+        ta.addEventListener("input", () => {
+          m.t = ta.value; m.u = Date.now(); saveM();
+          card.querySelector(".md").textContent = "更新 " + fmt(m.u); grow(ta);
+        });
+        card.querySelector(".mx").addEventListener("click", () => {
+          if (confirm("このメモを削除しますか？")) { memos = memos.filter(x => x.id !== m.id); saveM(); render(); }
+        });
+        wrap.appendChild(card);
+        grow(ta);
+      });
+    }
+    $("memo-add").addEventListener("click", () => {
+      memos.unshift({ id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), t: "", u: Date.now() });
+      saveM(); render();
+      const first = wrap.querySelector("textarea"); if (first) first.focus();
+    });
+    render();
+  })();
 
   /* ===== 鍵（パスコードでロードマップ・心得を復号） ===== */
   const ENC = {
