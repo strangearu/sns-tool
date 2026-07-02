@@ -150,7 +150,7 @@
       <button class="btn-sub" id="convert">⚡ 自動翻訳でサッと作る</button>
       <span class="status" id="status"></span>
     </div>
-    <p class="hint" style="margin-top:8px">🤖 = Claudeアプリ用のプロンプトを作ります（写真はアプリ側で添付・課金なし）。⚡ = キー不要で今すぐ機械翻訳＋タグ＋封面文字。</p>
+    <p class="hint" style="margin-top:8px">🤖 = Claudeアプリ用のプロンプトを作ります（写真はアプリ側で添付・課金なし）。⚡ = キー不要で今すぐ機械翻訳。どちらも本文からイベント名・キャラ名を検出してタグを毎回選び直します。</p>
 
     <!-- Claudeアプリ用プロンプト -->
     <div id="ai-box" style="display:none;margin-top:14px">
@@ -341,6 +341,79 @@ function catTags(platform) {
   return c && c[platform] ? c[platform].slice() : [];
 }
 
+// ==== スマートタグエンジン（本文・メモを読んでタグを考える） ====
+
+// イベント名検出（見つけたら全SNSに必ず付ける・最優先）
+const EVENT_RULES = [
+  { re: /EVO\s*JAPAN\s*(20\d{2})?/i, mk: m => "EVOJapan" + (m[1] || "") },
+  { re: /\bEVO\s*(20\d{2})?\b/i, mk: m => "EVO" + (m[1] || ""), not: /EVO\s*JAPAN/i },
+  { re: /(?:コミケ|コミックマーケット)\s*(1[0-2]\d)?/, mk: m => m[1] ? "C" + m[1] : "コミケ" },
+  { re: /\bC(1[0-2]\d)\b/, mk: m => "C" + m[1] },
+  { re: /東京ゲームショウ|\bTGS\s*(20\d{2})?\b/i, mk: m => "TGS" + (m[1] || "") },
+  { re: /カプコンカップ|CAPCOM\s*CUP/i, mk: () => "CAPCOMCUP" },
+  { re: /ストリートファイターリーグ|\bSFL\b/, mk: () => "SFL" },
+  { re: /\bRAGE\b/, mk: () => "RAGE" },
+  { re: /\bRIZIN\b/i, mk: () => "RIZIN" },
+  { re: /世界コスプレサミット|コスサミ/, mk: () => "コスサミ" },
+  { re: /acosta|アコスタ/i, mk: () => "acosta" },
+  { re: /ワンフェス|ワンダーフェスティバル/, mk: () => "ワンフェス" },
+  { re: /([^\s、。．！!？?（）()「」#＃]{1,8}杯)/, mk: m => m[1] },
+  { re: /([^\s、。．！!？?（）()「」#＃]{1,10}撮影会)/, mk: m => m[1] },
+];
+
+// 内容検出（書いてある内容に合うタグだけを足す）
+const CONTENT_RULES = [
+  // char:true = キャラ固有タグ。本文に出てこないときはカテゴリ/定番枠からも自動で外す
+  { re: /春麗|チュンリー|春丽|chun[\s\-]?li/i, label: "春麗", char: true, ig: ["chunli","chunlicosplay","streetfighter6","춘리"], red: ["春丽","春丽cos","街霸6"], weibo: ["春丽","街头霸王"] },
+  { re: /不知火舞|不知火|shiranui/i, label: "不知火舞", char: true, ig: ["maishiranui","fatalfury","kof"], red: ["不知火舞","拳皇"], weibo: ["不知火舞","拳皇"] },
+  { re: /キャミィ|cammy/i, label: "キャミィ", char: true, ig: ["cammy","cammycosplay","streetfighter6"], red: ["嘉米","街霸6"], weibo: ["嘉米","街头霸王"] },
+  { re: /ジュリ(?![アエオ])|juri/i, label: "ジュリ", char: true, ig: ["juri","jurihan","streetfighter6"], red: ["juri","街霸6"], weibo: ["街头霸王"] },
+  { re: /スト6|ストリートファイター|street\s*fighter|\bSF6\b|街霸/i, label: "スト6", ig: ["streetfighter6","sf6","fgc","스트리트파이터"], red: ["街霸6","街头霸王","格斗游戏"], weibo: ["街霸6","格斗游戏"] },
+  { re: /鉄拳|tekken/i, label: "鉄拳", ig: ["tekken8"], red: ["铁拳8"], weibo: ["铁拳8"] },
+  { re: /\bKOF\b|拳皇|キングオブファイターズ/i, label: "KOF", ig: ["kof","snk"], red: ["拳皇"], weibo: ["拳皇"] },
+  { re: /大会|対戦|参戦|優勝|勝った|負けた|マスターランク|ランクマ/, label: "対戦・大会", ig: ["fgc","esports"], red: ["电竞","格斗游戏"], weibo: ["电竞"] },
+  { re: /配信|生放送|stream|twitch/i, label: "配信", ig: ["twitch","streamer"], red: ["游戏直播"], weibo: ["游戏直播"] },
+  { re: /水着|ビキニ|swimsuit/i, label: "水着", ig: ["swimsuit"], red: ["泳装"], weibo: ["泳装"] },
+  { re: /セーラー服|制服|\bJK\b/, label: "制服", ig: ["seifuku"], red: ["JK制服"], weibo: ["JK制服"] },
+  { re: /メイド/, label: "メイド", ig: ["maid","maidcosplay"], red: ["女仆"], weibo: ["女仆装"] },
+  { re: /ドレス/, label: "ドレス", ig: ["dress"], red: ["礼服"], weibo: ["礼服"] },
+  { re: /桜|花見/, label: "桜", ig: ["sakura","cherryblossom"], red: ["樱花"], weibo: ["樱花"] },
+  { re: /ラスベガス|las\s*vegas|ベガス/i, label: "ラスベガス", ig: ["lasvegas"], red: ["拉斯维加斯"], weibo: ["拉斯维加斯"] },
+  { re: /スタジオ|ライティング|棚撮/, label: "スタジオ撮影", ig: ["studiophotography"], red: ["棚拍","布光"], weibo: ["棚拍"] },
+  { re: /ロケ撮|ロケーション/, label: "ロケ撮影", ig: ["locationshoot"], red: ["外景"], weibo: ["外景"] },
+  { re: /新衣装/, label: "新衣装", ig: ["newcostume"], red: ["cos服"], weibo: ["cos服"] },
+  { re: /自撮り|セルフィ/, label: "自撮り", ig: ["selfie","셀카"], red: ["自拍"], weibo: ["自拍"] },
+  { re: /チェキ/, label: "チェキ", ig: ["cheki"], red: ["拍立得"], weibo: ["拍立得"] },
+];
+
+function detectSmart(text) {
+  const out = { events: [], ig: [], red: [], weibo: [], labels: [], excl: new Set() };
+  if (!text || !text.trim()) return out;
+  for (const r of EVENT_RULES) {
+    if (r.not && r.not.test(text)) continue;
+    const m = text.match(r.re);
+    if (m) {
+      const tag = r.mk(m);
+      if (tag && !out.events.includes(tag)) { out.events.push(tag); out.labels.push(tag); }
+    }
+  }
+  for (const r of CONTENT_RULES) {
+    if (r.re.test(text)) {
+      out.ig.push(...r.ig); out.red.push(...r.red); out.weibo.push(...r.weibo);
+      out.labels.push(r.label);
+    } else if (r.char) {
+      // 本文に出てこないキャラのタグは、カテゴリ/定番枠からも外す
+      [...r.ig, ...r.red, ...r.weibo, r.label].forEach(t => out.excl.add(t.toLowerCase()));
+    }
+  }
+  return out;
+}
+
+// キャラ不一致タグを除いたカテゴリ/定番タグ
+function filterExcl(tags, smart) {
+  return tags.filter(t => !smart.excl.has(String(t).toLowerCase()));
+}
+
 $("save-settings").addEventListener("click", () => {
   const data = {};
   for (const k of ["ig", "red", "weibo"]) data[k] = $("tags-" + k).value.trim();
@@ -449,8 +522,9 @@ $("convert").addEventListener("click", async () => {
   btn.disabled = true;
   setStatus("翻訳中…（数秒かかります）");
   try {
-    await convertSimple(raw, memo);
-    setStatus("変換が完了しました ✅ 各欄は手直しできます");
+    const smart = await convertSimple(raw, memo);
+    const found = smart && smart.labels.length ? `　🎯 内容から検出: ${uniq(smart.labels).join("・")}` : "";
+    setStatus("変換が完了しました ✅ 各欄は手直しできます" + found);
   } catch (e) {
     setStatus("エラー: " + e.message, true);
   } finally {
@@ -477,9 +551,14 @@ function buildClaudePrompt() {
   p += "・Instagram(15〜25個): " + cat.ig.map(t => "#" + t).join(" ") + "\n";
   p += "・Weibo(5〜8個): " + cat.weibo.map(t => "#" + t + "#").join(" ") + "\n";
   p += "【タグの方針（重要）】タグは毎回その投稿の内容に合わせてあなたが取捨選択すること。候補は参考で、全部付ける必要はない。\n";
+  p += "・本文にイベント名（大会・即売会・撮影会・◯◯杯など。例: EVO、コミケ、C106、TGS、RAGE）が入っていたら、そのイベント名タグを【全SNSに必ず】入れる。イベントタグは検索とバズの入口なので最優先。\n";
   p += "・内容に合わないタグは絶対に付けない（例: コスプレでない投稿に #cosplay/#코스프레、春麗が写っていないのに #春丽 は付けない。日常やオフ投稿にコスプレタグを付けない）。\n";
   p += "・写真・本文から確実に分かるイベント名・キャラ名・作品名だけをタグにする。該当しなければ付けない。確信できない固有名詞も付けない。\n";
-  p += "・言語: Instagramは英語＋韓国語の両方（例 #chunli #춘리 #streetfighter #스트리트파이터）、小紅書・Weiboは簡体字（例 #春丽# #街霸6# #漫展#）。コスプレ投稿のときだけ #cosplay/#코스프레 を入れる。\n\n";
+  p += "・言語: Instagramは英語＋韓国語の両方（例 #chunli #춘리 #streetfighter #스트리트파이터）、小紅書・Weiboは簡体字（例 #春丽# #街霸6# #漫展#）。コスプレ投稿のときだけ #cosplay/#코스프레 を入れる。\n";
+  const det = detectSmart([raw, memo].join("\n"));
+  if (det.events.length) p += "・【必須タグ】本文からイベント名を検出済み。全SNSのタグに必ず含めること: " + uniq(det.events).map(t => "#" + t).join(" ") + "\n";
+  if (det.labels.length) p += "・本文から検出した要素（タグ選定の参考に）: " + uniq(det.labels).join("・") + "\n";
+  p += "\n";
   p += "必ず下の形式で、見出し行（===…===）はそのままコピーして出力してください:\n";
   p += RED_MARK + "\n（12字以内）\n";
   p += TITLE_MARK + "\n（20字以内・検索KW入り）\n";
@@ -545,31 +624,41 @@ async function convertSimple(raw, memo) {
   const tweetBody = cleaned.replace(tagRe, "").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
   const body = [tweetBody, memo].filter(Boolean).join("\n");
 
+  // 本文＋メモ＋元タグを読んで、内容に合うタグを考える
+  const smart = detectSmart([cleaned, memo, srcTags.join(" ")].join("\n"));
+
+  // 検出辞書でカバー済みの元タグは機械翻訳に回さない（「スト6→罢工6」のような誤訳タグを防ぐ）
+  const knownRe = [...EVENT_RULES.map(r => r.re), ...CONTENT_RULES.map(r => r.re)];
+  const untransTags = srcTags.filter(t => !knownRe.some(re => re.test(t)));
+
   const [en, zh, tagsZhRaw] = await Promise.all([
     translate(body, "en"),
     translate(body, "zh-CN"),
-    srcTags.length ? translate(srcTags.join("\n"), "zh-CN") : Promise.resolve("")
+    untransTags.length ? translate(untransTags.join("\n"), "zh-CN") : Promise.resolve("")
   ]);
   let tagsZh = tagsZhRaw.split("\n").map(t => t.replace(/\s+/g, "").trim()).filter(Boolean);
-  if (tagsZh.length !== srcTags.length) tagsZh = srcTags;
+  if (tagsZh.length !== untransTags.length) tagsZh = untransTags;
 
-  const igTags = uniq([...srcTags, ...catTags("ig"), ...getDefaultTags("ig")]).slice(0, 30);
+  // 優先順: 元タグ・イベント名 → 内容から検出 → カテゴリ → 定番（枠が余れば）
+  // ※カテゴリ/定番のうち、本文に出てこないキャラのタグは自動で外す
+  const igTags = uniq([...srcTags, ...smart.events, ...smart.ig, ...filterExcl(catTags("ig"), smart), ...filterExcl(getDefaultTags("ig"), smart)]).slice(0, 25);
   $("out-ig").value = body + "\n.\n" + en + "\n\n" + igTags.map(t => "#" + t).join(" ");
 
-  const redTags = uniq([...catTags("red"), ...tagsZh, ...getDefaultTags("red")]).slice(0, 12);
+  const redTags = uniq([...smart.events, ...smart.red, ...tagsZh, ...filterExcl(catTags("red"), smart), ...filterExcl(getDefaultTags("red"), smart)]).slice(0, 12);
   const zhLines = zh.split("\n").map(l => l.trim()).filter(Boolean);
   const titleLine = zhLines.find(l => [...l].length >= 4) || zhLines[0] || "";
   $("title-red").value = [...titleLine].slice(0, 20).join("");
   $("cover-red").value = [...titleLine].slice(0, 12).join("");  // 無料モードは題を流用（手直し前提）
   $("out-red").value = zh + "\n\n" + redTags.map(t => "#" + t).join(" ");
 
-  const wbTags = uniq([...catTags("weibo"), ...tagsZh, ...getDefaultTags("weibo")]).slice(0, 8);
+  const wbTags = uniq([...smart.events, ...smart.weibo, ...tagsZh, ...filterExcl(catTags("weibo"), smart), ...filterExcl(getDefaultTags("weibo"), smart)]).slice(0, 8);
   $("out-weibo").value = zh + "\n\n" + wbTags.map(t => "#" + t + "#").join(" ");
 
   for (const k of ["ig", "red", "weibo"]) {
     $("card-" + k).classList.add("show");
     updateCount(k);
   }
+  return smart;
 }
 
 // ---- 文字数カウント ----
