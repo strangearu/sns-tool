@@ -233,6 +233,7 @@
           </div>
         </div>
         <p class="hint">📕 封面文字は画像編集で表紙に載せる用。タイトル・本文は投稿画面の各欄へ。本文上限1,000字。</p>
+        <div id="red-check" class="hint" style="display:none;line-height:1.8;margin-top:6px"></div>
       </div>
     </div>
 
@@ -542,6 +543,7 @@ $("convert").addEventListener("click", async () => {
     const smart = await convertSimple(raw, memo);
     const found = smart && smart.labels.length ? `　🎯 内容から検出: ${uniq(smart.labels).join("・")}` : "";
     setStatus("変換が完了しました ✅ 各欄は手直しできます" + found);
+    checkRed();
   } catch (e) {
     setStatus("エラー: " + e.message, true);
   } finally {
@@ -562,6 +564,8 @@ function buildClaudePrompt() {
   p += "【元の投稿/メモ】\n" + (raw || "（なし）") + (memo ? "\n（撮影メモ・最優先で反映）" + memo : "") + "\n\n";
   p += "【カテゴリ】" + cat.label + "\n";
   p += "【小紅書の方針】封面文字＝サムネに乗せる12字以内のフック（クリック率が決まる最重要）。タイトル＝20字以内で検索キーワード（キャラ名・作品名）必須。本文＝広告でなく友達への「分享」トーン、絵文字入り、保存したくなる情報やコメントを誘う問いかけ（例「你们觉得呢？」）を入れる。露出は控えめに（審査・限流対策）。外部SNSのIDは書かない。\n";
+  p += "【小紅書の質基準（発布前審査と同じ基準で作る）】タイトルは爆款型を意識（数字型「5个◯◯」/好奇型/対比型/情緒型）。本文の最初の50字に核心キーワード＋続きを読ませるフックを置く。「最◯◯・第一・100%・绝对」等の誇大語と外部誘導ワード（微信等）は限流対象なので使わない。清単・対比・ビハインド情報など收藏（保存）したくなる要素を1つ入れる。\n";
+  p += "【Instagramの方針】キャプションの1文目が検索インデックスと「…続き」折りたたみ前に見える最重要行。冒頭に内容が伝わる英語1文を置く。\n";
   if (cat.coverSamples && cat.coverSamples.length) p += "【封面文字の例】" + cat.coverSamples.join(" / ") + "\n";
   p += "【タグ候補（参考リスト・この中から内容に合うものだけ選ぶ。全部は付けない）】\n";
   p += "・小紅書(8〜12個): " + cat.red.map(t => "#" + t).join(" ") + "\n";
@@ -628,8 +632,32 @@ $("ai-apply").addEventListener("click", () => {
   $("out-ig").value = ig;
   $("out-weibo").value = wb;
   for (const k of ["ig", "red", "weibo"]) { $("card-" + k).classList.add("show"); updateCount(k); }
+  checkRed();
   setStatus("各SNS欄に反映しました ✅ 手直ししてコピーしてください");
 });
+
+// ---- 小紅書 発布前チェッカー（字数・限流リスク・タグ数・互動を自動審査） ----
+const RED_RISK_WORDS = ["最好","最强","最便宜","最有效","第一","100%","绝对","包治","根治","神效","秒杀","返现","微信","加我","私信我","扫码"];
+function checkRed() {
+  const box = document.getElementById("red-check");
+  if (!box) return;
+  const cover = $("cover-red").value.trim(), title = $("title-red").value.trim(), body = $("out-red").value.trim();
+  if (!cover && !title && !body) { box.style.display = "none"; return; }
+  const len = s => [...s].length, warns = [];
+  if (cover && len(cover) > 12) warns.push("🔴 封面文字 " + len(cover) + "字 → 12字以内に");
+  if (title && len(title) > 20) warns.push("🔴 タイトル " + len(title) + "字 → 20字で切れます");
+  if (body && len(body) > 1000) warns.push("🔴 本文 " + len(body) + "字 → 上限1,000字");
+  if (body) {
+    const hit = RED_RISK_WORDS.filter(w => (title + " " + body).includes(w));
+    if (hit.length) warns.push("🟠 限流リスク語: " + hit.join("・") + "（誇大・外部誘導は審査対象）");
+    const tags = (body.match(/#[^#\s]+/g) || []).length;
+    if (tags > 0 && (tags < 5 || tags > 12)) warns.push("🟡 タグ" + tags + "個（推奨5〜12個）");
+    if (!/[？?]/.test(body.replace(/#[^#\s]+/g, "").trim().slice(-60))) warns.push("💡 末尾に問いかけ推奨（例:「你们觉得呢？」でコメント誘発）");
+  }
+  box.style.display = "block";
+  box.innerHTML = warns.length ? "📋 発布前チェック:<br>" + warns.join("<br>") : "🟢 発布前チェックOK（字数・限流リスク・タグ数）";
+}
+["cover-red", "title-red", "out-red"].forEach(id => $(id).addEventListener("input", checkRed));
 
 function uniq(arr) { return [...new Set(arr)]; }
 function getDefaultTags(key) {

@@ -371,29 +371,52 @@
   }
   function u() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
   function saveTodos() { localStorage.setItem(TKEY, JSON.stringify(todos)); }
+  const DKEY = "ayane-done-log";
+  let doneLog = JSON.parse(localStorage.getItem(DKEY) || "[]");
+  function saveDoneLog() { localStorage.setItem(DKEY, JSON.stringify(doneLog)); }
+  function thisWeekStart() { const d = new Date(); const day = (d.getDay() + 6) % 7; d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - day); return d.getTime(); }
+  function weekDoneCount() {
+    const ws = thisWeekStart();
+    return doneLog.filter(ts => ts >= ws).length + todos.filter(t => t.done && t.doneAt && t.doneAt >= ws).length;
+  }
+  function makeItem(it) {
+    const div = document.createElement("div");
+    div.className = "item" + (it.done ? " done" : "");
+    div.innerHTML = `<div class="chk">✓</div><div class="body"><div class="t" contenteditable="true" spellcheck="false"></div></div><button class="x pin"></button><button class="x">×</button>`;
+    div.querySelector(".t").textContent = it.t;
+    const btns = div.querySelectorAll(".x");
+    const pin = btns[0], del = btns[1];
+    pin.textContent = it.today ? "⭐" : "☆";
+    pin.title = "「今日やる」に固定/解除";
+    pin.addEventListener("click", () => { it.today = !it.today; saveTodos(); renderTodos(); });
+    div.querySelector(".chk").addEventListener("click", () => { it.done = !it.done; it.doneAt = it.done ? Date.now() : null; saveTodos(); renderTodos(); });
+    del.addEventListener("click", () => { todos = todos.filter(t => t.id !== it.id); saveTodos(); renderTodos(); });
+    const ed = div.querySelector(".t");
+    ed.addEventListener("blur", () => { const v = ed.textContent.trim(); if (v) { it.t = v; saveTodos(); } else { todos = todos.filter(t => t.id !== it.id); saveTodos(); renderTodos(); } });
+    ed.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); ed.blur(); } });
+    return div;
+  }
   function renderTodos() {
     const wrap = $("todo-list"); wrap.innerHTML = "";
     const total = todos.length, done = todos.filter(t => t.done).length;
-    $("todo-prog").textContent = total ? `${done}/${total} 完了` : "";
+    const wk = weekDoneCount();
+    $("todo-prog").textContent = (total ? `${done}/${total} 完了` : "") + (wk ? `　🔥今週${wk}件` : "");
     if (!total) { wrap.innerHTML = '<div class="empty">まだ何もありません。<br>上の欄から追加してみましょう ✍️</div>'; return; }
+    const todayItems = todos.filter(t => t.today);
+    if (todayItems.length) {
+      const h = document.createElement("div"); h.className = "catlabel"; h.textContent = "⭐ 今日やる";
+      wrap.appendChild(h);
+      const list = document.createElement("div"); list.className = "list";
+      todayItems.forEach(it => list.appendChild(makeItem(it)));
+      wrap.appendChild(list);
+    }
     CATS.forEach(cat => {
-      const items = todos.filter(t => t.c === cat);
+      const items = todos.filter(t => t.c === cat && !t.today);
       if (!items.length) return;
       const h = document.createElement("div"); h.className = "catlabel"; h.textContent = CATLABEL[cat];
       wrap.appendChild(h);
       const list = document.createElement("div"); list.className = "list";
-      items.forEach(it => {
-        const div = document.createElement("div");
-        div.className = "item" + (it.done ? " done" : "");
-        div.innerHTML = `<div class="chk">✓</div><div class="body"><div class="t" contenteditable="true" spellcheck="false"></div></div><button class="x">×</button>`;
-        div.querySelector(".t").textContent = it.t;
-        div.querySelector(".chk").addEventListener("click", () => { it.done = !it.done; saveTodos(); renderTodos(); });
-        div.querySelector(".x").addEventListener("click", () => { todos = todos.filter(t => t.id !== it.id); saveTodos(); renderTodos(); });
-        const ed = div.querySelector(".t");
-        ed.addEventListener("blur", () => { const v = ed.textContent.trim(); if (v) { it.t = v; saveTodos(); } else { todos = todos.filter(t => t.id !== it.id); saveTodos(); renderTodos(); } });
-        ed.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); ed.blur(); } });
-        list.appendChild(div);
-      });
+      items.forEach(it => list.appendChild(makeItem(it)));
       wrap.appendChild(list);
     });
   }
@@ -404,7 +427,7 @@
   }
   $("todo-add").addEventListener("click", addTodo);
   $("todo-input").addEventListener("keydown", e => { if (e.key === "Enter") addTodo(); });
-  $("todo-clear").addEventListener("click", () => { todos = todos.filter(t => !t.done); saveTodos(); renderTodos(); });
+  $("todo-clear").addEventListener("click", () => { todos.filter(t => t.done).forEach(t => doneLog.push(t.doneAt || Date.now())); doneLog = doneLog.filter(ts => ts >= Date.now() - 60 * 24 * 3600 * 1000); saveDoneLog(); todos = todos.filter(t => !t.done); saveTodos(); renderTodos(); });
   renderTodos();
 
   /* ===== メモ（自由メモ・買い物リスト等） ===== */
