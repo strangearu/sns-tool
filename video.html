@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#00A1D6">
+<title>動画クロス投稿ツール</title>
+<style>
+  :root {
+    --bg: #f4f5f7; --card: #ffffff; --text: #1a1d24; --sub: #6b7280; --border: #e2e4e9;
+    --accent: #00A1D6;           /* bilibiliブルー */
+    --bili: #00A1D6; --red: #ff2442; --weibo: #e6432e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif; background: var(--bg); color: var(--text); padding: 20px 14px 60px; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 20px; }
+  header h1 { font-size: 21px; letter-spacing: .04em; }
+  header p { color: var(--sub); font-size: 12.5px; margin-top: 6px; }
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+  label.head { display: block; font-weight: 700; font-size: 13.5px; margin-bottom: 8px; }
+  textarea, input[type=text], input[type=url] { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 11px 12px; font-size: 14px; line-height: 1.7; resize: vertical; font-family: inherit; background: #fafbfc; }
+  textarea:focus, input:focus { outline: 2px solid var(--accent); outline-offset: -1px; background: #fff; }
+  .row { display: flex; gap: 8px; }
+  .row input { flex: 1; }
+  button { border: none; border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity .15s; white-space: nowrap; }
+  button:hover { opacity: .85; }
+  button:disabled { opacity: .5; cursor: wait; }
+  .btn-sub { background: #eef1f5; color: var(--text); font-size: 13px; }
+  .btn-main { background: var(--accent); color: #fff; font-size: 15px; padding: 12px 28px; }
+  .cats { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cat-btn { background: #eef1f5; color: var(--text); border: 1px solid var(--border); border-radius: 99px; padding: 8px 16px; font-size: 13px; font-weight: 700; }
+  .cat-btn.active { background: var(--bili); color: #fff; border-color: var(--bili); }
+  .actions { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+  .status { font-size: 13px; color: var(--sub); }
+  .status.error { color: #dc2626; font-weight: 700; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: none; flex-direction: column; }
+  .card.show { display: flex; }
+  .card-head { padding: 11px 15px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
+  .card-head .name { font-weight: 800; font-size: 15px; }
+  .card-head .lang { font-size: 11px; opacity: .9; background: rgba(255,255,255,.22); padding: 3px 10px; border-radius: 99px; }
+  .card.bili .card-head { background: var(--bili); }
+  .card.red .card-head { background: var(--red); }
+  .card.weibo .card-head { background: var(--weibo); }
+  .card-body { padding: 13px 15px 15px; display: flex; flex-direction: column; gap: 9px; flex: 1; }
+  .card-body textarea { min-height: 150px; font-size: 13px; flex: 1; }
+  .field-label { font-size: 12px; color: var(--sub); font-weight: 700; }
+  .card-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .count { font-size: 12px; color: var(--sub); }
+  .count.over { color: #dc2626; font-weight: 700; }
+  .foot-btns { display: flex; gap: 8px; margin-left: auto; }
+  .copy-btn { background: var(--text); color: #fff; padding: 8px 18px; font-size: 13px; }
+  .copy-btn.done { background: #16a34a; }
+  .open-btn { background: #eef1f5; color: var(--text); padding: 8px 14px; font-size: 13px; text-decoration: none; border-radius: 10px; font-weight: 700; display: inline-flex; align-items: center; }
+  .hint { font-size: 11.5px; color: var(--sub); line-height: 1.6; }
+  .sugg { display: flex; flex-wrap: wrap; gap: 6px; }
+  .sugg:empty { display: none; }
+  .sugg .sg { background: #eef7fb; border: 1px solid var(--bili); color: #0b6e8f; border-radius: 10px; padding: 7px 11px; font-size: 12px; text-align: left; line-height: 1.4; }
+  .sugg .sg-label { flex-basis: 100%; font-size: 11px; color: var(--sub); font-weight: 700; margin-bottom: -2px; }
+  .card.red .sugg .sg { background: #fff0f2; border-color: var(--red); color: #b91c3c; }
+  footer { text-align: center; margin-top: 24px; font-size: 12px; color: var(--sub); line-height: 1.8; }
+  @media (max-width: 480px) { body { padding: 14px 10px 50px; } .panel { padding: 13px; } .btn-main { width: 100%; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p style="text-align:left;margin-bottom:10px"><a href="index.html" style="color:var(--accent);text-decoration:none;font-weight:700;font-size:13px">← マネージャーHubに戻る</a></p>
+    <h1>🎬 動画クロス投稿ツール</h1>
+    <p>YouTube・TikTokに上げた動画を、bilibili・小紅書・Weibo向けの投稿文にします（動画自体はそのまま使えます）</p>
+  </header>
+
+  <div class="panel">
+    <label class="head">① 動画URLから読み込み（YouTube / TikTok・タイトルを自動取得）</label>
+    <div class="row">
+      <input type="url" id="video-url" placeholder="https://youtu.be/… か https://www.tiktok.com/… を貼り付け" inputmode="url">
+      <button class="btn-sub" id="load-video">読み込み</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <label class="head" for="v-title">② 動画タイトル（自動入力 or 手で入力）</label>
+    <input type="text" id="v-title" placeholder="例: 【スト6】春麗コスでランクマ行ったら大変なことになった">
+
+    <label class="head" for="v-desc" style="margin-top:14px">③ 概要欄・投稿文（YouTubeの説明文やTikTokのキャプションを貼り付け・空でもOK）</label>
+    <textarea id="v-desc" style="min-height:90px" placeholder="概要欄の文章をそのまま貼り付け"></textarea>
+
+    <label class="head" for="v-memo" style="margin-top:14px">④ 動画の内容メモ（任意・一言でOK）</label>
+    <textarea id="v-memo" style="min-height:60px" placeholder="例: 春麗コスでSF6ランクマ実況。負けて発狂するシーンが見どころ"></textarea>
+
+    <label class="head" style="margin-top:14px">⑤ カテゴリ</label>
+    <div class="cats" id="cats"></div>
+
+    <div class="actions">
+      <button class="btn-main" id="ai-prompt">🤖 Claudeアプリで作る（無料・高品質）</button>
+      <button class="btn-sub" id="convert">⚡ 自動翻訳でサッと作る</button>
+      <span class="status" id="status"></span>
+    </div>
+    <p class="hint" style="margin-top:8px">🤖 = Claudeアプリ用プロンプトを作成（動画のスクショを添付するとさらに良い）。⚡ = 今すぐ機械翻訳。どちらもタイトル・本文からイベント名・キャラ名を検出してタグを毎回選び直します。</p>
+
+    <!-- Claudeアプリ用プロンプト -->
+    <div id="ai-box" style="display:none;margin-top:14px">
+      <label class="head">📋 このプロンプトをコピー → Claudeアプリに貼り付け（動画のスクショ添付推奨）</label>
+      <textarea id="ai-prompt-text" style="min-height:150px;font-size:12px"></textarea>
+      <div class="actions">
+        <button class="btn-sub" id="ai-copy">📋 プロンプトをコピー</button>
+        <a class="open-btn" href="https://claude.ai/new" target="_blank">Claudeを開く ↗</a>
+      </div>
+      <label class="head" style="margin-top:12px">⬇️ Claudeの返事をここに貼り付け</label>
+      <textarea id="ai-reply" style="min-height:90px" placeholder="Claudeが作った文章をまるごと貼り付けてください"></textarea>
+      <div class="actions">
+        <button class="btn-main" id="ai-apply">✅ 各欄に反映</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- bilibili -->
+    <div class="card bili" id="card-bili">
+      <div class="card-head"><span class="name">bilibili</span><span class="lang">中国語（簡体字）</span></div>
+      <div class="card-body">
+        <span class="field-label">标题（タイトル・80字以内）</span>
+        <div class="row">
+          <input type="text" id="bili-title">
+          <button class="copy-btn" data-target="bili-title" style="background:#6b7280">コピー</button>
+        </div>
+        <div class="sugg" id="bili-sugg"></div>
+        <span class="field-label">简介（説明文）</span>
+        <textarea id="bili-desc"></textarea>
+        <span class="field-label">标签（タグ・最大10個・投稿画面で1つずつ追加）</span>
+        <div class="row">
+          <input type="text" id="bili-tags">
+          <button class="copy-btn" data-target="bili-tags" style="background:#6b7280">コピー</button>
+        </div>
+        <div class="card-foot">
+          <span class="count" id="count-bili"></span>
+          <div class="foot-btns">
+            <a class="open-btn" href="https://member.bilibili.com/platform/upload/video/frame" target="_blank">投稿画面 ↗</a>
+            <button class="copy-btn" data-target="bili-desc">简介コピー</button>
+          </div>
+        </div>
+        <p class="hint">📺 标题は検索KW＋【】ジャンル表記が伸びる文化。简介末尾の「一键三连」お願いはbilibiliの定番です。</p>
+      </div>
+    </div>
+
+    <!-- 小紅書 -->
+    <div class="card red" id="card-red">
+      <div class="card-head"><span class="name">小紅書 RED（動画）</span><span class="lang">中国語（簡体字）</span></div>
+      <div class="card-body">
+        <span class="field-label">封面文字（サムネに乗せる・12字以内）</span>
+        <div class="row">
+          <input type="text" id="red-cover">
+          <button class="copy-btn" data-target="red-cover" style="background:#6b7280">コピー</button>
+        </div>
+        <div class="sugg" id="red-sugg"></div>
+        <span class="field-label">タイトル（20字以内）</span>
+        <div class="row">
+          <input type="text" id="red-title">
+          <button class="copy-btn" data-target="red-title" style="background:#6b7280">コピー</button>
+        </div>
+        <span class="field-label">本文</span>
+        <textarea id="red-body"></textarea>
+        <div class="card-foot">
+          <span class="count" id="count-red"></span>
+          <div class="foot-btns">
+            <a class="open-btn" href="https://creator.xiaohongshu.com/publish/publish" target="_blank">開く ↗</a>
+            <button class="copy-btn" data-target="red-body">本文コピー</button>
+          </div>
+        </div>
+        <p class="hint">📕 小紅書は動画投稿が伸びやすい。封面文字はクリック率の決め手です。</p>
+      </div>
+    </div>
+
+    <!-- Weibo -->
+    <div class="card weibo" id="card-weibo">
+      <div class="card-head"><span class="name">Weibo 微博（動画）</span><span class="lang">中国語（簡体字）</span></div>
+      <div class="card-body">
+        <textarea id="weibo-body"></textarea>
+        <div class="card-foot">
+          <span class="count" id="count-weibo"></span>
+          <div class="foot-btns">
+            <a class="open-btn" href="https://weibo.com/" target="_blank">開く ↗</a>
+            <button class="copy-btn" data-target="weibo-body">コピー</button>
+          </div>
+        </div>
+        <p class="hint">🔶 動画付き投稿の本文。話題タグは #タグ# 形式に変換済み。</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>📱 このページはブラウザだけで動きます。動画本体は各サイトへそのままアップロードしてください。</footer>
+</div>
+
+<script>
+// ==== カテゴリ（クロス投稿ツールと同じ世界観・動画向け） ====
+const CATEGORIES = {
+  chunli: { label: "春麗・格ゲーコス",
+    zh: ["cosplay","cos正片","春丽","街头霸王","街霸6","格斗游戏","二次元","日本coser","游戏实况"],
+    cover: ["春丽cos来啦💙","日本coser的春丽","街霸春丽👊"] },
+  game: { label: "ゲーム実況・配信",
+    zh: ["游戏实况","格斗游戏","街霸6","电竞","游戏直播","日本玩家","搞笑"],
+    cover: ["日本玩家的日常","这波操作太秀了","实况精彩片段"] },
+  dance: { label: "ダンス・踊ってみた",
+    zh: ["舞蹈","翻跳","韩舞","kpop","宅舞","舞蹈挑战","日本coser"],
+    cover: ["挑战最火的舞💃","这个舞太上头了","春丽跳kpop？！"] },
+  daily: { label: "日常・Vlog",
+    zh: ["日常","vlog","生活记录","日本生活","coser日常","日系穿搭"],
+    cover: ["coser的日常","日本生活vlog","今天的记录"] },
+  generic: { label: "汎用",
+    zh: ["cosplay","二次元","日本coser","日常","游戏"],
+    cover: [] }
+};
+let curCat = localStorage.getItem("videopost-cat") || "chunli";
+
+// ==== スマートタグエンジン（クロス投稿ツールと同じ） ====
+const EVENT_RULES = [
+  // 年付き(EVO2026等)が本文のどこかにあれば年付きを優先
+  { re: /EVO\s*JAPAN\s*(20\d{2})?/i, mk: (m, text) => { const y = text.match(/EVO\s*JAPAN\s*(20\d{2})/i); return "EVOJapan" + (y ? y[1] : (m[1] || "")); } },
+  { re: /\bEVO\s*(20\d{2})?\b/i, mk: (m, text) => { const y = text.match(/\bEVO\s*(20\d{2})\b/i); return "EVO" + (y ? y[1] : (m[1] || "")); }, not: /EVO\s*JAPAN/i },
+  { re: /(?:コミケ|コミックマーケット)\s*(1[0-2]\d)?/, mk: m => m[1] ? "C" + m[1] : "コミケ" },
+  { re: /\bC(1[0-2]\d)\b/, mk: m => "C" + m[1] },
+  { re: /東京ゲームショウ|\bTGS\s*(20\d{2})?\b/i, mk: m => "TGS" + (m[1] || "") },
+  { re: /カプコンカップ|CAPCOM\s*CUP/i, mk: () => "CAPCOMCUP" },
+  { re: /ストリートファイターリーグ|\bSFL\b/, mk: () => "SFL" },
+  { re: /\bRAGE\b/, mk: () => "RAGE" },
+  { re: /\bRIZIN\b/i, mk: () => "RIZIN" },
+  { re: /世界コスプレサミット|コスサミ/, mk: () => "コスサミ" },
+  { re: /acosta|アコスタ/i, mk: () => "acosta" },
+  { re: /ワンフェス|ワンダーフェスティバル/, mk: () => "ワンフェス" },
+  { re: /([^\s、。．！!？?（）()「」#＃]{1,8}杯)/, mk: m => m[1] },
+  { re: /([^\s、。．！!？?（）()「」#＃]{1,10}撮影会)/, mk: m => m[1] },
+];
+const CONTENT_RULES = [
+  { re: /春麗|チュンリー|春丽|chun[\s\-]?li/i, label: "春麗", kind: "chara", zh: ["春丽","街霸6"] },
+  { re: /不知火舞|不知火|shiranui/i, label: "不知火舞", kind: "chara", zh: ["不知火舞","拳皇"] },
+  { re: /キャミィ|cammy/i, label: "キャミィ", kind: "chara", zh: ["嘉米","街霸6"] },
+  { re: /スト6|ストリートファイター|street\s*fighter|\bSF6\b|街霸/i, label: "スト6", kind: "game", zh: ["街霸6","街头霸王","格斗游戏"] },
+  { re: /鉄拳|tekken/i, label: "鉄拳", kind: "game", zh: ["铁拳8"] },
+  { re: /\bKOF\b|拳皇/i, label: "KOF", kind: "game", zh: ["拳皇"] },
+  { re: /大会|対戦|参戦|優勝|勝った|負けた|ランクマ|マスターランク/, label: "対戦・大会", zh: ["电竞","格斗游戏"] },
+  { re: /配信|生放送|実況|stream|twitch/i, label: "実況・配信", zh: ["游戏实况","游戏直播"] },
+  { re: /ラスベガス|las\s*vegas|ベガス/i, label: "ラスベガス", zh: ["拉斯维加斯"] },
+  { re: /メイキング|舞台裏|behind/i, label: "メイキング", zh: ["幕后花絮"] },
+  { re: /メイク|化粧/, label: "メイク", zh: ["cos妆","仿妆"] },
+  { re: /踊|ダンス|dance|振り?付け|チャレンジ|challenge|翻跳/i, label: "ダンス", kind: "dance", zh: ["舞蹈","翻跳","舞蹈挑战"] },
+  { re: /k-?pop|kpop|케이팝|韓流|韩流/i, label: "K-POP", zh: ["kpop","韩舞"] },
+  { re: /歌ってみた|カバー曲|歌枕|翻唱/i, label: "歌", zh: ["翻唱"] },
+];
+function detectSmart(text) {
+  const out = { events: [], zh: [], labels: [], chara: "", game: "", song: "" };
+  if (!text || !text.trim()) return out;
+  // 曲名検出: 「◯◯」『◯◯』のカッコ内、または「◯◯踊ってみた/チャレンジ」の◯◯
+  const sm = text.match(/[「『]([^」』]{1,25})[」』]/);
+  if (sm) out.song = sm[1];
+  if (!out.song) {
+    const m2 = text.match(/([A-Za-z0-9À-ÿ゠-ヿ぀-ゟー・&'! ]{2,25}?)\s*(?:踊ってみた|ダンスチャレンジ|チャレンジ|dance\s*challenge|dance\s*cover)/i);
+    if (m2 && m2[1].trim().length >= 2) out.song = m2[1].trim();
+  }
+  for (const r of EVENT_RULES) {
+    if (r.not && r.not.test(text)) continue;
+    const m = text.match(r.re);
+    if (m) { const tag = r.mk(m, text); if (tag && !out.events.includes(tag)) { out.events.push(tag); out.labels.push(tag); } }
+  }
+  for (const r of CONTENT_RULES) {
+    if (r.re.test(text)) {
+      out.zh.push(...r.zh); out.labels.push(r.label);
+      if (r.kind === "chara" && !out.chara) out.chara = r.zh[0];
+      if (r.kind === "game" && !out.game) out.game = r.zh[0];
+    }
+  }
+  // キャラからゲームを補完（春麗→街霸6等）
+  if (out.chara && !out.game) {
+    const g = { "春丽": "街霸6", "嘉米": "街霸6", "不知火舞": "拳皇" }[out.chara];
+    if (g) out.game = g;
+  }
+  return out;
+}
+
+// ==== ジャンル別バズ型データベース（bilibili/小紅書/Weiboの傾向分析に基づく） ====
+const BUZZ = {
+  event: {
+    label: "大会・イベント現地",
+    tips: {
+      bili: "「直击◯◯现场」「空降现场」など現地感ワードが最強（中国のファンは現地に行けない＝現場映像そのものに希少価値）。「会发生什么…」の挑戦型、「日本coser」の身分フックも定番。",
+      red: "封面文字は「直击现场🔥」「我来啦！」系の臨場感。現地の熱気と自分が両方写った封面が伸びる。",
+      weibo: "cosplay超话・ゲーム超话に参加投稿。短文＋現地感。#イベント名#タグ必須。"
+    },
+    biliTitles: [
+      e => `【${e.game || "格斗游戏"}】直击${e.event}现场！日本coser的${e.chara ? e.chara + "cos" : "cosplay"}参战记`,
+      e => `当日本coser cos成${e.chara || "游戏角色"}出现在${e.event}现场…观众反应太真实了`,
+      e => `【${e.event}】穿着${e.chara ? e.chara + "的衣服" : "cos服"}打比赛是什么体验？`
+    ],
+    redCovers: [e => `直击${e.event}现场🔥`, e => `${e.event}我来啦！`, e => `${e.event}现场太燃了🔥`]
+  },
+  chara: {
+    label: "キャラコス正片",
+    tips: {
+      bili: "「还原/还原度」が最重要ワード。数字型（还原度99%）と「当◯◯真的出现在你面前…」型が伸びる。春丽は中国出身キャラなので「日本coserが中国の人気キャラを本気で再現」という文化リスペクト角度が特に刺さる。",
+      red: "数字＋疑問形（还原度几分？你们打几分？）でコメントを誘う。「日本coser」の身分フックを封面かタイトルに必ず入れる。衣装・メイク情報を書くと保存されて伸びる。",
+      weibo: "#キャラ名#＋#cosplay超话#。厳選写真数枚＋短文。"
+    },
+    biliTitles: [
+      e => `【cosplay】还原度99%的${e.chara || "角色"}！日本coser的${e.game ? e.game + "正片" : "cos正片"}`,
+      e => `当${e.chara || "她"}真的出现在你面前…【日本coser】`,
+      e => `日本coser挑战${e.chara || "游戏角色"}！你们打几分？`
+    ],
+    redCovers: [e => `还原度99%的${e.chara || "cos"}`, e => `日本coser的${e.chara || "cos正片"}`, e => `这个${e.chara || "cos"}打几分？`]
+  },
+  game: {
+    label: "ゲーム実況・プレイ",
+    tips: {
+      bili: "「◯◯是什么体验？」体験型＋腕前を数字で（マスターランク=大师段位）。「名场面」「第一视角」も強い。",
+      red: "ゲーム実況単体は伸びにくい→「日本女生玩家的日常」と人物軸に寄せる。",
+      weibo: "#游戏直播#＋ゲームタグで。"
+    },
+    biliTitles: [
+      e => `${e.game ? "【" + e.game + "】" : ""}大师段位的日本coser玩家排位实况`,
+      e => `穿着cos服打${e.game || "游戏"}是什么体验？`,
+      e => `${e.game ? "【" + e.game + "】" : ""}日本玩家的名场面合集`
+    ],
+    redCovers: [e => `日本女生玩家的日常🎮`, e => `大师段位女玩家`]
+  },
+  dance: {
+    label: "ダンス・踊ってみた",
+    tips: {
+      bili: "ダンスカバーは「翻跳」が検索ワード（タイトルに必ず入れる）。コス×ダンスは「当◯◯（キャラ）跳△△（曲）」のギャップ型が最強。fancam風は「直拍」表記。曲名は原題のままタイトルとタグに必ず入れる。",
+      red: "「挑战◯◯」チャレンジ型が基本。韩舞（K-POPダンス）は大人気ジャンルで、曲名タグ＋#舞蹈挑战。完整版は保存されやすい。",
+      weibo: "#舞蹈挑战#＋曲名タグ。K-POPなら#kpop#と韓流超话。"
+    },
+    biliTitles: [
+      e => `【翻跳】${e.chara ? "当" + e.chara + "跳" : "日本coser挑战"}${e.song || "TikTok最火舞蹈"}…`,
+      e => `【${e.song || "热门舞蹈"}】日本coser${e.chara ? "的" + e.chara + "cos" : ""}翻跳${e.song ? "直拍" : ""}`,
+      e => `${e.song ? e.song + "但是" : "跳舞的"}${e.chara ? "是" + e.chara : "日本coser"}版本💃`
+    ],
+    redCovers: [
+      e => `挑战${e.song || "最火的舞"}💃`,
+      e => `${e.chara ? e.chara + "跳" : "日本coser跳"}${e.song || "这个舞"}？！`,
+      e => `${e.song || "这个舞"}完整版来了`
+    ]
+  },
+  daily: {
+    label: "日常・Vlog",
+    tips: {
+      bili: "「日本coser的一天」型。日本の日常そのものがコンテンツになる。",
+      red: "「日本生活」「coser的日常」は安定ジャンル。親近感＋最後に質問で締める。",
+      weibo: "#日常#タグ＋気軽な口調。"
+    },
+    biliTitles: [e => `日本coser的一天vlog｜${e.event || "真实日常记录"}`, e => `日本女生coser的真实日常…`],
+    redCovers: [e => `日本coser的日常`, e => `今天的vlog🌷`]
+  },
+  generic: {
+    label: "汎用",
+    tips: {
+      bili: "検索KW＋【】ジャンル表記＋フック（数字・疑問・ギャップ）を必ず1つ。",
+      red: "検索KW＋数字か疑問形＋「日本coser」フック。",
+      weibo: "短文＋#話題#タグ。"
+    },
+    biliTitles: [e => `【cosplay】日本coser的新作品来啦！`],
+    redCovers: [e => `新作品来啦🌟`]
+  }
+};
+
+function resolveGenre(smart) {
+  if (smart.events.length) return "event";
+  // ダンスはキャラより優先（コス×ダンスのギャップ型が最強のため）
+  if (smart.labels.includes("ダンス") || curCat === "dance") return "dance";
+  if (smart.chara) return "chara";
+  if (smart.labels.includes("実況・配信") || curCat === "game") return "game";
+  if (curCat === "daily") return "daily";
+  return "generic";
+}
+
+const $ = id => document.getElementById(id);
+function uniq(arr) { return [...new Set(arr)]; }
+
+// ==== カテゴリUI ====
+function renderCats() {
+  const box = $("cats"); box.innerHTML = "";
+  if (!CATEGORIES[curCat]) curCat = "chunli";
+  for (const key of Object.keys(CATEGORIES)) {
+    const b = document.createElement("button");
+    b.className = "cat-btn" + (key === curCat ? " active" : "");
+    b.textContent = CATEGORIES[key].label;
+    b.addEventListener("click", () => { curCat = key; localStorage.setItem("videopost-cat", key); renderCats(); });
+    box.appendChild(b);
+  }
+}
+renderCats();
+
+// ==== 動画URL読み込み（YouTube=noembed / TikTok=公式oEmbed） ====
+$("load-video").addEventListener("click", async () => {
+  const url = $("video-url").value.trim();
+  if (!url) { setStatus("動画URLを入力してください", true); return; }
+  const btn = $("load-video");
+  btn.disabled = true;
+  setStatus("動画情報を取得中…");
+  try {
+    let title = "";
+    if (/tiktok\.com/.test(url)) {
+      const r = await fetch("https://www.tiktok.com/oembed?url=" + encodeURIComponent(url));
+      const j = await r.json();
+      title = j.title || "";
+    } else {
+      const r = await fetch("https://noembed.com/embed?url=" + encodeURIComponent(url));
+      const j = await r.json();
+      if (j.error) throw new Error("この動画URLは読み込めませんでした");
+      title = j.title || "";
+    }
+    if (title) $("v-title").value = title;
+    setStatus(title ? "タイトルを読み込みました ✅（概要欄は手で貼り付けてください）" : "タイトルが取得できませんでした。手で入力してください", !title);
+  } catch (e) {
+    setStatus("エラー: " + e.message + "（タイトルを手で入力してもOK）", true);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// ==== 翻訳 ====
+async function translate(text, target) {
+  if (!text.trim()) return "";
+  const url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&dt=t&tl=" + encodeURIComponent(target) + "&q=" + encodeURIComponent(text);
+  const r = await fetch(url);
+  if (!r.ok) throw new Error("翻訳サーバーに接続できませんでした");
+  const data = await r.json();
+  return data[0].map(seg => seg[0]).filter(Boolean).join("");
+}
+
+// 機械翻訳の定番誤訳を正しい中国語ゲーム用語に直す
+const ZH_FIX = [
+  [/强袭6|罢工6|斯托6|斯特6|条纹6/g, "街霸6"],
+  [/街头快打|街头斗士/g, "街头霸王"],
+];
+function fixZh(s) { for (const [re, to] of ZH_FIX) s = s.replace(re, to); return s; }
+
+// ==== ⚡ 自動翻訳 ====
+$("convert").addEventListener("click", async () => {
+  const title = $("v-title").value.trim();
+  const desc = $("v-desc").value.replace(/https?:\/\/\S+/g, "").trim();
+  const memo = $("v-memo").value.trim();
+  if (!title && !desc && !memo) { setStatus("タイトルか概要欄を入力してください", true); return; }
+  const btn = $("convert");
+  btn.disabled = true;
+  setStatus("翻訳中…（数秒かかります）");
+  try {
+    const smart = detectSmart([title, desc, memo].join("\n"));
+    const catZh = (CATEGORIES[curCat] || CATEGORIES.generic).zh;
+    let [zhTitle, zhDesc] = await Promise.all([
+      translate(title, "zh-CN"),
+      translate([desc, memo].filter(Boolean).join("\n"), "zh-CN"),
+    ]);
+    zhTitle = fixZh(zhTitle); zhDesc = fixZh(zhDesc);
+    // 曲名はイベント名と同格の必須タグ（原題のまま全SNSへ）
+    const tags = uniq([...smart.events, ...(smart.song ? [smart.song] : []), ...smart.zh, ...catZh]);
+
+    // ジャンル別バズ型でタイトル候補を生成（機械翻訳の直訳より優先）
+    const genre = resolveGenre(smart);
+    const e = { event: smart.events[0] || "", chara: smart.chara, game: smart.game, song: smart.song };
+    const buzz = BUZZ[genre];
+    const biliCands = uniq([...buzz.biliTitles.map(f => f(e)), zhTitle]).filter(Boolean);
+    const coverCands = uniq([...buzz.redCovers.map(f => f(e)), [...zhTitle].slice(0, 12).join("")]).filter(Boolean);
+
+    // bilibili（第1候補をセット・他は下の候補チップから選べる）
+    $("bili-title").value = [...biliCands[0]].slice(0, 80).join("");
+    $("bili-desc").value = (zhDesc ? zhDesc + "\n\n" : "") + "我是来自日本的coser！喜欢的话请一键三连支持一下🙏";
+    $("bili-tags").value = tags.slice(0, 10).join(",");
+    renderSugg("bili-sugg", biliCands.slice(1), "bili-title", `💡 ${buzz.label}型の候補（タップで差し替え・最後は直訳）`);
+
+    // 小紅書
+    $("red-cover").value = coverCands[0];
+    $("red-title").value = [...zhTitle].slice(0, 20).join("");
+    $("red-body").value = (zhDesc || zhTitle) + "\n\n" + tags.slice(0, 12).map(t => "#" + t).join(" ");
+    renderSugg("red-sugg", coverCands.slice(1), "red-cover", "💡 封面文字の候補（タップで差し替え）");
+
+    // Weibo
+    $("weibo-body").value = zhTitle + (zhDesc ? "\n" + zhDesc : "") + "\n\n" + tags.slice(0, 8).map(t => "#" + t + "#").join(" ");
+
+    for (const k of ["bili", "red", "weibo"]) $("card-" + k).classList.add("show");
+    updateCounts();
+    const found = smart.labels.length ? `　🎯 検出: ${uniq(smart.labels).join("・")}｜バズ型: ${buzz.label}` : "";
+    setStatus("変換が完了しました ✅ 各欄は手直しできます" + found);
+  } catch (e) {
+    setStatus("エラー: " + e.message, true);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// タイトル候補チップ（タップで差し替え）
+function renderSugg(boxId, items, targetId, label) {
+  const box = $(boxId);
+  box.innerHTML = "";
+  if (!items.length) return;
+  const lb = document.createElement("span");
+  lb.className = "sg-label";
+  lb.textContent = label;
+  box.appendChild(lb);
+  items.forEach(text => {
+    const b = document.createElement("button");
+    b.className = "sg";
+    b.textContent = text;
+    b.addEventListener("click", () => { $(targetId).value = text; updateCounts(); });
+    box.appendChild(b);
+  });
+}
+
+// ==== 🤖 Claudeアプリ用プロンプト ====
+const M = { BT: "===bilibili标题===", BD: "===bilibili简介===", BG: "===bilibili标签===",
+            RC: "===封面文字===", RT: "===小紅書タイトル===", RB: "===小紅書本文===", WB: "===Weibo===" };
+
+function buildPrompt() {
+  const cat = CATEGORIES[curCat] || CATEGORIES.generic;
+  const title = $("v-title").value.trim();
+  const desc = $("v-desc").value.replace(/https?:\/\/\S+/g, "").trim();
+  const memo = $("v-memo").value.trim();
+  const det = detectSmart([title, desc, memo].join("\n"));
+  let p = "あなたはコスプレ×格闘ゲーム系クリエイターの中国動画SNS投稿を作るアシスタントです。日本のYouTube/TikTokに投稿した動画を、bilibili・小紅書・Weiboに転載するための投稿文を作ってください。目的は中国でのフォロワー獲得。\n\n";
+  p += "【元動画のタイトル（日本語）】\n" + (title || "（なし）") + "\n";
+  if (desc) p += "【概要欄・投稿文】\n" + desc + "\n";
+  if (memo) p += "【動画の内容メモ（最優先で反映）】\n" + memo + "\n";
+  p += "【カテゴリ】" + cat.label + "\n\n";
+  const genre = resolveGenre(det);
+  const buzz = BUZZ[genre];
+  const ent = { event: det.events[0] || "", chara: det.chara, game: det.game, song: det.song };
+  p += "【ジャンル判定】" + buzz.label + "\n";
+  p += "【このジャンルのバズ型（分析済み・タイトルは必ずこの型をベースに作ること）】\n";
+  p += "・bilibili: " + buzz.tips.bili + "\n";
+  p += "  标题の例: " + buzz.biliTitles.map(f => f(ent)).join(" ／ ") + "\n";
+  p += "・小紅書: " + buzz.tips.red + "\n";
+  p += "  封面文字の例: " + buzz.redCovers.map(f => f(ent)).join(" ／ ") + "\n";
+  p += "・Weibo: " + buzz.tips.weibo + "\n\n";
+  p += "【bilibiliの方針】标题=80字以内。検索キーワード（キャラ名・ゲーム名）を含め、【】でジャンル表記（例:【cosplay】【街霸6】）するのがbilibili文化。简介=親しみやすい自己紹介（日本から来たcoser等）＋動画の見どころ＋一键三连（点赞・投币・收藏）のお願い。标签=10個以内、検索される単語で。\n";
+  p += "【小紅書の方針】封面文字=12字以内のフック。タイトル=20字以内で検索KW必須。本文=友達への分享トーン＋絵文字＋コメントを誘う問いかけ。\n";
+  p += "【Weiboの方針】本文＋#话题#形式のタグ5〜8個。\n";
+  p += "【タグの方針】内容に合うものだけ選ぶ。合わないタグは付けない。確信できない固有名詞は付けない。\n";
+  p += "・本文にイベント名（大会・即売会・◯◯杯など）があれば、そのイベント名タグを【全SNSに必ず】入れる。\n";
+  if (det.events.length) p += "・【必須タグ】検出済みイベント名。全SNSのタグに必ず含めること: " + uniq(det.events).map(t => "#" + t).join(" ") + "\n";
+  if (det.song) p += "・【必須】曲名を検出:「" + det.song + "」— 原題のままタイトルと全SNSのタグに必ず入れる（曲名検索からの流入が最大の入口）。\n";
+  if (det.labels.length) p += "・本文から検出した要素（参考）: " + uniq(det.labels).join("・") + "\n";
+  p += "・タグ候補（参考・取捨選択する）: " + cat.zh.map(t => "#" + t).join(" ") + "\n\n";
+  p += "必ず下の形式で、見出し行（===…===）はそのままコピーして出力してください:\n";
+  p += M.BT + "\n（80字以内）\n" + M.BD + "\n（简介）\n" + M.BG + "\n（カンマ区切り10個以内）\n";
+  p += M.RC + "\n（12字以内）\n" + M.RT + "\n（20字以内）\n" + M.RB + "\n（本文＋#タグ）\n" + M.WB + "\n（本文＋#タグ#）";
+  return p;
+}
+
+$("ai-prompt").addEventListener("click", () => {
+  const t = $("v-title").value.trim(), d = $("v-desc").value.trim(), m = $("v-memo").value.trim();
+  if (!t && !d && !m) { setStatus("タイトルか概要欄を入れてからどうぞ", true); return; }
+  $("ai-prompt-text").value = buildPrompt();
+  $("ai-box").style.display = "block";
+  setStatus("プロンプトを作りました📋 コピーしてClaudeアプリへ");
+  $("ai-box").scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
+$("ai-copy").addEventListener("click", () => copyBtn($("ai-prompt-text").value, $("ai-copy")));
+
+function section(text, start, ...ends) {
+  const i = text.indexOf(start);
+  if (i < 0) return "";
+  let from = i + start.length, to = text.length;
+  for (const e of ends) { const j = text.indexOf(e, from); if (j >= 0 && j < to) to = j; }
+  return text.slice(from, to).trim();
+}
+$("ai-apply").addEventListener("click", () => {
+  const t = $("ai-reply").value;
+  if (!t.trim()) { setStatus("Claudeの返事を貼り付けてください", true); return; }
+  const all = Object.values(M);
+  const get = (mark) => section(t, mark, ...all.filter(x => x !== mark));
+  const bt = get(M.BT), bd = get(M.BD), bg = get(M.BG), rc = get(M.RC), rt = get(M.RT), rb = get(M.RB), wb = get(M.WB);
+  if (!bt && !bd && !rb && !wb) { setStatus("見出し（===…===）が見つかりません。返事をまるごと貼り付けてください", true); return; }
+  $("bili-title").value = bt; $("bili-desc").value = bd; $("bili-tags").value = bg.replace(/#/g, "");
+  $("red-cover").value = rc; $("red-title").value = rt; $("red-body").value = rb;
+  $("weibo-body").value = wb;
+  for (const k of ["bili", "red", "weibo"]) $("card-" + k).classList.add("show");
+  updateCounts();
+  setStatus("各欄に反映しました ✅ 手直ししてコピーしてください");
+});
+
+// ==== 文字数カウント ====
+function updateCounts() {
+  const bt = [...$("bili-title").value].length;
+  const el = $("count-bili");
+  el.textContent = `标题 ${bt} / 80字`;
+  el.classList.toggle("over", bt > 80);
+  const rb = [...$("red-body").value].length;
+  $("count-red").textContent = `本文 ${rb} / 1000字`;
+  $("count-red").classList.toggle("over", rb > 1000);
+  const wb = [...$("weibo-body").value].length;
+  $("count-weibo").textContent = `${wb} / 2000字`;
+}
+["bili-title", "red-body", "weibo-body"].forEach(id => $(id).addEventListener("input", updateCounts));
+
+// ==== コピー ====
+async function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return; }
+  const ta = document.createElement("textarea");
+  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  document.execCommand("copy"); document.body.removeChild(ta);
+}
+async function copyBtn(text, btn) {
+  const orig = btn.textContent;
+  try { await copyText(text); btn.textContent = "✓ コピーしました"; btn.classList.add("done"); }
+  catch (e) { btn.textContent = "失敗（長押しで選択して）"; }
+  setTimeout(() => { btn.textContent = orig; btn.classList.remove("done"); }, 1600);
+}
+document.querySelectorAll(".copy-btn").forEach(btn => {
+  btn.addEventListener("click", () => copyBtn($(btn.dataset.target).value, btn));
+});
+
+function setStatus(msg, isError) {
+  const el = $("status");
+  el.textContent = msg;
+  el.className = "status" + (isError ? " error" : "");
+}
+</script>
+</body>
+</html>

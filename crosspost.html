@@ -284,6 +284,13 @@ const CATEGORIES = {
     weibo: ["日常","生活记录","每日穿搭","穿搭日记","coser日常","自拍","女生日常","分享生活","二次元日常"],
     coverSamples: ["coser的日常碎片","今天的穿搭🌷","下播啦~","日本生活vlog"]
   },
+  dance: {
+    label: "ダンス・チャレンジ",
+    red: ["舞蹈","韩舞","kpop","舞蹈挑战","翻跳","日本coser","宅舞","二次元"],
+    ig: ["dance","dancecover","dancechallenge","kpop","kpopdance","kpopchallenge","챌린지","커버댄스","케이팝","댄스","틱톡챌린지","일본코스프레","cosplay","ダンス","踊ってみた"],
+    weibo: ["舞蹈","韩舞","kpop","舞蹈挑战","翻跳","宅舞","coser"],
+    coverSamples: ["挑战最火的舞💃","春丽跳kpop？！","这个舞太上头了","完整版来了"]
+  },
   studio: {
     label: "スタジオ撮影・摄影",
     red: ["人像摄影","摄影","棚拍","摄影棚","写真","日系写真","布光","摄影分享","模特","约拍","cos摄影","作品分享"],
@@ -345,8 +352,9 @@ function catTags(platform) {
 
 // イベント名検出（見つけたら全SNSに必ず付ける・最優先）
 const EVENT_RULES = [
-  { re: /EVO\s*JAPAN\s*(20\d{2})?/i, mk: m => "EVOJapan" + (m[1] || "") },
-  { re: /\bEVO\s*(20\d{2})?\b/i, mk: m => "EVO" + (m[1] || ""), not: /EVO\s*JAPAN/i },
+  // 年付き(EVO2026等)が本文のどこかにあれば年付きを優先
+  { re: /EVO\s*JAPAN\s*(20\d{2})?/i, mk: (m, text) => { const y = text.match(/EVO\s*JAPAN\s*(20\d{2})/i); return "EVOJapan" + (y ? y[1] : (m[1] || "")); } },
+  { re: /\bEVO\s*(20\d{2})?\b/i, mk: (m, text) => { const y = text.match(/\bEVO\s*(20\d{2})\b/i); return "EVO" + (y ? y[1] : (m[1] || "")); }, not: /EVO\s*JAPAN/i },
   { re: /(?:コミケ|コミックマーケット)\s*(1[0-2]\d)?/, mk: m => m[1] ? "C" + m[1] : "コミケ" },
   { re: /\bC(1[0-2]\d)\b/, mk: m => "C" + m[1] },
   { re: /東京ゲームショウ|\bTGS\s*(20\d{2})?\b/i, mk: m => "TGS" + (m[1] || "") },
@@ -377,6 +385,8 @@ const CONTENT_RULES = [
   { re: /セーラー服|制服|\bJK\b/, label: "制服", ig: ["seifuku"], red: ["JK制服"], weibo: ["JK制服"] },
   { re: /メイド/, label: "メイド", ig: ["maid","maidcosplay"], red: ["女仆"], weibo: ["女仆装"] },
   { re: /ドレス/, label: "ドレス", ig: ["dress"], red: ["礼服"], weibo: ["礼服"] },
+  { re: /踊|ダンス|dance|振り?付け|チャレンジ|challenge|翻跳/i, label: "ダンス", ig: ["dance","dancecover","dancechallenge","챌린지","커버댄스"], red: ["舞蹈","舞蹈挑战","翻跳"], weibo: ["舞蹈","舞蹈挑战"] },
+  { re: /k-?pop|kpop|케이팝|韓流|韩流/i, label: "K-POP", ig: ["kpop","kpopdance","케이팝"], red: ["kpop","韩舞"], weibo: ["kpop","韩舞"] },
   { re: /桜|花見/, label: "桜", ig: ["sakura","cherryblossom"], red: ["樱花"], weibo: ["樱花"] },
   { re: /ラスベガス|las\s*vegas|ベガス/i, label: "ラスベガス", ig: ["lasvegas"], red: ["拉斯维加斯"], weibo: ["拉斯维加斯"] },
   { re: /スタジオ|ライティング|棚撮/, label: "スタジオ撮影", ig: ["studiophotography"], red: ["棚拍","布光"], weibo: ["棚拍"] },
@@ -387,13 +397,20 @@ const CONTENT_RULES = [
 ];
 
 function detectSmart(text) {
-  const out = { events: [], ig: [], red: [], weibo: [], labels: [], excl: new Set() };
+  const out = { events: [], ig: [], red: [], weibo: [], labels: [], excl: new Set(), song: "" };
   if (!text || !text.trim()) return out;
+  // 曲名検出（ダンス投稿用）: 「◯◯」内、または「◯◯踊ってみた/チャレンジ」の◯◯
+  const sm = text.match(/[「『]([^」』]{1,25})[」』]/);
+  if (sm) out.song = sm[1];
+  if (!out.song) {
+    const m2 = text.match(/([A-Za-z0-9À-ÿ゠-ヿ぀-ゟー・&'! ]{2,25}?)\s*(?:踊ってみた|ダンスチャレンジ|チャレンジ|dance\s*challenge|dance\s*cover)/i);
+    if (m2 && m2[1].trim().length >= 2) out.song = m2[1].trim();
+  }
   for (const r of EVENT_RULES) {
     if (r.not && r.not.test(text)) continue;
     const m = text.match(r.re);
     if (m) {
-      const tag = r.mk(m);
+      const tag = r.mk(m, text);
       if (tag && !out.events.includes(tag)) { out.events.push(tag); out.labels.push(tag); }
     }
   }
@@ -557,6 +574,8 @@ function buildClaudePrompt() {
   p += "・言語: Instagramは英語＋韓国語の両方（例 #chunli #춘리 #streetfighter #스트리트파이터）、小紅書・Weiboは簡体字（例 #春丽# #街霸6# #漫展#）。コスプレ投稿のときだけ #cosplay/#코스프레 を入れる。\n";
   const det = detectSmart([raw, memo].join("\n"));
   if (det.events.length) p += "・【必須タグ】本文からイベント名を検出済み。全SNSのタグに必ず含めること: " + uniq(det.events).map(t => "#" + t).join(" ") + "\n";
+  if (det.song) p += "・【必須】曲名を検出:「" + det.song + "」— 原題のままタイトル/本文と全SNSのタグに必ず入れる（曲名検索が最大の流入口）。\n";
+  if (det.labels.includes("ダンス")) p += "・ダンス投稿の方針: 小紅書は「挑战◯◯」型のタイトルが伸びる。K-POPならIGは韓国語タグ（#챌린지 #커버댄스 #케이팝）を必ず数個入れる。\n";
   if (det.labels.length) p += "・本文から検出した要素（タグ選定の参考に）: " + uniq(det.labels).join("・") + "\n";
   p += "\n";
   p += "必ず下の形式で、見出し行（===…===）はそのままコピーして出力してください:\n";
@@ -631,27 +650,32 @@ async function convertSimple(raw, memo) {
   const knownRe = [...EVENT_RULES.map(r => r.re), ...CONTENT_RULES.map(r => r.re)];
   const untransTags = srcTags.filter(t => !knownRe.some(re => re.test(t)));
 
-  const [en, zh, tagsZhRaw] = await Promise.all([
+  let [en, zh, tagsZhRaw] = await Promise.all([
     translate(body, "en"),
     translate(body, "zh-CN"),
     untransTags.length ? translate(untransTags.join("\n"), "zh-CN") : Promise.resolve("")
   ]);
+  // 機械翻訳の定番誤訳を正しい中国語ゲーム用語に直す
+  const ZH_FIX = [[/强袭6|罢工6|斯托6|斯特6|条纹6/g, "街霸6"], [/街头快打|街头斗士/g, "街头霸王"]];
+  for (const [re, to] of ZH_FIX) { zh = zh.replace(re, to); tagsZhRaw = tagsZhRaw.replace(re, to); }
   let tagsZh = tagsZhRaw.split("\n").map(t => t.replace(/\s+/g, "").trim()).filter(Boolean);
   if (tagsZh.length !== untransTags.length) tagsZh = untransTags;
 
   // 優先順: 元タグ・イベント名 → 内容から検出 → カテゴリ → 定番（枠が余れば）
   // ※カテゴリ/定番のうち、本文に出てこないキャラのタグは自動で外す
-  const igTags = uniq([...srcTags, ...smart.events, ...smart.ig, ...filterExcl(catTags("ig"), smart), ...filterExcl(getDefaultTags("ig"), smart)]).slice(0, 25);
+  // 曲名はイベント名と同格の必須タグ（原題のまま全SNSへ）
+  const songTag = smart.song ? [smart.song.replace(/\s+/g, "")] : [];
+  const igTags = uniq([...srcTags, ...smart.events, ...songTag, ...smart.ig, ...filterExcl(catTags("ig"), smart), ...filterExcl(getDefaultTags("ig"), smart)]).slice(0, 25);
   $("out-ig").value = body + "\n.\n" + en + "\n\n" + igTags.map(t => "#" + t).join(" ");
 
-  const redTags = uniq([...smart.events, ...smart.red, ...tagsZh, ...filterExcl(catTags("red"), smart), ...filterExcl(getDefaultTags("red"), smart)]).slice(0, 12);
+  const redTags = uniq([...smart.events, ...songTag, ...smart.red, ...tagsZh, ...filterExcl(catTags("red"), smart), ...filterExcl(getDefaultTags("red"), smart)]).slice(0, 12);
   const zhLines = zh.split("\n").map(l => l.trim()).filter(Boolean);
   const titleLine = zhLines.find(l => [...l].length >= 4) || zhLines[0] || "";
   $("title-red").value = [...titleLine].slice(0, 20).join("");
   $("cover-red").value = [...titleLine].slice(0, 12).join("");  // 無料モードは題を流用（手直し前提）
   $("out-red").value = zh + "\n\n" + redTags.map(t => "#" + t).join(" ");
 
-  const wbTags = uniq([...smart.events, ...smart.weibo, ...tagsZh, ...filterExcl(catTags("weibo"), smart), ...filterExcl(getDefaultTags("weibo"), smart)]).slice(0, 8);
+  const wbTags = uniq([...smart.events, ...songTag, ...smart.weibo, ...tagsZh, ...filterExcl(catTags("weibo"), smart), ...filterExcl(getDefaultTags("weibo"), smart)]).slice(0, 8);
   $("out-weibo").value = zh + "\n\n" + wbTags.map(t => "#" + t + "#").join(" ");
 
   for (const k of ["ig", "red", "weibo"]) {
@@ -707,4 +731,3 @@ function setStatus(msg, isError) {
 </script>
 </body>
 </html>
-
