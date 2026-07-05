@@ -9,7 +9,7 @@
   :root {
     --bg: #f4f5f7; --card: #ffffff; --text: #1a1d24; --sub: #6b7280; --border: #e2e4e9;
     --accent: #00A1D6;           /* bilibiliブルー */
-    --bili: #00A1D6; --red: #ff2442; --weibo: #e6432e;
+    --bili: #00A1D6; --red: #ff2442; --weibo: #e6432e; --tiktok: #161823; --ttpink: #FE2C55;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif; background: var(--bg); color: var(--text); padding: 20px 14px 60px; }
@@ -43,6 +43,7 @@
   .card.bili .card-head { background: var(--bili); }
   .card.red .card-head { background: var(--red); }
   .card.weibo .card-head { background: var(--weibo); }
+  .card.tiktok .card-head { background: var(--tiktok); }
   .card-body { padding: 13px 15px 15px; display: flex; flex-direction: column; gap: 9px; flex: 1; }
   .card-body textarea { min-height: 150px; font-size: 13px; flex: 1; }
   .field-label { font-size: 12px; color: var(--sub); font-weight: 700; }
@@ -59,6 +60,7 @@
   .sugg .sg { background: #eef7fb; border: 1px solid var(--bili); color: #0b6e8f; border-radius: 10px; padding: 7px 11px; font-size: 12px; text-align: left; line-height: 1.4; }
   .sugg .sg-label { flex-basis: 100%; font-size: 11px; color: var(--sub); font-weight: 700; margin-bottom: -2px; }
   .card.red .sugg .sg { background: #fff0f2; border-color: var(--red); color: #b91c3c; }
+  .card.tiktok .sugg .sg { background: #fef1f4; border-color: var(--ttpink); color: #c11c42; }
   footer { text-align: center; margin-top: 24px; font-size: 12px; color: var(--sub); line-height: 1.8; }
   @media (max-width: 480px) { body { padding: 14px 10px 50px; } .panel { padding: 13px; } .btn-main { width: 100%; } }
 </style>
@@ -68,7 +70,7 @@
   <header>
     <p style="text-align:left;margin-bottom:10px"><a href="index.html" style="color:var(--accent);text-decoration:none;font-weight:700;font-size:13px">← マネージャーHubに戻る</a></p>
     <h1>🎬 動画クロス投稿ツール</h1>
-    <p>YouTube・TikTokに上げた動画を、bilibili・小紅書・Weibo向けの投稿文にします（動画自体はそのまま使えます）</p>
+    <p>動画1本から、TikTok・bilibili・小紅書・Weibo向けの投稿文を作ります（Vlogショートの一次投稿にも、転載にも）</p>
   </header>
 
   <div class="panel">
@@ -116,6 +118,29 @@
   </div>
 
   <div class="grid">
+    <!-- TikTok -->
+    <div class="card tiktok" id="card-tiktok">
+      <div class="card-head"><span class="name">TikTok</span><span class="lang">日本語</span></div>
+      <div class="card-body">
+        <span class="field-label">冒頭フック（動画に載せる1行テロップ・CapCutで焼く）</span>
+        <div class="row">
+          <input type="text" id="tt-hook">
+          <button class="copy-btn" data-target="tt-hook" style="background:#6b7280">コピー</button>
+        </div>
+        <div class="sugg" id="tt-sugg"></div>
+        <span class="field-label">キャプション（本文＋#タグ）</span>
+        <textarea id="tt-cap"></textarea>
+        <div class="card-foot">
+          <span class="count" id="count-tt"></span>
+          <div class="foot-btns">
+            <a class="open-btn" href="https://www.tiktok.com/tiktokstudio/upload" target="_blank">投稿画面 ↗</a>
+            <button class="copy-btn" data-target="tt-cap">キャプションコピー</button>
+          </div>
+        </div>
+        <p class="hint">🎵 冒頭3秒のフックが命。タグは日本語＋英語グローバル混在で5〜8個、ダンス動画は曲名タグ必須。スマホはTikTokアプリから投稿でOK。</p>
+      </div>
+    </div>
+
     <!-- bilibili -->
     <div class="card bili" id="card-bili">
       <div class="card-head"><span class="name">bilibili</span><span class="lang">中国語（簡体字）</span></div>
@@ -197,18 +222,23 @@
 const CATEGORIES = {
   chunli: { label: "春麗・格ゲーコス",
     zh: ["cosplay","cos正片","春丽","街头霸王","街霸6","格斗游戏","二次元","日本coser","游戏实况"],
+    jp: ["コスプレ","cosplay","春麗","chunli","スト6","streetfighter6","格ゲー","ゲーム女子"],
     cover: ["春丽cos来啦💙","日本coser的春丽","街霸春丽👊"] },
   game: { label: "ゲーム実況・配信",
     zh: ["游戏实况","格斗游戏","街霸6","电竞","游戏直播","日本玩家","搞笑"],
+    jp: ["ゲーム実況","スト6","格ゲー","gaming","ゲーム女子","fgc"],
     cover: ["日本玩家的日常","这波操作太秀了","实况精彩片段"] },
   dance: { label: "ダンス・踊ってみた",
     zh: ["舞蹈","翻跳","韩舞","kpop","宅舞","舞蹈挑战","日本coser"],
+    jp: ["踊ってみた","ダンス","dance","kpop","dancechallenge","コスプレ"],
     cover: ["挑战最火的舞💃","这个舞太上头了","春丽跳kpop？！"] },
   daily: { label: "日常・Vlog",
     zh: ["日常","vlog","生活记录","日本生活","coser日常","日系穿搭"],
+    jp: ["vlog","日常","コスプレイヤーの日常","dailyvlog","日本"],
     cover: ["coser的日常","日本生活vlog","今天的记录"] },
   generic: { label: "汎用",
     zh: ["cosplay","二次元","日本coser","日常","游戏"],
+    jp: ["コスプレ","cosplay","ゲーム","日常"],
     cover: [] }
 };
 let curCat = localStorage.getItem("videopost-cat") || "chunli";
@@ -248,7 +278,7 @@ const CONTENT_RULES = [
   { re: /歌ってみた|カバー曲|歌枕|翻唱/i, label: "歌", zh: ["翻唱"] },
 ];
 function detectSmart(text) {
-  const out = { events: [], zh: [], labels: [], chara: "", game: "", song: "" };
+  const out = { events: [], zh: [], labels: [], chara: "", charaJa: "", game: "", gameJa: "", song: "" };
   if (!text || !text.trim()) return out;
   // 曲名検出: 「◯◯」『◯◯』のカッコ内、または「◯◯踊ってみた/チャレンジ」の◯◯
   const sm = text.match(/[「『]([^」』]{1,25})[」』]/);
@@ -265,8 +295,8 @@ function detectSmart(text) {
   for (const r of CONTENT_RULES) {
     if (r.re.test(text)) {
       out.zh.push(...r.zh); out.labels.push(r.label);
-      if (r.kind === "chara" && !out.chara) out.chara = r.zh[0];
-      if (r.kind === "game" && !out.game) out.game = r.zh[0];
+      if (r.kind === "chara" && !out.chara) { out.chara = r.zh[0]; out.charaJa = r.label; }
+      if (r.kind === "game" && !out.game) { out.game = r.zh[0]; out.gameJa = r.label; }
     }
   }
   // キャラからゲームを補完（春麗→街霸6等）
@@ -361,6 +391,16 @@ const BUZZ = {
   }
 };
 
+// ==== TikTok用フック候補（日本語・冒頭テロップ） ====
+const TT_HOOKS = {
+  event:   e => [`${e.event}行ってきた🔥`, `${e.event}の現地、こうなってた`, `${e.event}参戦した結果…`],
+  chara:   e => [`本気の${e.charaJa || "コスプレ"}、見て`, `${e.charaJa ? e.charaJa + "コス" : "このコス"}、何点？`, `${e.charaJa || "キャラ"}になってみた👊`],
+  game:    e => [`${e.gameJa || "格ゲー"}ガチ勢の日常🎮`, `この試合、最後まで見て`, `女子ゲーマーの本気`],
+  dance:   e => [`${e.song ? "「" + e.song + "」" : "これ"}踊ってみた💃`, `このダンス、難しすぎた`, `${e.charaJa ? e.charaJa + "が踊ったら" : "完コピ"}チャレンジ`],
+  daily:   e => [`コスプレイヤーの1日vlog`, `${e.event || "今日"}の記録🌷`, `密着してみた`],
+  generic: e => [`新作できました🌟`, `これ、どう？`]
+};
+
 function resolveGenre(smart) {
   if (smart.events.length) return "event";
   // ダンスはキャラより優先（コス×ダンスのギャップ型が最強のため）
@@ -444,7 +484,8 @@ $("convert").addEventListener("click", async () => {
   setStatus("翻訳中…（数秒かかります）");
   try {
     const smart = detectSmart([title, desc, memo].join("\n"));
-    const catZh = (CATEGORIES[curCat] || CATEGORIES.generic).zh;
+    const catDef = CATEGORIES[curCat] || CATEGORIES.generic;
+    const catZh = catDef.zh;
     let [zhTitle, zhDesc] = await Promise.all([
       translate(title, "zh-CN"),
       translate([desc, memo].filter(Boolean).join("\n"), "zh-CN"),
@@ -475,7 +516,14 @@ $("convert").addEventListener("click", async () => {
     // Weibo
     $("weibo-body").value = zhTitle + (zhDesc ? "\n" + zhDesc : "") + "\n\n" + tags.slice(0, 8).map(t => "#" + t + "#").join(" ");
 
-    for (const k of ["bili", "red", "weibo"]) $("card-" + k).classList.add("show");
+    // TikTok（日本語・一次投稿）
+    const jpTags = uniq([...smart.events, ...(smart.song ? [smart.song] : []), ...(catDef.jp || [])]).slice(0, 8);
+    const hooks = (TT_HOOKS[genre] || TT_HOOKS.generic)({ event: e.event, song: e.song, charaJa: smart.charaJa, gameJa: smart.gameJa });
+    $("tt-hook").value = hooks[0] || "";
+    $("tt-cap").value = (memo || title) + "\n\n" + jpTags.map(t => "#" + t).join(" ");
+    renderSugg("tt-sugg", hooks.slice(1), "tt-hook", "💡 冒頭フックの候補（タップで差し替え）");
+
+    for (const k of ["tiktok", "bili", "red", "weibo"]) $("card-" + k).classList.add("show");
     updateCounts();
     const found = smart.labels.length ? `　🎯 検出: ${uniq(smart.labels).join("・")}｜バズ型: ${buzz.label}` : "";
     setStatus("変換が完了しました ✅ 各欄は手直しできます" + found);
@@ -505,7 +553,8 @@ function renderSugg(boxId, items, targetId, label) {
 }
 
 // ==== 🤖 Claudeアプリ用プロンプト ====
-const M = { BT: "===bilibili标题===", BD: "===bilibili简介===", BG: "===bilibili标签===",
+const M = { TH: "===TikTokフック===", TC: "===TikTokキャプション===",
+            BT: "===bilibili标题===", BD: "===bilibili简介===", BG: "===bilibili标签===",
             RC: "===封面文字===", RT: "===小紅書タイトル===", RB: "===小紅書本文===", WB: "===Weibo===" };
 
 function buildPrompt() {
@@ -514,7 +563,7 @@ function buildPrompt() {
   const desc = $("v-desc").value.replace(/https?:\/\/\S+/g, "").trim();
   const memo = $("v-memo").value.trim();
   const det = detectSmart([title, desc, memo].join("\n"));
-  let p = "あなたはコスプレ×格闘ゲーム系クリエイターの中国動画SNS投稿を作るアシスタントです。日本のYouTube/TikTokに投稿した動画を、bilibili・小紅書・Weiboに転載するための投稿文を作ってください。目的は中国でのフォロワー獲得。\n\n";
+  let p = "あなたはコスプレ×格闘ゲーム系クリエイターの動画SNS投稿を作るアシスタントです。1本の動画（Vlogショート含む）から、TikTok（日本語・一次投稿）と、bilibili・小紅書・Weibo（中国語・転載）の投稿文を作ってください。目的は各SNSでのフォロワー獲得。\n\n";
   p += "【元動画のタイトル（日本語）】\n" + (title || "（なし）") + "\n";
   if (desc) p += "【概要欄・投稿文】\n" + desc + "\n";
   if (memo) p += "【動画の内容メモ（最優先で反映）】\n" + memo + "\n";
@@ -529,6 +578,7 @@ function buildPrompt() {
   p += "・小紅書: " + buzz.tips.red + "\n";
   p += "  封面文字の例: " + buzz.redCovers.map(f => f(ent)).join(" ／ ") + "\n";
   p += "・Weibo: " + buzz.tips.weibo + "\n\n";
+  p += "【TikTokの方針】日本語。フック=動画冒頭に載せる1行テロップ（3秒でスクロールを止める言葉・15字前後、続きが気になる形）。キャプション=1行目に内容がわかる一言→補足1〜2行→タグ5〜8個（日本語＋英語グローバル混在。例: #コスプレ #cosplay。ダンス動画は曲名タグと#踊ってみた 必須）。恋愛感情を煽る文言（ガチ恋営業）は使わない。\n";
   p += "【bilibiliの方針】标题=80字以内。検索キーワード（キャラ名・ゲーム名）を含め、【】でジャンル表記（例:【cosplay】【街霸6】）するのがbilibili文化。简介=親しみやすい自己紹介（日本から来たcoser等）＋動画の見どころ＋一键三连（点赞・投币・收藏）のお願い。标签=10個以内、検索される単語で。\n";
   p += "【小紅書の方針】封面文字=12字以内のフック。タイトル=20字以内で検索KW必須。本文=友達への分享トーン＋絵文字＋コメントを誘う問いかけ。\n";
   p += "【Weiboの方針】本文＋#话题#形式のタグ5〜8個。\n";
@@ -540,6 +590,7 @@ function buildPrompt() {
   if (det.labels.length) p += "・本文から検出した要素（参考）: " + uniq(det.labels).join("・") + "\n";
   p += "・タグ候補（参考・取捨選択する）: " + cat.zh.map(t => "#" + t).join(" ") + "\n\n";
   p += "必ず下の形式で、見出し行（===…===）はそのままコピーして出力してください:\n";
+  p += M.TH + "\n（15字前後の1行）\n" + M.TC + "\n（本文＋#タグ5〜8個）\n";
   p += M.BT + "\n（80字以内）\n" + M.BD + "\n（简介）\n" + M.BG + "\n（カンマ区切り10個以内）\n";
   p += M.RC + "\n（12字以内）\n" + M.RT + "\n（20字以内）\n" + M.RB + "\n（本文＋#タグ）\n" + M.WB + "\n（本文＋#タグ#）";
   return p;
@@ -567,12 +618,13 @@ $("ai-apply").addEventListener("click", () => {
   if (!t.trim()) { setStatus("Claudeの返事を貼り付けてください", true); return; }
   const all = Object.values(M);
   const get = (mark) => section(t, mark, ...all.filter(x => x !== mark));
-  const bt = get(M.BT), bd = get(M.BD), bg = get(M.BG), rc = get(M.RC), rt = get(M.RT), rb = get(M.RB), wb = get(M.WB);
-  if (!bt && !bd && !rb && !wb) { setStatus("見出し（===…===）が見つかりません。返事をまるごと貼り付けてください", true); return; }
+  const th = get(M.TH), tc = get(M.TC), bt = get(M.BT), bd = get(M.BD), bg = get(M.BG), rc = get(M.RC), rt = get(M.RT), rb = get(M.RB), wb = get(M.WB);
+  if (!th && !tc && !bt && !bd && !rb && !wb) { setStatus("見出し（===…===）が見つかりません。返事をまるごと貼り付けてください", true); return; }
+  $("tt-hook").value = th; $("tt-cap").value = tc;
   $("bili-title").value = bt; $("bili-desc").value = bd; $("bili-tags").value = bg.replace(/#/g, "");
   $("red-cover").value = rc; $("red-title").value = rt; $("red-body").value = rb;
   $("weibo-body").value = wb;
-  for (const k of ["bili", "red", "weibo"]) $("card-" + k).classList.add("show");
+  for (const k of ["tiktok", "bili", "red", "weibo"]) $("card-" + k).classList.add("show");
   updateCounts();
   setStatus("各欄に反映しました ✅ 手直ししてコピーしてください");
 });
@@ -588,8 +640,11 @@ function updateCounts() {
   $("count-red").classList.toggle("over", rb > 1000);
   const wb = [...$("weibo-body").value].length;
   $("count-weibo").textContent = `${wb} / 2000字`;
+  const tc = [...$("tt-cap").value].length;
+  $("count-tt").textContent = `キャプション ${tc} / 2200字`;
+  $("count-tt").classList.toggle("over", tc > 2200);
 }
-["bili-title", "red-body", "weibo-body"].forEach(id => $(id).addEventListener("input", updateCounts));
+["bili-title", "red-body", "weibo-body", "tt-cap"].forEach(id => $(id).addEventListener("input", updateCounts));
 
 // ==== コピー ====
 async function copyText(text) {
@@ -614,6 +669,18 @@ function setStatus(msg, isError) {
   el.textContent = msg;
   el.className = "status" + (isError ? " error" : "");
 }
+
+// ==== vlog-pipeline直結: URLパラメータからプリフィル（?title=&memo=&desc=&cat=） ====
+(function () {
+  const qp = new URLSearchParams(location.search);
+  if (!qp.get("title") && !qp.get("memo")) return;
+  if (qp.get("title")) $("v-title").value = qp.get("title");
+  if (qp.get("desc")) $("v-desc").value = qp.get("desc");
+  if (qp.get("memo")) $("v-memo").value = qp.get("memo");
+  const c = qp.get("cat");
+  if (c && CATEGORIES[c]) { curCat = c; localStorage.setItem("videopost-cat", c); renderCats(); }
+  setStatus("vlog-pipelineのショートを読み込みました ✅ 🤖ボタンで投稿文を作ってください");
+})();
 </script>
 </body>
 </html>
