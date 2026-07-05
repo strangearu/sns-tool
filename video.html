@@ -214,6 +214,12 @@
     </div>
   </div>
 
+  <!-- 日本語訳（中国語の検品用・投稿はしない） -->
+  <div class="panel" id="ja-box" style="display:none">
+    <label class="head">📖 日本語訳（検品用・これは投稿しない）</label>
+    <div id="ja-trans" style="white-space:pre-wrap;font-size:13px;line-height:1.9"></div>
+  </div>
+
   <footer>📱 このページはブラウザだけで動きます。動画本体は各サイトへそのままアップロードしてください。</footer>
 </div>
 
@@ -555,7 +561,8 @@ function renderSugg(boxId, items, targetId, label) {
 // ==== 🤖 Claudeアプリ用プロンプト ====
 const M = { TH: "===TikTokフック===", TC: "===TikTokキャプション===",
             BT: "===bilibili标题===", BD: "===bilibili简介===", BG: "===bilibili标签===",
-            RC: "===封面文字===", RT: "===小紅書タイトル===", RB: "===小紅書本文===", WB: "===Weibo===" };
+            RC: "===封面文字===", RT: "===小紅書タイトル===", RB: "===小紅書本文===", WB: "===Weibo===",
+            JA: "===日本語訳===" };
 
 function buildPrompt() {
   const cat = CATEGORIES[curCat] || CATEGORIES.generic;
@@ -563,7 +570,8 @@ function buildPrompt() {
   const desc = $("v-desc").value.replace(/https?:\/\/\S+/g, "").trim();
   const memo = $("v-memo").value.trim();
   const det = detectSmart([title, desc, memo].join("\n"));
-  let p = "あなたはコスプレ×格闘ゲーム系クリエイターの動画SNS投稿を作るアシスタントです。1本の動画（Vlogショート含む）から、TikTok（日本語・一次投稿）と、bilibili・小紅書・Weibo（中国語・転載）の投稿文を作ってください。目的は各SNSでのフォロワー獲得。\n\n";
+  let p = "あなたはコスプレ×格闘ゲーム系クリエイターの動画SNS投稿を作るアシスタントです。1本の動画（Vlogショート含む）から、TikTok（日本語・一次投稿）と、bilibili・小紅書・Weibo（中国語・転載）の投稿文を作ってください。目的は各SNSでのフォロワー獲得。\n";
+  p += "【忠実性（最重要・全SNS共通）】本文はタイトル・概要欄・内容メモに書いてあること＋添付スクショから確実に分かることだけで構成する。本人が言っていない見どころ・体験談・コツ・裏話を発明しない。アレンジしてよいのは語り口・構成・絵文字・問いかけ・タグまで。元ネタが薄ければ無理に膨らませず短くてよい。\n\n";
   p += "【元動画のタイトル（日本語）】\n" + (title || "（なし）") + "\n";
   if (desc) p += "【概要欄・投稿文】\n" + desc + "\n";
   if (memo) p += "【動画の内容メモ（最優先で反映）】\n" + memo + "\n";
@@ -582,7 +590,7 @@ function buildPrompt() {
   p += "【bilibiliの方針】标题=80字以内。検索キーワード（キャラ名・ゲーム名）を含め、【】でジャンル表記（例:【cosplay】【街霸6】）するのがbilibili文化。简介=親しみやすい自己紹介（日本から来たcoser等）＋動画の見どころ＋一键三连（点赞・投币・收藏）のお願い。标签=10個以内、検索される単語で。\n";
   p += "【小紅書の方針】封面文字=12字以内のフック。タイトル=20字以内で検索KW必須。本文=友達への分享トーン＋絵文字＋コメントを誘う問いかけ。\n";
   p += "【Weiboの方針】本文＋#话题#形式のタグ5〜8個。\n";
-  p += "【ショート動画の転載設計（重要・バズ分析基準）】冒頭3秒がすべて＝ロゴ・挨拶・イントロは動画の減点要素（もし元動画にあれば指摘する）。完走率がゲート（15〜30秒動画は約70%、30〜60秒は約50%が目安）なので、标题・封面文字・简介は「最後まで見る理由」を予告する書き方にする。終わりが冒頭に繋がるループ動画は再生率が跳ねる。保存(收藏)・シェアを誘う一言（後で見返す価値・友達に送りたくなる要素）を必ず1つ入れる。TikTokのウォーターマーク付き動画は他プラットフォームで減点されるため、見つけたら指摘すること。\n";
+  p += "【ショート動画の転載設計（重要・バズ分析基準）】冒頭3秒がすべて＝ロゴ・挨拶・イントロは動画の減点要素（もし元動画にあれば指摘する）。完走率がゲート（15〜30秒動画は約70%、30〜60秒は約50%が目安）なので、标题・封面文字・简介は「最後まで見る理由」を予告する書き方にする。終わりが冒頭に繋がるループ動画は再生率が跳ねる。保存(收藏)・シェアを誘う一言は元の内容に合う形でだけ入れる（見どころやコツをでっち上げない）。TikTokのウォーターマーク付き動画は他プラットフォームで減点されるため、見つけたら指摘すること。\n";
   p += "【タグの方針】内容に合うものだけ選ぶ。合わないタグは付けない。確信できない固有名詞は付けない。\n";
   p += "・本文にイベント名（大会・即売会・◯◯杯など）があれば、そのイベント名タグを【全SNSに必ず】入れる。\n";
   if (det.events.length) p += "・【必須タグ】検出済みイベント名。全SNSのタグに必ず含めること: " + uniq(det.events).map(t => "#" + t).join(" ") + "\n";
@@ -592,7 +600,8 @@ function buildPrompt() {
   p += "必ず下の形式で、見出し行（===…===）はそのままコピーして出力してください:\n";
   p += M.TH + "\n（15字前後の1行）\n" + M.TC + "\n（本文＋#タグ5〜8個）\n";
   p += M.BT + "\n（80字以内）\n" + M.BD + "\n（简介）\n" + M.BG + "\n（カンマ区切り10個以内）\n";
-  p += M.RC + "\n（12字以内）\n" + M.RT + "\n（20字以内）\n" + M.RB + "\n（本文＋#タグ）\n" + M.WB + "\n（本文＋#タグ#）";
+  p += M.RC + "\n（12字以内）\n" + M.RT + "\n（20字以内）\n" + M.RB + "\n（本文＋#タグ）\n" + M.WB + "\n（本文＋#タグ#）\n";
+  p += M.JA + "\n（bilibili标题・简介・封面文字・小紅書タイトル/本文・Weiboの日本語訳を項目名付きで。本人は中国語が読めないので、検品できるよう省略せず全文訳すこと）";
   return p;
 }
 
@@ -618,15 +627,17 @@ $("ai-apply").addEventListener("click", () => {
   if (!t.trim()) { setStatus("Claudeの返事を貼り付けてください", true); return; }
   const all = Object.values(M);
   const get = (mark) => section(t, mark, ...all.filter(x => x !== mark));
-  const th = get(M.TH), tc = get(M.TC), bt = get(M.BT), bd = get(M.BD), bg = get(M.BG), rc = get(M.RC), rt = get(M.RT), rb = get(M.RB), wb = get(M.WB);
+  const th = get(M.TH), tc = get(M.TC), bt = get(M.BT), bd = get(M.BD), bg = get(M.BG), rc = get(M.RC), rt = get(M.RT), rb = get(M.RB), wb = get(M.WB), ja = get(M.JA);
   if (!th && !tc && !bt && !bd && !rb && !wb) { setStatus("見出し（===…===）が見つかりません。返事をまるごと貼り付けてください", true); return; }
   $("tt-hook").value = th; $("tt-cap").value = tc;
   $("bili-title").value = bt; $("bili-desc").value = bd; $("bili-tags").value = bg.replace(/#/g, "");
   $("red-cover").value = rc; $("red-title").value = rt; $("red-body").value = rb;
   $("weibo-body").value = wb;
+  if (ja) { $("ja-trans").textContent = ja; $("ja-box").style.display = "block"; }
+  else { $("ja-box").style.display = "none"; }
   for (const k of ["tiktok", "bili", "red", "weibo"]) $("card-" + k).classList.add("show");
   updateCounts();
-  setStatus("各欄に反映しました ✅ 手直ししてコピーしてください");
+  setStatus("各欄に反映しました ✅ 下の📖日本語訳で中身を検品してください");
 });
 
 // ==== 文字数カウント ====

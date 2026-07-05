@@ -254,6 +254,12 @@
     </div>
   </div>
 
+  <!-- 日本語訳（中国語の検品用・投稿はしない） -->
+  <div class="panel" id="ja-box" style="display:none">
+    <label class="head">📖 日本語訳（検品用・これは投稿しない）</label>
+    <div id="ja-trans" style="white-space:pre-wrap;font-size:13px;line-height:1.9"></div>
+  </div>
+
   <footer>
     📱 このページはブラウザだけで動きます（PC不要・どこからでも使えます）。<br>
     スマホのホーム画面に追加しておくとアプリのように使えます。
@@ -553,18 +559,20 @@ $("convert").addEventListener("click", async () => {
 
 // ---- 🤖 Claudeアプリ用プロンプトを作る（課金なし。写真はアプリ側で添付） ----
 const RED_MARK = "===封面文字===", TITLE_MARK = "===タイトル===",
-      BODY_MARK = "===小紅書本文===", IG_MARK = "===Instagram===", WB_MARK = "===Weibo===";
+      BODY_MARK = "===小紅書本文===", IG_MARK = "===Instagram===", WB_MARK = "===Weibo===",
+      JA_MARK = "===日本語訳===";
 
 function buildClaudePrompt() {
   const cat = CATEGORIES[curCat] || CATEGORIES.generic;
   const raw = $("src").value.replace(/https?:\/\/t\.co\/\S+/g, "").trim();
   const memo = $("memo").value.trim();
   let p = "あなたはコスプレ撮影クリエイターの中国SNS投稿を作るアシスタントです。目的は中国（小紅書）でのフォロワー獲得。\n";
-  p += "このメッセージに添付した写真と下の情報をもとに、各SNS向けの投稿文を作ってください。写真からキャラ・衣装・雰囲気を読み取り、確信のない固有名詞は推測しないこと。\n\n";
+  p += "このメッセージに添付した写真と下の情報をもとに、各SNS向けの投稿文を作ってください。写真からキャラ・衣装・雰囲気を読み取り、確信のない固有名詞は推測しないこと。\n";
+  p += "【忠実性（最重要・全SNS共通）】本文は【元の投稿/メモ】に書いてあること＋写真から確実に見えること（キャラ・衣装・場所の雰囲気）だけで構成する。本人が言っていない体験談・撮影のコツ・裏話・感想・清単（◯个心得/◯選）を発明しない。アレンジしてよいのは語り口・構成・絵文字・問いかけ・タグまで。元ネタが一言だけなら無理に膨らませず短い投稿にする（その方が自然）。\n\n";
   p += "【元の投稿/メモ】\n" + (raw || "（なし）") + (memo ? "\n（撮影メモ・最優先で反映）" + memo : "") + "\n\n";
   p += "【カテゴリ】" + cat.label + "\n";
   p += "【小紅書の方針】封面文字＝サムネに乗せる12字以内のフック（クリック率が決まる最重要）。タイトル＝20字以内で検索キーワード（キャラ名・作品名）必須。本文＝広告でなく友達への「分享」トーン、絵文字入り、保存したくなる情報やコメントを誘う問いかけ（例「你们觉得呢？」）を入れる。露出は控えめに（審査・限流対策）。外部SNSのIDは書かない。\n";
-  p += "【小紅書の質基準（発布前審査と同じ基準で作る）】タイトルは爆款型を意識（数字型「5个◯◯」/好奇型/対比型/情緒型）。本文の最初の50字に核心キーワード＋続きを読ませるフックを置く。「最◯◯・第一・100%・绝对」等の誇大語と外部誘導ワード（微信等）は限流対象なので使わない。清単・対比・ビハインド情報など收藏（保存）したくなる要素を1つ入れる。\n";
+  p += "【小紅書の質基準（発布前審査と同じ基準で作る）】タイトルは爆款型を意識（数字型「5个◯◯」/好奇型/対比型/情緒型）。本文の最初の50字に核心キーワード＋続きを読ませるフックを置く。「最◯◯・第一・100%・绝对」等の誇大語と外部誘導ワード（微信等）は限流対象なので使わない。收藏（保存）要素は【元の投稿/メモ】に実際にある情報（衣装の入手先・イベント情報・制作過程など）が含まれる場合だけ入れる——なければ末尾の問いかけだけでよく、情報をでっち上げて清単を作るのは禁止。\n";
   p += "【Instagramの方針】キャプションの1文目が検索インデックスと「…続き」折りたたみ前に見える最重要行。冒頭に内容が伝わる英語1文を置く。\n";
   if (cat.coverSamples && cat.coverSamples.length) p += "【封面文字の例】" + cat.coverSamples.join(" / ") + "\n";
   p += "【タグ候補（参考リスト・この中から内容に合うものだけ選ぶ。全部は付けない）】\n";
@@ -587,7 +595,8 @@ function buildClaudePrompt() {
   p += TITLE_MARK + "\n（20字以内・検索KW入り）\n";
   p += BODY_MARK + "\n（簡体字の本文＋末尾に#タグ）\n";
   p += IG_MARK + "\n（日本語本文→英訳→#タグ）\n";
-  p += WB_MARK + "\n（簡体字の本文＋#タグ#）";
+  p += WB_MARK + "\n（簡体字の本文＋#タグ#）\n";
+  p += JA_MARK + "\n（封面文字・タイトル・小紅書本文・Weiboの日本語訳を項目名付きで。本人は中国語が読めないので、検品できるよう省略せず全文訳すこと）";
   return p;
 }
 
@@ -617,11 +626,12 @@ function section(text, start, ...ends) {
 $("ai-apply").addEventListener("click", () => {
   const t = $("ai-reply").value;
   if (!t.trim()) { setStatus("Claudeの返事を貼り付けてください", true); return; }
-  const cover = section(t, RED_MARK, TITLE_MARK, BODY_MARK, IG_MARK, WB_MARK);
-  const title = section(t, TITLE_MARK, BODY_MARK, IG_MARK, WB_MARK);
-  const body = section(t, BODY_MARK, IG_MARK, WB_MARK);
-  const ig = section(t, IG_MARK, WB_MARK);
-  const wb = section(t, WB_MARK);
+  const cover = section(t, RED_MARK, TITLE_MARK, BODY_MARK, IG_MARK, WB_MARK, JA_MARK);
+  const title = section(t, TITLE_MARK, BODY_MARK, IG_MARK, WB_MARK, JA_MARK);
+  const body = section(t, BODY_MARK, IG_MARK, WB_MARK, JA_MARK);
+  const ig = section(t, IG_MARK, WB_MARK, JA_MARK);
+  const wb = section(t, WB_MARK, JA_MARK);
+  const ja = section(t, JA_MARK);
   if (!cover && !title && !body && !ig && !wb) {
     setStatus("見出し（===…===）が見つかりません。Claudeの返事を見出しごとまるごと貼り付けてください", true);
     return;
@@ -631,9 +641,11 @@ $("ai-apply").addEventListener("click", () => {
   $("out-red").value = body;
   $("out-ig").value = ig;
   $("out-weibo").value = wb;
+  if (ja) { $("ja-trans").textContent = ja; $("ja-box").style.display = "block"; }
+  else { $("ja-box").style.display = "none"; }
   for (const k of ["ig", "red", "weibo"]) { $("card-" + k).classList.add("show"); updateCount(k); }
   checkRed();
-  setStatus("各SNS欄に反映しました ✅ 手直ししてコピーしてください");
+  setStatus("各SNS欄に反映しました ✅ 下の📖日本語訳で中身を検品してください");
 });
 
 // ---- 小紅書 発布前チェッカー（字数・限流リスク・タグ数・互動を自動審査） ----
