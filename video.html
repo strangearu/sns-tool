@@ -107,7 +107,7 @@
       <textarea id="ai-prompt-text" style="min-height:150px;font-size:12px"></textarea>
       <div class="actions">
         <button class="btn-sub" id="ai-copy">📋 プロンプトをコピー</button>
-        <a class="open-btn" href="https://claude.ai/new" target="_blank">Claudeを開く ↗</a>
+        <a class="open-btn" href="https://claude.ai/new" target="_blank" id="claude-open">Claudeを開く ↗</a>
       </div>
       <label class="head" style="margin-top:12px">⬇️ Claudeの返事をここに貼り付け</label>
       <textarea id="ai-reply" style="min-height:90px" placeholder="Claudeが作った文章をまるごと貼り付けてください"></textarea>
@@ -564,6 +564,11 @@ const M = { TH: "===TikTokフック===", TC: "===TikTokキャプション===",
             RC: "===封面文字===", RT: "===小紅書タイトル===", RB: "===小紅書本文===", WB: "===Weibo===",
             JA: "===日本語訳===" };
 
+// PC（幅900px以上）ではプロンプトに推敲指示を足して精度を上げる
+const PC_CTX = `【PC高精度モード（追加の思考指示）】
+・标题・封面文字・TikTokフックはまず頭の中で3案比較し、一番強い1つだけを出力する
+・出力前にセルフレビューを1周: ①忠実性（言っていない見どころ・体験を足していないか）②冒頭3秒と完走率の観点でフックが機能するか③タグ・字数制限——問題があれば直してから出す`;
+
 function buildPrompt() {
   const cat = CATEGORIES[curCat] || CATEGORIES.generic;
   const title = $("v-title").value.trim();
@@ -597,6 +602,7 @@ function buildPrompt() {
   if (det.song) p += "・【必須】曲名を検出:「" + det.song + "」— 原題のままタイトルと全SNSのタグに必ず入れる（曲名検索からの流入が最大の入口）。\n";
   if (det.labels.length) p += "・本文から検出した要素（参考）: " + uniq(det.labels).join("・") + "\n";
   p += "・タグ候補（参考・取捨選択する）: " + cat.zh.map(t => "#" + t).join(" ") + "\n\n";
+  if (window.innerWidth >= 900) p += PC_CTX + "\n\n";
   p += "必ず下の形式で、見出し行（===…===）はそのままコピーして出力してください:\n";
   p += M.TH + "\n（15字前後の1行）\n" + M.TC + "\n（本文＋#タグ5〜8個）\n";
   p += M.BT + "\n（80字以内）\n" + M.BD + "\n（简介）\n" + M.BG + "\n（カンマ区切り10個以内）\n";
@@ -680,6 +686,17 @@ function setStatus(msg, isError) {
   el.textContent = msg;
   el.className = "status" + (isError ? " error" : "");
 }
+
+// ==== PC高精度モード（幅900px以上で自動有効） ====
+if (window.innerWidth >= 900) {
+  document.querySelector("header p:last-of-type").insertAdjacentText("beforeend", "｜🖥️ PC高精度モード有効");
+}
+$("claude-open").addEventListener("click", e => {
+  if (window.innerWidth < 900) return; // スマホは通常タブ
+  e.preventDefault();
+  const w = Math.min(620, Math.floor(screen.availWidth * 0.4));
+  window.open("https://claude.ai/new", "claude_side", `width=${w},height=${screen.availHeight - 80},left=${screen.availWidth - w},top=0`);
+});
 
 // ==== vlog-pipeline直結: URLパラメータからプリフィル（?title=&memo=&desc=&cat=） ====
 (function () {

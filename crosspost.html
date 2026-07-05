@@ -158,7 +158,7 @@
       <textarea id="ai-prompt-text" style="min-height:150px;font-size:12px"></textarea>
       <div class="actions">
         <button class="btn-sub" id="ai-copy">📋 プロンプトをコピー</button>
-        <a class="open-btn" href="https://claude.ai/new" target="_blank">Claudeを開く ↗</a>
+        <a class="open-btn" href="https://claude.ai/new" target="_blank" id="claude-open">Claudeを開く ↗</a>
       </div>
       <ol style="font-size:12px;color:var(--sub);line-height:1.9;margin:10px 0 0 18px">
         <li>「プロンプトをコピー」を押す</li>
@@ -562,6 +562,12 @@ const RED_MARK = "===封面文字===", TITLE_MARK = "===タイトル===",
       BODY_MARK = "===小紅書本文===", IG_MARK = "===Instagram===", WB_MARK = "===Weibo===",
       JA_MARK = "===日本語訳===";
 
+// PC（幅900px以上）ではプロンプトに推敲指示を足して精度を上げる
+const PC_CTX = `【PC高精度モード（追加の思考指示）】
+・封面文字とタイトルはまず頭の中で3案比較し、一番強い1つだけを出力する
+・出力前にセルフレビューを1周: ①忠実性（原文にない体験・情報を足していないか）②限流語（最・第一・绝对・微信等）③タグが内容と合っているか④字数制限——問題があれば直してから出す
+・あたたの実データでは「写真1枚＋50字以内の一言」が勝ち型。翻訳先でも盛らない一言の空気を保ち、その分タイトル・封面で引きを作る`;
+
 function buildClaudePrompt() {
   const cat = CATEGORIES[curCat] || CATEGORIES.generic;
   const raw = $("src").value.replace(/https?:\/\/t\.co\/\S+/g, "").trim();
@@ -590,6 +596,7 @@ function buildClaudePrompt() {
   if (det.labels.includes("ダンス")) p += "・ダンス投稿の方針: 小紅書は「挑战◯◯」型のタイトルが伸びる。K-POPならIGは韓国語タグ（#챌린지 #커버댄스 #케이팝）を必ず数個入れる。\n";
   if (det.labels.length) p += "・本文から検出した要素（タグ選定の参考に）: " + uniq(det.labels).join("・") + "\n";
   p += "\n";
+  if (window.innerWidth >= 900) p += PC_CTX + "\n\n";
   p += "必ず下の形式で、見出し行（===…===）はそのままコピーして出力してください:\n";
   p += RED_MARK + "\n（12字以内）\n";
   p += TITLE_MARK + "\n（20字以内・検索KW入り）\n";
@@ -768,6 +775,17 @@ function setStatus(msg, isError) {
   el.textContent = msg;
   el.className = "status" + (isError ? " error" : "");
 }
+
+// ==== PC高精度モード（幅900px以上で自動有効） ====
+if (window.innerWidth >= 900) {
+  document.querySelector("header p:last-of-type").insertAdjacentText("beforeend", "｜🖥️ PC高精度モード有効");
+}
+$("claude-open").addEventListener("click", e => {
+  if (window.innerWidth < 900) return; // スマホは通常タブ
+  e.preventDefault();
+  const w = Math.min(620, Math.floor(screen.availWidth * 0.4));
+  window.open("https://claude.ai/new", "claude_side", `width=${w},height=${screen.availHeight - 80},left=${screen.availWidth - w},top=0`);
+});
 </script>
 </body>
 </html>

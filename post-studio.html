@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111111">
+<title>投稿工房 — バズ投稿を考える</title>
+<style>
+  :root {
+    --bg: #f4f5f7; --card: #ffffff; --text: #1a1d24; --sub: #6b7280; --border: #e2e4e9;
+    --accent: #111111; --x: #111111; --ig: #E1306C; --tt: #161823; --red: #ff2442;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif; background: var(--bg); color: var(--text); padding: 20px 14px 60px; }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 20px; }
+  header h1 { font-size: 21px; letter-spacing: .04em; }
+  header p { color: var(--sub); font-size: 12.5px; margin-top: 6px; }
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+  label.head { display: block; font-weight: 700; font-size: 13.5px; margin-bottom: 8px; }
+  textarea, input[type=text] { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 11px 12px; font-size: 14px; line-height: 1.7; resize: vertical; font-family: inherit; background: #fafbfc; }
+  textarea:focus, input:focus { outline: 2px solid var(--accent); outline-offset: -1px; background: #fff; }
+  button { border: none; border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity .15s; white-space: nowrap; }
+  button:hover { opacity: .85; }
+  .btn-sub { background: #eef1f5; color: var(--text); font-size: 13px; }
+  .btn-main { background: var(--accent); color: #fff; font-size: 15px; padding: 12px 28px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { background: #eef1f5; color: var(--text); border: 1px solid var(--border); border-radius: 99px; padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .actions { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+  .status { font-size: 13px; color: var(--sub); }
+  .status.error { color: #dc2626; font-weight: 700; }
+  .open-btn { background: #eef1f5; color: var(--text); padding: 8px 14px; font-size: 13px; text-decoration: none; border-radius: 10px; font-weight: 700; display: inline-flex; align-items: center; }
+  .hint { font-size: 11.5px; color: var(--sub); line-height: 1.6; }
+  .idea { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 14px; }
+  .idea-head { padding: 10px 15px; background: var(--accent); color: #fff; font-weight: 800; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .idea-head .aim { font-size: 11px; opacity: .9; background: rgba(255,255,255,.22); padding: 3px 10px; border-radius: 99px; font-weight: 700; }
+  .idea-body { padding: 13px 15px 15px; display: flex; flex-direction: column; gap: 9px; }
+  .idea-body textarea { min-height: 84px; font-size: 14px; }
+  .meta { font-size: 12.5px; color: var(--sub); line-height: 1.8; white-space: pre-wrap; }
+  .idea-foot { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .copy-btn { background: var(--text); color: #fff; padding: 8px 18px; font-size: 13px; }
+  .copy-btn.done { background: #16a34a; }
+  details.brain { margin-top: 10px; }
+  details.brain summary { cursor: pointer; font-size: 12.5px; color: var(--sub); font-weight: 700; }
+  details.brain pre { white-space: pre-wrap; font-family: inherit; font-size: 12px; color: var(--sub); line-height: 1.8; margin-top: 8px; background: #fafbfc; border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
+  footer { text-align: center; margin-top: 24px; font-size: 12px; color: var(--sub); line-height: 1.8; }
+  @media (max-width: 480px) { body { padding: 14px 10px 50px; } .panel { padding: 13px; } .btn-main { width: 100%; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p style="text-align:left;margin-bottom:10px"><a href="index.html" style="color:var(--sub);text-decoration:none;font-weight:700;font-size:13px">← マネージャーHubに戻る</a></p>
+    <h1>🧠 投稿工房</h1>
+    <p>全6,139投稿の実データ勝ちパターン×アルゴリズム要点で、バズを狙った投稿案を作る</p>
+  </header>
+
+  <div class="panel">
+    <label class="head">① どのSNS？</label>
+    <div class="chips" id="platforms"></div>
+
+    <label class="head" style="margin-top:14px">② 今日のネタ・手持ち素材（任意・空なら定番型から提案）</label>
+    <textarea id="seed" style="min-height:70px" placeholder="例: 昨日のスタジオで撮った春麗の写真が5枚ある／今夜スト6配信する／特になし"></textarea>
+
+    <label class="head" style="margin-top:14px">③ 目的</label>
+    <div class="chips" id="aims"></div>
+
+    <div class="actions">
+      <button class="btn-main" id="ai-prompt">🤖 投稿案を3本つくる（Claudeアプリ）</button>
+      <span class="status" id="status"></span>
+    </div>
+    <details class="brain">
+      <summary>📊 このページの頭脳（実データ勝ちパターン）を見る</summary>
+      <pre id="brain-view"></pre>
+    </details>
+
+    <div id="ai-box" style="display:none;margin-top:14px">
+      <label class="head">📋 このプロンプトをコピー → Claudeアプリに貼り付け（手持ち写真があれば添付推奨）</label>
+      <textarea id="ai-prompt-text" style="min-height:140px;font-size:12px"></textarea>
+      <div class="actions">
+        <button class="btn-sub" id="ai-copy">📋 プロンプトをコピー</button>
+        <a class="open-btn" href="https://claude.ai/new" target="_blank" id="claude-open">Claudeを開く ↗</a>
+      </div>
+      <label class="head" style="margin-top:12px">⬇️ Claudeの返事をここに貼り付け</label>
+      <textarea id="ai-reply" style="min-height:90px" placeholder="===案1=== から始まる返事をまるごと貼り付け"></textarea>
+      <div class="actions">
+        <button class="btn-main" id="ai-apply">✅ 案を並べる</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="ideas"></div>
+
+  <footer>📱 案は下書きです。投稿する・しないの最終判断は自分で。<br>頭脳の元データ: projects\x-buzz-analysis（月次更新）</footer>
+</div>
+
+<script>
+// ==== 頭脳（BUZZ_BRAIN）— x-buzz-analysis 2026-06時点の実データから蒸留。週次レビューで見直す ====
+const BRAIN = {
+  x: `【あたたのX実データ勝ちパターン（全6,139投稿・2026-06時点）】
+・写真1枚が絶対条件: 画像1枚バズ率29.8%（いいね中央値517）／テキストのみ0.2%（43）。枚数は1枚が最強、3枚以上は逆効果
+・投稿時間は朝9〜11時がゴールデン（バズ率22〜24.5%）。夜21〜23時は効率最低帯（5〜9%）→ 夜のネタは翌朝に回す
+・「おはよ」ポストは実績385本でバズ率23.1%・中央値365の量産型エース。おはよ＋写真1枚が定番の主砲
+・強いテーマ: ストリートファイター系(45.5%)・FANBOX告知(36.4%)・水着(26.3%)・コミケ(24.4%)・コスプレ(21.1%)・スト6(20.3%)
+・ハッシュタグはイベント名がある時だけ付ける（イベントタグが検索の入口。普段のタグは不要）
+・本文は50字以内の一言＋写真が量産帯。100字超は告知など情報がある時だけ
+・実際に伸びた型: キャラ名＋一言（「不知火舞ﾀﾞﾖｰ」）／変化・初めて（「人生初の赤髪✌️」）／大会現地＋イベントタグ／試合結果の感情爆発（勝ちも負けも伸びる）／告知は日時・場所を明記`,
+  xspec: `【Xアルゴリズム要点（2026年時点の通説・週次で見直し）】
+・リプライ（特に会話の往復）が最重量の加点。いいねは軽い → 返信しやすい余白・問いかけを作る
+・滞在時間が効く: 写真・動画で足を止める
+・外部リンクは本文に入れると配布が落ちる → リンクは自己リプへ
+・最初の30〜60分の初速が配布を決める → 投稿直後のリプ返しが有効
+・連投は配布を食い合う → 最低2〜3時間空ける
+・ブロック・ミュートされる系の攻めは強い減点 → 不快方向には振らない`,
+  ig: `【Instagram（リール/フィード）要点】
+・リールは視聴維持と「送信数（友達へのシェア）」が最強シグナル。冒頭3秒のフックが命
+・フィード写真はカルーセルより1枚目の強度。1文目が折りたたみ前に見える最重要行（英語1文→日本語）
+・タグは英語＋韓国語混在（K-POP路線と相性）。参考: #cosplay #chunli #코스프레`,
+  tiktok: `【TikTok要点】
+・完走率がゲート: 15〜30秒なら70%目標。冒頭3秒でスクロールを止める
+・トレンド音源は早乗りが正義。ダンス・チャレンジ系は曲名タグ必須
+・キャプションは1行目に内容＋タグ5〜8個（日英混在）。終わりが冒頭に繋がるループ構成は再生率が跳ねる`,
+  red: `【小紅書要点】
+・封面（表紙）文字とタイトルの検索KWがクリック率を決める。「日本coser」の身分フックが強い
+・收藏（保存）される実用性か、コメントを誘う問いかけで互動を作る
+・誇大語（最・第一・绝对）と外部誘導は限流対象。詳細はクロス投稿ツールの発布前チェッカーが正`
+};
+const PLATFORMS = { x: "X（メイン）", ig: "Instagram", tiktok: "TikTok", red: "小紅書" };
+const AIMS = { grow: "伸ばす（新規リーチ）", promo: "告知（イベント・Fanbox・新刊）", daily: "日常（ファンとの接点維持）" };
+let curPf = localStorage.getItem("studio-pf") || "x";
+let curAim = localStorage.getItem("studio-aim") || "grow";
+
+const $ = id => document.getElementById(id);
+
+function renderChips(boxId, obj, cur, onPick) {
+  const box = $(boxId); box.innerHTML = "";
+  for (const k of Object.keys(obj)) {
+    const b = document.createElement("button");
+    b.className = "chip" + (k === cur ? " active" : "");
+    b.textContent = obj[k];
+    b.addEventListener("click", () => onPick(k));
+    box.appendChild(b);
+  }
+}
+function renderAll() {
+  renderChips("platforms", PLATFORMS, curPf, k => { curPf = k; localStorage.setItem("studio-pf", k); renderAll(); });
+  renderChips("aims", AIMS, curAim, k => { curAim = k; localStorage.setItem("studio-aim", k); renderAll(); });
+  $("brain-view").textContent = (curPf === "x" ? BRAIN.x + "\n\n" + BRAIN.xspec : BRAIN[curPf]);
+}
+renderAll();
+
+// ==== プロンプト生成 ====
+function buildPrompt() {
+  const seed = $("seed").value.trim();
+  let p = "あなたは「あたた」（X: @atata_dayo。コスプレイヤー・ゲーマー・配信者、「日本一美しいゲーマー」路線）のメディアマネージャーです。下の実データとアルゴリズム要点に基づいて、" + PLATFORMS[curPf] + "でバズを狙う投稿案を3本作ってください。\n\n";
+  p += "【ブランド原則（絶対）】K-POPアイドル的な洗練・清潔感。女性ファンにも好かれる「憧れ」を売る。ガチ恋営業・匂わせ・過度な色気はNG。誇張や虚偽もNG。\n\n";
+  p += (curPf === "x" ? BRAIN.x + "\n\n" + BRAIN.xspec : BRAIN[curPf]) + "\n\n";
+  p += "【今日のネタ・手持ち素材】\n" + (seed || "特になし → 実データの定番型（おはよ＋写真、キャラ名＋一言 等）から、今の季節・曜日に合う案を出す") + "\n";
+  p += "【目的】" + AIMS[curAim] + "\n\n";
+  p += "【作り方】3案は方向性を変えること（例: 定番量産型／攻めの新規リーチ型／会話誘発型）。本文は投稿画面にそのまま貼れる完成形で書く。";
+  p += (curPf === "x" ? "Xの本文は原則50字以内の一言＋写真前提（告知だけ長文可・日時場所明記）。イベント名がある時だけそのタグを付ける。" : "") + "\n";
+  p += "写真が添付されていればそれを最優先の素材として使うこと。本人が言っていない体験談・事実を発明しない（語り口の演出はOK）。\n\n";
+  p += "必ず下の形式で、見出し行（===…===）と【】ラベルはそのまま使って出力:\n";
+  p += "===案1===\n【本文】（完成文そのまま）\n【写真】（合わせる写真・構図の指定）\n【投稿時刻】（実データに基づく推奨。例: 明日10時）\n【狙い】（どの勝ち型か＋期待する反応を一言）\n===案2===\n（同様）\n===案3===\n（同様）";
+  return p;
+}
+
+$("ai-prompt").addEventListener("click", () => {
+  $("ai-prompt-text").value = buildPrompt();
+  $("ai-box").style.display = "block";
+  setStatus("プロンプトを作りました📋 コピーしてClaudeアプリへ（写真添付推奨）");
+  $("ai-box").scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
+$("ai-copy").addEventListener("click", () => copyBtn($("ai-prompt-text").value, $("ai-copy")));
+
+// PCではClaudeを横並びウィンドウで開く（作業しながら貼り戻せる）
+$("claude-open").addEventListener("click", e => {
+  if (window.innerWidth >= 900) {
+    e.preventDefault();
+    const w = Math.min(620, screen.availWidth * 0.4);
+    window.open("https://claude.ai/new", "claude_side", `width=${w},height=${screen.availHeight - 80},left=${screen.availWidth - w},top=0`);
+  }
+});
+
+// ==== 返事のパース → 案カード ====
+function field(block, label) {
+  const m = block.match(new RegExp("【" + label + "】([\\s\\S]*?)(?=【|$)"));
+  return m ? m[1].trim() : "";
+}
+$("ai-apply").addEventListener("click", () => {
+  const t = $("ai-reply").value;
+  if (!t.trim()) { setStatus("Claudeの返事を貼り付けてください", true); return; }
+  const parts = t.split(/===\s*案\s*(\d+)\s*===/).slice(1); // [num, block, num, block...]
+  const box = $("ideas"); box.innerHTML = "";
+  let count = 0;
+  for (let i = 0; i + 1 < parts.length; i += 2) {
+    const n = parts[i], block = parts[i + 1];
+    const body = field(block, "本文") || block.trim();
+    const photo = field(block, "写真"), when = field(block, "投稿時刻"), aim = field(block, "狙い");
+    count++;
+    const card = document.createElement("div");
+    card.className = "idea";
+    card.innerHTML = `
+      <div class="idea-head"><span>案${n}</span>${aim ? `<span class="aim"></span>` : ""}</div>
+      <div class="idea-body">
+        <textarea class="body-ta"></textarea>
+        <div class="meta"></div>
+        <div class="idea-foot">
+          <a class="open-btn x-open" style="display:none" target="_blank">𝕏 で投稿画面を開く ↗</a>
+          <button class="copy-btn">本文コピー</button>
+        </div>
+      </div>`;
+    card.querySelector(".body-ta").value = body;
+    if (aim) card.querySelector(".aim").textContent = aim.split("\n")[0].slice(0, 30);
+    card.querySelector(".meta").textContent = [photo && "📷 " + photo, when && "🕒 " + when].filter(Boolean).join("\n");
+    const ta = card.querySelector(".body-ta");
+    card.querySelector(".copy-btn").addEventListener("click", ev => copyBtn(ta.value, ev.currentTarget));
+    if (curPf === "x") {
+      const a = card.querySelector(".x-open");
+      a.style.display = "inline-flex";
+      const setHref = () => a.href = "https://x.com/intent/post?text=" + encodeURIComponent(ta.value);
+      setHref(); ta.addEventListener("input", setHref);
+    }
+    box.appendChild(card);
+  }
+  if (!count) { setStatus("===案1=== の見出しが見つかりません。返事をまるごと貼り付けてください", true); return; }
+  setStatus(count + "案を並べました ✅ 手直しして、投稿は自分のタイミングで");
+  box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
+
+// ==== 共通 ====
+async function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return; }
+  const ta = document.createElement("textarea");
+  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  document.execCommand("copy"); document.body.removeChild(ta);
+}
+async function copyBtn(text, btn) {
+  const orig = btn.textContent;
+  try { await copyText(text); btn.textContent = "✓ コピーしました"; btn.classList.add("done"); }
+  catch (e) { btn.textContent = "失敗（長押しで選択して）"; }
+  setTimeout(() => { btn.textContent = orig; btn.classList.remove("done"); }, 1600);
+}
+function setStatus(msg, isError) {
+  const el = $("status");
+  el.textContent = msg;
+  el.className = "status" + (isError ? " error" : "");
+}
+</script>
+</body>
+</html>

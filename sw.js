@@ -1,5 +1,5 @@
 // My Hub Service Worker — オフラインでも開けるように主要ファイルをキャッシュ
-const CACHE = "myhub-v2";
+const CACHE = "myhub-v3";
 const ASSETS = [
   "./",
   "./index.html",
@@ -8,6 +8,7 @@ const ASSETS = [
   "./invoice.html",
   "./mail.html",
   "./video.html",
+  "./post-studio.html",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png",
