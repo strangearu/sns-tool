@@ -97,6 +97,14 @@
   .lnk .li { font-size:17px; }
   .lnk small { display:block; color:var(--sub); font-weight:500; font-size:10.5px; margin-top:1px; }
 
+  /* リンクコピー用ボタン */
+  button.lnk { width:100%; text-align:left; cursor:pointer; font-family:inherit; min-width:0; }
+  button.lnk > span:last-child { min-width:0; overflow:hidden; flex:1; }
+  button.lnk small { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  button.lnk.wide { grid-column:1/-1; border-color:var(--accent); }
+  button.lnk.copied { outline:2px solid var(--ok); }
+  button.lnk.copied small { color:var(--ok); font-weight:700; }
+
   /* カード（早見表/ロードマップ/マインドセット） */
   .card-x { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:15px; margin-bottom:11px; box-shadow:var(--shadow); }
   .card-x .ct { font-size:14.5px; font-weight:800; margin-bottom:9px; display:flex; align-items:center; gap:8px; }
@@ -254,6 +262,9 @@
       <a class="tool" href="invoice.html"><span class="ico">🧾</span><span class="nm">請求書を作る</span><span class="ds">宛先と品目→PDF</span></a>
       <a class="tool" href="mail.html"><span class="ico">✉️</span><span class="nm">メール返信</span><span class="ds">返信案づくりを手伝う</span></a>
     </div>
+    <div class="sec-title">🔗 リンクコピー <small style="font-weight:400">タップでコピー→投稿文・プロフィールに貼る</small></div>
+    <div class="links" id="copy-links"></div>
+
     <div class="sec-title">💰 収益・公式</div>
     <div class="links">
       <a class="lnk" href="https://atatadayo.fanbox.cc/" rel="noopener"><span class="li">💎</span><span>FANBOX<small>限定コンテンツ</small></span></a>
@@ -467,6 +478,55 @@
       const first = wrap.querySelector("textarea"); if (first) first.focus();
     });
     render();
+  })();
+
+  /* ===== SNSリンクコピー ===== */
+  (function () {
+    const LINKS = [
+      ["🐦", "X (Twitter)", "https://x.com/atata_dayo"],
+      ["📷", "Instagram", "https://www.instagram.com/atatadayo/"],
+      ["▶️", "YouTube", "https://youtube.com/@atatadayo0909"],
+      ["🎵", "TikTok", "https://www.tiktok.com/@atatadayo"],
+      ["🎮", "Twitch", "https://twitch.tv/atatadayo"],
+      ["📺", "bilibili", "https://space.bilibili.com/3546597218584661"],
+      ["📕", "小紅書", "https://www.xiaohongshu.com/user/profile/642699610000000012011c64"],
+      ["🌐", "Weibo", "https://weibo.com/u/7737210867"],
+      ["💎", "FANBOX", "https://atatadayo.fanbox.cc/"],
+      ["🏠", "公式HP", "https://atatadayo.pages.dev"],
+      ["✉️", "ビジネスメール", "ayanerenraku0000@gmail.com"],
+    ];
+    const box = $("copy-links");
+    async function copyText(t) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try { await navigator.clipboard.writeText(t); return true; } catch (e) { /* フォールバックへ */ }
+      }
+      try {
+        const ta = document.createElement("textarea"); ta.value = t;
+        ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select();
+        const ok = document.execCommand("copy"); ta.remove();
+        return ok;
+      } catch (e) { return false; }
+    }
+    function mkBtn(ic, nm, sub, getText, wide) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "lnk" + (wide ? " wide" : "");
+      b.innerHTML = `<span class="li">${ic}</span><span><b></b><small></small></span>`;
+      b.querySelector("b").textContent = nm;
+      b.querySelector("small").textContent = sub;
+      b.addEventListener("click", async () => {
+        const ok = await copyText(getText());
+        const s = b.querySelector("small"), org = s.textContent;
+        if (ok) b.classList.add("copied");
+        s.textContent = ok ? "✓ コピーしました" : "✗ コピーできませんでした（長押しで選択してください）";
+        setTimeout(() => { b.classList.remove("copied"); s.textContent = org; }, 1200);
+      });
+      return b;
+    }
+    box.appendChild(mkBtn("📋", "ぜんぶまとめてコピー", "全SNS＋HP＋ビジネスメールの一覧テキスト",
+      () => LINKS.map(([i, n, u]) => `${n}: ${u}`).join("\n"), true));
+    LINKS.forEach(([ic, nm, url]) => box.appendChild(mkBtn(ic, nm, url, () => url)));
   })();
 
   /* ===== 鍵（パスコードでロードマップ・心得を復号） ===== */
