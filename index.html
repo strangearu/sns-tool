@@ -184,9 +184,9 @@
       <p>今日もおつかれさま 🌸</p>
     </div>
     <div class="countdown" id="countdown">
-      <div class="lbl">🔥 EVO LAS VEGAS まで</div>
+      <div class="lbl">📚 コミケ C106（新刊）まで</div>
       <div class="days" id="cd-days">--</div>
-      <div class="date" id="cd-date">2026年6月26日</div>
+      <div class="date" id="cd-date">2026年8月中旬（日付確定したら更新）</div>
     </div>
 
     <div class="sec-title">✅ 今日のアクション <span class="r"><button class="reset" id="reset-actions">リセット</button></span></div>
@@ -246,11 +246,11 @@
   <section class="tab" id="tab-tools">
     <div class="ph"><h1>🔧 ツール</h1><p>マネージャー機能</p></div>
     <div class="tools">
+      <a class="tool" href="http://192.168.10.104:8761"><span class="ico">📈</span><span class="nm">SNSトラッカー</span><span class="ds">数字・競合分析・今週の投稿案（自宅Wi-Fi＋PC起動中）</span></a>
       <a class="tool" href="money.html"><span class="ico">💰</span><span class="nm">収益ダッシュボード</span><span class="ds">月100万への現在地を見る</span></a>
       <a class="tool" href="post-studio.html"><span class="ico">🧠</span><span class="nm">投稿工房</span><span class="ds">実データ勝ちパターンでバズ案を作る</span></a>
       <a class="tool" href="crosspost.html"><span class="ico">📤</span><span class="nm">SNSクロス投稿</span><span class="ds">X→IG/小紅書/Weibo に変換</span></a>
       <a class="tool" href="video.html"><span class="ico">🎬</span><span class="nm">動画クロス投稿</span><span class="ds">YT/TikTok→bilibili/RED/Weibo</span></a>
-      <a class="tool" href="https://scintillating-arithmetic-9c22e4.netlify.app/index.html" rel="noopener"><span class="ico">📊</span><span class="nm">バズ分析</span><span class="ds">当たる型をデータで確認</span></a>
       <a class="tool" href="invoice.html"><span class="ico">🧾</span><span class="nm">請求書を作る</span><span class="ds">宛先と品目→PDF</span></a>
       <a class="tool" href="mail.html"><span class="ico">✉️</span><span class="nm">メール返信</span><span class="ds">返信案づくりを手伝う</span></a>
     </div>
@@ -262,17 +262,17 @@
       <a class="lnk" href="https://atatadayo.pages.dev" rel="noopener"><span class="li">🏠</span><span>公式HP<small>信頼装置</small></span></a>
     </div>
 
-    <div class="sec-title">📺 配信・動画</div>
+    <div class="sec-title">📺 配信・動画 <small style="font-weight:400">※フォロワー数はSNSトラッカーが正</small></div>
     <div class="links">
-      <a class="lnk" href="https://twitch.tv/atatadayo" rel="noopener"><span class="li">🎮</span><span>Twitch<small>2.8万人</small></span></a>
+      <a class="lnk" href="https://twitch.tv/atatadayo" rel="noopener"><span class="li">🎮</span><span>Twitch<small>配信</small></span></a>
       <a class="lnk" href="https://youtube.com/@atatadayo0909" rel="noopener"><span class="li">▶️</span><span>YouTube<small>動画・アーカイブ</small></span></a>
       <a class="lnk" href="https://www.tiktok.com/@atatadayo" rel="noopener"><span class="li">🎵</span><span>TikTok<small>ショート動画</small></span></a>
     </div>
 
     <div class="sec-title">🐦 SNS</div>
     <div class="links">
-      <a class="lnk" href="https://x.com/atata_dayo" rel="noopener"><span class="li">🐦</span><span>X (Twitter)<small>8.7万人</small></span></a>
-      <a class="lnk" href="https://www.instagram.com/atatadayo/" rel="noopener"><span class="li">📷</span><span>Instagram<small>4.5万人</small></span></a>
+      <a class="lnk" href="https://x.com/atata_dayo" rel="noopener"><span class="li">🐦</span><span>X (Twitter)<small>メイン</small></span></a>
+      <a class="lnk" href="https://www.instagram.com/atatadayo/" rel="noopener"><span class="li">📷</span><span>Instagram<small>リール重視へ</small></span></a>
     </div>
 
     <div class="sec-title">🇨🇳 中国圏</div>
@@ -315,9 +315,9 @@
   navBtns.forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
   showTab(localStorage.getItem("hub-tab") || "today");
 
-  /* ===== EVOカウントダウン ===== */
+  /* ===== 次の大目標カウントダウン（C106コミケ・日付は確定したら直す） ===== */
   (function () {
-    const target = new Date("2026-06-26T00:00:00+09:00");
+    const target = new Date("2026-08-15T00:00:00+09:00");
     const days = Math.ceil((target - new Date()) / 86400000);
     const cd = $("countdown"), el = $("cd-days");
     if (days > 0) el.innerHTML = days + '<small> 日</small>';
@@ -325,14 +325,15 @@
     else { el.textContent = "お疲れ様！"; cd.classList.add("passed"); $("cd-date").textContent = "次の戦いへ"; }
   })();
 
-  /* ===== 今日のアクション（固定・日付別） ===== */
+  /* ===== 今日のアクション（2026-07-07 競合分析で刷新: 戦略3本柱ベース） ===== */
   const ACTIONS = [
-    { t: "📸 撮影会の写真を1枚、朝9〜11時に投稿", d: "「おはよ」形式＋#スト6 タグ。残りは在庫に温存" },
-    { t: "🔥 EVOカウントダウンを絡める", d: "「おはよ！EVOあと◯日〜！」（実績5,049いいね）" },
-    { t: "📺 夕方〜夜に3〜4時間配信", d: "企画を1つ持って。同接1000人超を狙う" },
-    { t: "🎵 TikTok撮影・投稿", d: "週3本ペース。ルーティン化が1年後の証拠" },
-    { t: "🇨🇳 Weibo・RED更新／中国語クロス投稿", d: "SNSクロス投稿ツールで同時展開" },
-    { t: "💎 FANBOX・連絡チェック", d: "告知が今週まだなら1本。DM/メールは即レス" },
+    { t: "📸 朝7時「おはよ＋写真1枚」", d: "7時は中央値2,035いいねで全時間帯トップ。テキスト単体では出さない（中央値58に沈む）" },
+    { t: "🗒 #春麗観察日記 を週1本", d: "固有タグ×反復フォーマット＝viewsの複利（倉持の#妻パッチノートは169万views）" },
+    { t: "🎬 15秒コス動画を1本仕込む", d: "衣装＋ひと芝居のユリコ型（バズ率62%）。撮影の最後5分で動画テイク" },
+    { t: "🎵 TikTok転載（週3）", d: "shortsコマンドでYouTube→TikTok直結。追加コストゼロ" },
+    { t: "📺 夕方〜夜の固定枠配信", d: "定時化が再訪を生む。イベント後48時間は必ず配信" },
+    { t: "💎 FANBOX・連絡チェック", d: "撮影後48時間以内に更新→ぼかしプレビューでX告知。DM/メールは即レス" },
+    { t: "📈 数字と投稿案はSNSトラッカーで", d: "毎週月曜に自動更新（競合ウォッチ＋コピペ可能な投稿案）" },
   ];
   const today = new Date().toISOString().slice(0, 10);
   const AKEY = "ayane-actions-" + today;
