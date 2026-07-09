@@ -221,11 +221,12 @@
         <div class="card-foot">
           <span class="count" id="count-ig"></span>
           <div class="foot-btns">
+            <button class="copy-btn" data-handoff="ig" style="background:var(--accent)">📲 アプリへ</button>
             <a class="open-btn" href="https://www.instagram.com/" target="_blank">開く ↗</a>
             <button class="copy-btn" data-target="out-ig">コピー</button>
           </div>
         </div>
-        <p class="hint">📷 上限2,200字・タグ最大30個。コピー後そのままIGアプリへ。</p>
+        <p class="hint">📷 上限2,200字・タグ最大30個。📲=本文コピー＋写真を共有シートでIGへ渡す→貼り付けるだけ。</p>
       </div>
     </div>
 
@@ -248,11 +249,12 @@
         <div class="card-foot">
           <span class="count" id="count-red"></span>
           <div class="foot-btns">
+            <button class="copy-btn" data-handoff="red" style="background:var(--accent)">📲 アプリへ</button>
             <a class="open-btn" href="https://creator.xiaohongshu.com/publish/publish" target="_blank">開く ↗</a>
             <button class="copy-btn" data-target="out-red">本文コピー</button>
           </div>
         </div>
-        <p class="hint">📕 封面文字は画像編集で表紙に載せる用。タイトル・本文は投稿画面の各欄へ。本文上限1,000字。</p>
+        <p class="hint">📕 📲=タイトル＋本文をまとめてコピー＋写真を共有シートで渡す（1行目をタイトル欄に移すだけ）。封面文字は画像編集で表紙用。本文上限1,000字。</p>
         <div id="red-check" class="hint" style="display:none;line-height:1.8;margin-top:6px"></div>
       </div>
     </div>
@@ -265,11 +267,12 @@
         <div class="card-foot">
           <span class="count" id="count-weibo"></span>
           <div class="foot-btns">
+            <button class="copy-btn" data-handoff="weibo" style="background:var(--accent)">📲 アプリへ</button>
             <a class="open-btn" href="https://weibo.com/" target="_blank">開く ↗</a>
             <button class="copy-btn" data-target="out-weibo">コピー</button>
           </div>
         </div>
-        <p class="hint">🔶 140字超は「全文を表示」で折りたたみ。話題タグは #タグ# 形式。</p>
+        <p class="hint">🔶 📲=本文コピー＋写真を共有シートで渡す。140字超は「全文を表示」で折りたたみ。話題タグは #タグ# 形式。</p>
       </div>
     </div>
   </div>
@@ -749,6 +752,54 @@ function loadApiSettings() {
 
 $("api-save") && $("api-save").addEventListener("click", saveApiSettings);
 loadApiSettings();
+
+// ---- 📲 ワンタップ引き渡し（本文コピー＋写真を共有シートでアプリへ） ----
+function dataUrlToFile(p, i) {
+  const m = (p.dataUrl || "").match(/^data:(image\/[a-z+]+);base64,(.+)$/s);
+  if (!m) return null;
+  const bin = atob(m[2]);
+  const arr = new Uint8Array(bin.length);
+  for (let j = 0; j < bin.length; j++) arr[j] = bin.charCodeAt(j);
+  return new File([arr], "photo" + (i + 1) + ".jpg", { type: m[1] });
+}
+async function photosAsFiles() {
+  const out = [];
+  for (let i = 0; i < photos.length && i < 4; i++) {
+    const p = photos[i];
+    try {
+      if (p.dataUrl) { const f = dataUrlToFile(p, i); if (f) out.push(f); }
+      else if (p.url) {
+        const r = await fetch(p.url);
+        const b = await r.blob();
+        out.push(new File([b], "photo" + (i + 1) + ".jpg", { type: b.type || "image/jpeg" }));
+      }
+    } catch (e) { /* 画像が取れなくても文面コピーは続行 */ }
+  }
+  return out;
+}
+const HANDOFF = {
+  ig:    { get: () => $("out-ig").value.trim(), fallback: "https://www.instagram.com/", label: "Instagram" },
+  red:   { get: () => [$("title-red").value.trim(), $("out-red").value.trim()].filter(Boolean).join("\n\n"), fallback: "https://creator.xiaohongshu.com/publish/publish", label: "小紅書" },
+  weibo: { get: () => $("out-weibo").value.trim(), fallback: "https://weibo.com/", label: "Weibo" },
+};
+document.querySelectorAll("[data-handoff]").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const h = HANDOFF[btn.dataset.handoff];
+    const text = h.get();
+    if (!text) { setStatus("先に文面を作ってください（🚀/🤖/⚡のどれかで生成）", true); return; }
+    try { await navigator.clipboard.writeText(text); } catch (e) {
+      setStatus("コピーできませんでした。各欄のコピーボタンを使ってください", true);
+      return;
+    }
+    const files = await photosAsFiles();
+    if (files.length && navigator.canShare && navigator.canShare({ files })) {
+      setStatus("文面コピー済み📋 共有先で" + h.label + "を選び、本文欄に貼り付け（⌘V/長押しペースト）");
+      try { await navigator.share({ files }); return; } catch (e) { /* キャンセル時は下のフォールバックへ */ }
+    }
+    setStatus("文面コピー済み📋 " + h.label + "を開くので本文欄に貼り付けてください（写真は端末の写真から選択）");
+    window.open(h.fallback, "_blank");
+  });
+});
 
 $("api-go").addEventListener("click", async () => {
   const raw = $("src").value.trim(), memo = $("memo").value.trim();
