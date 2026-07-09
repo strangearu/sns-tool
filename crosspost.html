@@ -254,7 +254,7 @@
             <button class="copy-btn" data-target="out-red">本文コピー</button>
           </div>
         </div>
-        <p class="hint">📕 📲の使い方: 押す→共有シートで<b>「画像を保存」</b>→小紅書アプリの＋→保存した写真を選ぶ→タイトル・本文欄にペースト（コピー済み・1行目がタイトル）。封面文字は表紙画像の文字入れ用。本文上限1,000字。</p>
+        <p class="hint">📕 📲の使い方: 押す→共有シートで<b>rednote（小紅書）を選ぶ</b>→写真が入る→タイトル・本文欄にペースト（まとめてコピー済み・1行目がタイトル）。rednoteが出ない時は「画像を保存」→アプリの＋から。封面文字は表紙画像の文字入れ用。本文上限1,000字。</p>
         <div id="red-check" class="hint" style="display:none;line-height:1.8;margin-top:6px"></div>
       </div>
     </div>
@@ -829,8 +829,8 @@ const HANDOFF = {
     get: () => [$("title-red").value.trim(), $("out-red").value.trim()].filter(Boolean).join("\n\n"),
     fallback: "https://www.xiaohongshu.com/",
     label: "小紅書",
-    // 小紅書はiOSの共有シートに直接出ないことが多い → 「画像を保存」→アプリの＋から選ぶ動線
-    guide: "共有シートで【画像を保存】→小紅書アプリの＋→保存した写真を選ぶ→タイトルと本文をペースト（1行目がタイトル）",
+    // 共有シートに「rednote」名義で出る（実機確認済み）。出ない場合は画像保存ルート
+    guide: "共有シートで【rednote（小紅書）】を選ぶ→写真が入る→タイトルと本文をペースト（1行目がタイトル）。rednoteが無ければ【画像を保存】→アプリの＋から",
   },
   weibo: {
     get: () => $("out-weibo").value.trim(),
