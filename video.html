@@ -752,36 +752,77 @@ function apiImageBlocks() {
   }).filter(Boolean);
 }
 
-async function callClaudeAPI(prompt, imageBlocks) {
+async function callClaudeAPI(prompt, imageBlocks, onProgress) {
   const key = (localStorage.getItem(API_KEY_LS) || "").trim();
   if (!key) throw new Error("NO_KEY");
   const model = localStorage.getItem(API_MODEL_LS) || "claude-sonnet-5";
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": key,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 8000,
-      thinking: { type: "adaptive" },
-      messages: [{ role: "user", content: [...imageBlocks, { type: "text", text: prompt }] }],
-    }),
-  });
-  const data = await r.json().catch(() => ({}));
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 180000);
+  let r;
+  try {
+    r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      signal: ctrl.signal,
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 8000,
+        stream: true,
+        thinking: { type: "adaptive" },
+        messages: [{ role: "user", content: [...imageBlocks, { type: "text", text: prompt }] }],
+      }),
+    });
+  } catch (e) {
+    clearTimeout(timer);
+    if (e.name === "AbortError") throw new Error("3分でタイムアウトしました。電波の良い場所でもう一度どうぞ");
+    throw new Error("接続できませんでした（電波・機内モードを確認して再実行）");
+  }
   if (!r.ok) {
+    clearTimeout(timer);
+    const data = await r.json().catch(() => ({}));
     const msg = (data.error && data.error.message) || ("HTTP " + r.status);
     if (r.status === 401) throw new Error("APIキーが無効です。⚙️API設定を確認してください");
     if (r.status === 429) throw new Error("レート制限中です。1分ほど待って再実行してください");
+    if (r.status === 400 && /credit/i.test(msg)) throw new Error("API残高が不足しています。platform.claude.com でチャージしてください");
     throw new Error(msg);
   }
-  const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
-  const u = data.usage || {};
+  // SSEストリーミング受信（1文字ずつ届くのでSafariの無通信タイムアウトにかからない）
+  const reader = r.body.getReader();
+  const dec = new TextDecoder();
+  let buf = "", text = "", inTok = 0, outTok = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let idx;
+      while ((idx = buf.indexOf("\n\n")) >= 0) {
+        const chunk = buf.slice(0, idx); buf = buf.slice(idx + 2);
+        for (const line of chunk.split("\n")) {
+          if (!line.startsWith("data:")) continue;
+          let ev;
+          try { ev = JSON.parse(line.slice(5)); } catch (e) { continue; }
+          if (ev.type === "error") throw new Error((ev.error && ev.error.message) || "APIエラー");
+          if (ev.type === "message_start" && ev.message && ev.message.usage) inTok = ev.message.usage.input_tokens || 0;
+          if (ev.type === "content_block_delta" && ev.delta) {
+            if (ev.delta.type === "text_delta") { text += ev.delta.text; if (onProgress) onProgress(text.length, "本文"); }
+            else if (ev.delta.type === "thinking_delta" && onProgress) onProgress(text.length, "思考中");
+          }
+          if (ev.type === "message_delta" && ev.usage) outTok = ev.usage.output_tokens || outTok;
+        }
+      }
+    }
+  } finally {
+    clearTimeout(timer);
+  }
+  if (!text.trim()) throw new Error("応答が空でした。もう一度お試しください");
   const p = API_PRICES[model] || API_PRICES["claude-sonnet-5"];
-  const yen = ((u.input_tokens || 0) * p.i + (u.output_tokens || 0) * p.o) / 1e6 * YEN;
+  const yen = (inTok * p.i + outTok * p.o) / 1e6 * YEN;
   return { text, yen, model };
 }
 
@@ -805,9 +846,13 @@ $("api-go").addEventListener("click", async () => {
   const imgs = apiImageBlocks();
   const btn = $("api-go");
   btn.disabled = true;
-  setStatus("🚀 生成中…（スクショ" + imgs.length + "枚を送信・20〜60秒かかります）");
+  const t0 = Date.now();
+  setStatus("🚀 送信中…（スクショ" + imgs.length + "枚・画面はこのまま開いておいてください）");
   try {
-    const res = await callClaudeAPI(buildPrompt(true), imgs);
+    const res = await callClaudeAPI(buildPrompt(true), imgs, (chars, phase) => {
+      const sec = Math.round((Date.now() - t0) / 1000);
+      setStatus("🚀 " + phase + "… " + sec + "秒・" + chars + "字（画面を閉じないで）");
+    });
     if (!applyReply(res.text)) throw new Error("返答の形式が想定と違いました。もう一度お試しください");
     setStatus("完成 ✅ 📖日本語訳で検品を（今回: 約" + res.yen.toFixed(1) + "円・" + (res.model.includes("opus") ? "Opus" : "Sonnet") + "）");
   } catch (e) {
