@@ -62,6 +62,17 @@
   .card.red .sugg .sg { background: #fff0f2; border-color: var(--red); color: #b91c3c; }
   .card.tiktok .sugg .sg { background: #fef1f4; border-color: var(--ttpink); color: #c11c42; }
   footer { text-align: center; margin-top: 24px; font-size: 12px; color: var(--sub); line-height: 1.8; }
+  .photos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .photos .thumb { position: relative; }
+  .photos img { width: 84px; height: 84px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); display: block; }
+  .photos .del { position: absolute; top: -7px; right: -7px; width: 22px; height: 22px; border-radius: 50%; border: none; background: #334155; color: #fff; font-size: 13px; line-height: 1; cursor: pointer; }
+  .upload-label { display: inline-block; font-size: 13px; font-weight: 700; color: var(--accent); cursor: pointer; }
+  .upload-label input { display: none; }
+  .api-settings { margin-top: 14px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 4px 16px 14px; }
+  .api-settings summary { cursor: pointer; font-size: 13px; font-weight: 700; padding: 10px 0; }
+  .api-settings .inner { display: grid; gap: 10px; }
+  .api-settings label { font-size: 12px; color: var(--sub); display: block; margin-bottom: 4px; }
+  .api-settings input, .api-settings select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; box-sizing: border-box; }
   @media (max-width: 480px) { body { padding: 14px 10px 50px; } .panel { padding: 13px; } .btn-main { width: 100%; } }
 </style>
 </head>
@@ -91,15 +102,41 @@
     <label class="head" for="v-memo" style="margin-top:14px">④ 動画の内容メモ（任意・一言でOK）</label>
     <textarea id="v-memo" style="min-height:60px" placeholder="例: 春麗コスでSF6ランクマ実況。負けて発狂するシーンが見どころ"></textarea>
 
-    <label class="head" style="margin-top:14px">⑤ カテゴリ</label>
+    <label class="head" style="margin-top:14px">⑤ 動画のスクショ・サムネ（任意・🚀ではAIがこの画像を読んで質が上がります）</label>
+    <div class="photos" id="photos"></div>
+    <div style="margin-top:6px">
+      <label class="upload-label">📷 スクショ・サムネを追加（最大4枚）<input type="file" id="file-input" accept="image/*" multiple></label>
+    </div>
+
+    <label class="head" style="margin-top:14px">⑥ カテゴリ</label>
     <div class="cats" id="cats"></div>
 
     <div class="actions">
-      <button class="btn-main" id="ai-prompt">🤖 Claudeアプリで作る（無料・高品質）</button>
-      <button class="btn-sub" id="convert">⚡ 自動翻訳でサッと作る</button>
+      <button class="btn-main" id="api-go">🚀 その場で完成（スクショごとAI送信）</button>
+      <button class="btn-sub" id="ai-prompt">🤖 Claudeアプリで作る（無料）</button>
+      <button class="btn-sub" id="convert">⚡ 自動翻訳</button>
       <span class="status" id="status"></span>
     </div>
-    <p class="hint" style="margin-top:8px">🤖 = Claudeアプリ用プロンプトを作成（動画のスクショを添付するとさらに良い）。⚡ = 今すぐ機械翻訳。どちらもタイトル・本文からイベント名・キャラ名を検出してタグを毎回選び直します。</p>
+    <p class="hint" style="margin-top:8px">🚀 = スクショとプロンプトをAPIに直接送ってその場で完成（1回約3〜10円・要APIキー。下の⚙️API設定から）。🤖 = プロンプトをコピーしてClaudeアプリで（課金なし）。⚡ = キー不要の機械翻訳。</p>
+
+    <details class="api-settings" id="api-settings">
+      <summary>⚙️ API設定（🚀その場で完成 用・初回のみ）</summary>
+      <div class="inner">
+        <div>
+          <label for="api-key">Claude APIキー（platform.claude.com で発行。この端末のブラウザ内にだけ保存）</label>
+          <input type="password" id="api-key" placeholder="sk-ant-api03-…" autocomplete="off">
+        </div>
+        <div>
+          <label for="api-model">モデル</label>
+          <select id="api-model">
+            <option value="claude-sonnet-5">Sonnet 5（推奨・1回約3〜9円）</option>
+            <option value="claude-opus-4-8">Opus 4.8（最高品質・1回約8〜15円）</option>
+          </select>
+        </div>
+        <button class="btn-sub" id="api-save" style="justify-self:start">保存</button>
+        <p class="hint" style="margin:0">キーはこの端末→Anthropic APIの通信にだけ使われます。クロス投稿ツールと同じキーを共有します。</p>
+      </div>
+    </details>
 
     <!-- Claudeアプリ用プロンプト -->
     <div id="ai-box" style="display:none;margin-top:14px">
@@ -462,6 +499,55 @@ $("load-video").addEventListener("click", async () => {
   }
 });
 
+// ==== スクショ・サムネ添付（🚀API直モードでAIが読む） ====
+let photos = [];  // {dataUrl}
+$("file-input").addEventListener("change", async (ev) => {
+  for (const file of [...ev.target.files]) {
+    if (photos.length >= 4) break;
+    try {
+      photos.push({ dataUrl: await shrinkImage(file) });
+    } catch (e) {
+      const reader = new FileReader();
+      await new Promise(res => { reader.onload = () => { photos.push({ dataUrl: reader.result }); res(); }; reader.readAsDataURL(file); });
+    }
+    renderPhotos();
+  }
+  ev.target.value = "";
+});
+function shrinkImage(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 1280;
+      let { width: w, height: h } = img;
+      if (Math.max(w, h) > MAX) { const s = MAX / Math.max(w, h); w = Math.round(w * s); h = Math.round(h * s); }
+      const c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      c.getContext("2d").drawImage(img, 0, 0, w, h);
+      resolve(c.toDataURL("image/jpeg", 0.85));
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+function renderPhotos() {
+  const box = $("photos");
+  box.innerHTML = "";
+  photos.forEach((p, i) => {
+    const div = document.createElement("div");
+    div.className = "thumb";
+    const img = document.createElement("img");
+    img.src = p.dataUrl;
+    const del = document.createElement("button");
+    del.className = "del";
+    del.textContent = "×";
+    del.addEventListener("click", () => { photos.splice(i, 1); renderPhotos(); });
+    div.append(img, del);
+    box.appendChild(div);
+  });
+}
+
 // ==== 翻訳 ====
 async function translate(text, target) {
   if (!text.trim()) return "";
@@ -564,18 +650,20 @@ const M = { TH: "===TikTokフック===", TC: "===TikTokキャプション===",
             RC: "===封面文字===", RT: "===小紅書タイトル===", RB: "===小紅書本文===", WB: "===Weibo===",
             JA: "===日本語訳===" };
 
-// PC（幅900px以上）ではプロンプトに推敲指示を足して精度を上げる
-const PC_CTX = `【PC高精度モード（追加の思考指示）】
+// PC（幅900px以上）とAPI直モードではプロンプトに推敲指示を足して精度を上げる
+const PC_CTX = `【高精度モード（追加の思考指示）】
 ・标题・封面文字・TikTokフックはまず頭の中で3案比較し、一番強い1つだけを出力する
-・出力前にセルフレビューを1周: ①忠実性（言っていない見どころ・体験を足していないか）②冒頭3秒と完走率の観点でフックが機能するか③タグ・字数制限——問題があれば直してから出す`;
+・出力前にセルフレビューを1周: ①忠実性（言っていない見どころ・体験を足していないか）②冒頭3秒と完走率の観点でフックが機能するか③タグ・字数制限④人設（ガチ恋営業になっていないか）——問題があれば直してから出す`;
 
-function buildPrompt() {
+function buildPrompt(forApi) {
   const cat = CATEGORIES[curCat] || CATEGORIES.generic;
   const title = $("v-title").value.trim();
   const desc = $("v-desc").value.replace(/https?:\/\/\S+/g, "").trim();
   const memo = $("v-memo").value.trim();
   const det = detectSmart([title, desc, memo].join("\n"));
-  let p = "あなたはコスプレ×格闘ゲーム系クリエイターの動画SNS投稿を作るアシスタントです。1本の動画（Vlogショート含む）から、TikTok（日本語・一次投稿）と、bilibili・小紅書・Weibo（中国語・転載）の投稿文を作ってください。目的は各SNSでのフォロワー獲得。\n";
+  let p = "あなたは日本のコスプレイヤー「あたた」の動画SNS投稿を作る専属アシスタントです。1本の動画（Vlogショート含む）から、TikTok（日本語・一次投稿）と、bilibili・小紅書・Weibo（中国語・転載）の投稿文を作ってください。目的は各SNSでのフォロワー獲得。\n";
+  p += "【人設・ブランド（全SNS共通・最優先で守る）】あたた＝「日本一美しいゲーマー」。格闘ゲームガチ勢×洗練されたコスプレ、清潔感ある美人路線。中国語圏では「日本から発信している日本人coser」の親近感が最大の武器。トーンは自信があって親しみやすい・ポジティブ。恋愛感情を煽る文言（ガチ恋営業・匂わせ）は絶対に使わない。色気・露出を売りにする書き方もしない。売るのは「憧れ」。\n";
+  if (photos.length) p += "【スクショの読み取り（最初にやること）】添付したスクショ・サムネから次を観察する: ①キャラ・作品名（確信がある場合のみ名指し）②衣装・シーンの内容 ③画面の雰囲気・色調 ④テロップや画面内の文字。タイトル・概要欄が薄い場合はこの「見えている事実」が主素材——各SNSのネイティブが書くような一人称の投稿文を、見えるものだけで組み立てる。見えないこと（撮影裏話・苦労・本人の感想）は作らない。\n";
   p += "【忠実性（最重要・全SNS共通）】本文はタイトル・概要欄・内容メモに書いてあること＋添付スクショから確実に分かることだけで構成する。本人が言っていない見どころ・体験談・コツ・裏話を発明しない。アレンジしてよいのは語り口・構成・絵文字・問いかけ・タグまで。元ネタが薄ければ無理に膨らませず短くてよい。\n\n";
   p += "【元動画のタイトル（日本語）】\n" + (title || "（なし）") + "\n";
   if (desc) p += "【概要欄・投稿文】\n" + desc + "\n";
@@ -591,8 +679,8 @@ function buildPrompt() {
   p += "・小紅書: " + buzz.tips.red + "\n";
   p += "  封面文字の例: " + buzz.redCovers.map(f => f(ent)).join(" ／ ") + "\n";
   p += "・Weibo: " + buzz.tips.weibo + "\n\n";
-  p += "【TikTokの方針】日本語。フック=動画冒頭に載せる1行テロップ（3秒でスクロールを止める言葉・15字前後、続きが気になる形）。キャプション=1行目に内容がわかる一言→補足1〜2行→タグ5〜8個（日本語＋英語グローバル混在。例: #コスプレ #cosplay。ダンス動画は曲名タグと#踊ってみた 必須）。恋愛感情を煽る文言（ガチ恋営業）は使わない。\n";
-  p += "【bilibiliの方針】标题=80字以内。検索キーワード（キャラ名・ゲーム名）を含め、【】でジャンル表記（例:【cosplay】【街霸6】）するのがbilibili文化。简介=親しみやすい自己紹介（日本から来たcoser等）＋動画の見どころ＋一键三连（点赞・投币・收藏）のお願い。标签=10個以内、検索される単語で。\n";
+  p += "【TikTokの方針】日本語。フック=動画冒頭に載せる1行テロップ（3秒でスクロールを止める言葉・15字前後、続きが気になる形）。競合分析では「コス×15秒シチュエーション芝居」型がバズ率62%——フックも「状況設定が一瞬でわかる」形（例:「春麗が◯◯したら」「◯◯な日のコスプレイヤー」）を優先する。キャプション=1行目に内容がわかる一言→補足1〜2行→タグ5〜8個（日本語＋英語グローバル混在。例: #コスプレ #cosplay。ダンス動画は曲名タグと#踊ってみた 必須）。恋愛感情を煽る文言（ガチ恋営業）は使わない。\n";
+  p += "【bilibiliの方針】标题=80字以内。検索キーワード（キャラ名・ゲーム名）を含め、【】でジャンル表記（例:【cosplay】【街霸6】）するのがbilibili文化。简介=親しみやすい自己紹介（日本から来たcoser等）＋動画の見どころ＋一键三连（点赞・投币・收藏）のお願い。加えて简介かタイトルに弹幕を打ちたくなる具体的な問い・お題を1つ仕込む（例:「你们的主用角色是谁？弹幕告诉我」）——弹幕・コメントの互动率が推荐の燃料になる。标签=10個以内、検索される単語で。\n";
   p += "【小紅書の方針】封面文字=12字以内のフック。タイトル=20字以内で検索KW必須。本文=友達への分享トーン＋絵文字＋コメントを誘う問いかけ。\n";
   p += "【Weiboの方針】本文＋#话题#形式のタグ5〜8個。\n";
   p += "【ショート動画の転載設計（重要・バズ分析基準）】冒頭3秒がすべて＝ロゴ・挨拶・イントロは動画の減点要素（もし元動画にあれば指摘する）。完走率がゲート（15〜30秒動画は約70%、30〜60秒は約50%が目安）なので、标题・封面文字・简介は「最後まで見る理由」を予告する書き方にする。終わりが冒頭に繋がるループ動画は再生率が跳ねる。保存(收藏)・シェアを誘う一言は元の内容に合う形でだけ入れる（見どころやコツをでっち上げない）。TikTokのウォーターマーク付き動画は他プラットフォームで減点されるため、見つけたら指摘すること。\n";
@@ -602,12 +690,12 @@ function buildPrompt() {
   if (det.song) p += "・【必須】曲名を検出:「" + det.song + "」— 原題のままタイトルと全SNSのタグに必ず入れる（曲名検索からの流入が最大の入口）。\n";
   if (det.labels.length) p += "・本文から検出した要素（参考）: " + uniq(det.labels).join("・") + "\n";
   p += "・タグ候補（参考・取捨選択する）: " + cat.zh.map(t => "#" + t).join(" ") + "\n\n";
-  if (window.innerWidth >= 900) p += PC_CTX + "\n\n";
+  if (forApi || window.innerWidth >= 900) p += PC_CTX + "\n\n";
   p += "必ず下の形式で、見出し行（===…===）はそのままコピーして出力してください:\n";
   p += M.TH + "\n（15字前後の1行）\n" + M.TC + "\n（本文＋#タグ5〜8個）\n";
   p += M.BT + "\n（80字以内）\n" + M.BD + "\n（简介）\n" + M.BG + "\n（カンマ区切り10個以内）\n";
   p += M.RC + "\n（12字以内）\n" + M.RT + "\n（20字以内）\n" + M.RB + "\n（本文＋#タグ）\n" + M.WB + "\n（本文＋#タグ#）\n";
-  p += M.JA + "\n（bilibili标题・简介・封面文字・小紅書タイトル/本文・Weiboの日本語訳を項目名付きで。本人は中国語が読めないので、検品できるよう省略せず全文訳すこと）";
+  p += M.JA + "\n（bilibili标题・简介・封面文字・小紅書タイトル/本文・Weiboの日本語訳を項目名付きで。本人は中国語が読めないので、検品できるよう省略せず全文訳すこと。最後に、シリーズ化できる企画・サムネ改善など「次に効く一手」が1つあれば「💡提案:」として1行だけ添える——無ければ書かない）";
   return p;
 }
 
@@ -628,13 +716,11 @@ function section(text, start, ...ends) {
   for (const e of ends) { const j = text.indexOf(e, from); if (j >= 0 && j < to) to = j; }
   return text.slice(from, to).trim();
 }
-$("ai-apply").addEventListener("click", () => {
-  const t = $("ai-reply").value;
-  if (!t.trim()) { setStatus("Claudeの返事を貼り付けてください", true); return; }
+function applyReply(t) {
   const all = Object.values(M);
   const get = (mark) => section(t, mark, ...all.filter(x => x !== mark));
   const th = get(M.TH), tc = get(M.TC), bt = get(M.BT), bd = get(M.BD), bg = get(M.BG), rc = get(M.RC), rt = get(M.RT), rb = get(M.RB), wb = get(M.WB), ja = get(M.JA);
-  if (!th && !tc && !bt && !bd && !rb && !wb) { setStatus("見出し（===…===）が見つかりません。返事をまるごと貼り付けてください", true); return; }
+  if (!th && !tc && !bt && !bd && !rb && !wb) return false;
   $("tt-hook").value = th; $("tt-cap").value = tc;
   $("bili-title").value = bt; $("bili-desc").value = bd; $("bili-tags").value = bg.replace(/#/g, "");
   $("red-cover").value = rc; $("red-title").value = rt; $("red-body").value = rb;
@@ -643,7 +729,92 @@ $("ai-apply").addEventListener("click", () => {
   else { $("ja-box").style.display = "none"; }
   for (const k of ["tiktok", "bili", "red", "weibo"]) $("card-" + k).classList.add("show");
   updateCounts();
+  return true;
+}
+
+$("ai-apply").addEventListener("click", () => {
+  const t = $("ai-reply").value;
+  if (!t.trim()) { setStatus("Claudeの返事を貼り付けてください", true); return; }
+  if (!applyReply(t)) { setStatus("見出し（===…===）が見つかりません。返事をまるごと貼り付けてください", true); return; }
   setStatus("各欄に反映しました ✅ 下の📖日本語訳で中身を検品してください");
+});
+
+// ==== 🚀 API直モード（Claude APIをブラウザから直接呼ぶ・スクショごと送信） ====
+const API_KEY_LS = "anthropic-api-key", API_MODEL_LS = "anthropic-api-model";
+const API_PRICES = { "claude-sonnet-5": { i: 3, o: 15 }, "claude-opus-4-8": { i: 5, o: 25 } }; // $/100万tok
+const YEN = 150;
+
+function apiImageBlocks() {
+  return photos.slice(0, 4).map(p => {
+    const m = (p.dataUrl || "").match(/^data:(image\/[a-z+]+);base64,(.+)$/s);
+    return m ? { type: "image", source: { type: "base64", media_type: m[1], data: m[2] } } : null;
+  }).filter(Boolean);
+}
+
+async function callClaudeAPI(prompt, imageBlocks) {
+  const key = (localStorage.getItem(API_KEY_LS) || "").trim();
+  if (!key) throw new Error("NO_KEY");
+  const model = localStorage.getItem(API_MODEL_LS) || "claude-sonnet-5";
+  const r = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 8000,
+      thinking: { type: "adaptive" },
+      messages: [{ role: "user", content: [...imageBlocks, { type: "text", text: prompt }] }],
+    }),
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const msg = (data.error && data.error.message) || ("HTTP " + r.status);
+    if (r.status === 401) throw new Error("APIキーが無効です。⚙️API設定を確認してください");
+    if (r.status === 429) throw new Error("レート制限中です。1分ほど待って再実行してください");
+    throw new Error(msg);
+  }
+  const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
+  const u = data.usage || {};
+  const p = API_PRICES[model] || API_PRICES["claude-sonnet-5"];
+  const yen = ((u.input_tokens || 0) * p.i + (u.output_tokens || 0) * p.o) / 1e6 * YEN;
+  return { text, yen, model };
+}
+
+$("api-save").addEventListener("click", () => {
+  localStorage.setItem(API_KEY_LS, $("api-key").value.trim());
+  localStorage.setItem(API_MODEL_LS, $("api-model").value);
+  setStatus("API設定を保存しました ✅（この端末のブラウザ内にだけ保存されます）");
+});
+$("api-key").value = localStorage.getItem(API_KEY_LS) || "";
+$("api-model").value = localStorage.getItem(API_MODEL_LS) || "claude-sonnet-5";
+
+$("api-go").addEventListener("click", async () => {
+  const t = $("v-title").value.trim(), d = $("v-desc").value.trim(), m2 = $("v-memo").value.trim();
+  if (!t && !d && !m2 && !photos.length) { setStatus("タイトルかスクショを入れてからどうぞ", true); return; }
+  if (!(localStorage.getItem(API_KEY_LS) || "").trim()) {
+    document.getElementById("api-settings").open = true;
+    document.getElementById("api-settings").scrollIntoView({ behavior: "smooth" });
+    setStatus("先に⚙️API設定でAPIキーを保存してください（初回のみ）", true);
+    return;
+  }
+  const imgs = apiImageBlocks();
+  const btn = $("api-go");
+  btn.disabled = true;
+  setStatus("🚀 生成中…（スクショ" + imgs.length + "枚を送信・20〜60秒かかります）");
+  try {
+    const res = await callClaudeAPI(buildPrompt(true), imgs);
+    if (!applyReply(res.text)) throw new Error("返答の形式が想定と違いました。もう一度お試しください");
+    setStatus("完成 ✅ 📖日本語訳で検品を（今回: 約" + res.yen.toFixed(1) + "円・" + (res.model.includes("opus") ? "Opus" : "Sonnet") + "）");
+  } catch (e) {
+    if (e.message === "NO_KEY") setStatus("⚙️API設定でAPIキーを保存してください", true);
+    else setStatus("エラー: " + e.message, true);
+  } finally {
+    btn.disabled = false;
+  }
 });
 
 // ==== 文字数カウント ====
