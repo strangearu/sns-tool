@@ -226,7 +226,7 @@
             <button class="copy-btn" data-target="out-ig">コピー</button>
           </div>
         </div>
-        <p class="hint">📷 上限2,200字・タグ最大30個。📲=本文コピー＋写真を共有シートでIGへ渡す→貼り付けるだけ。</p>
+        <p class="hint">📷 📲の使い方: 押す→出てきた共有シートで<b>Instagramを選ぶ</b>（⚠️外側をタップするとキャンセル）→写真入りの投稿画面が開く→キャプション欄を長押し→ペースト。上限2,200字・タグ最大30個。</p>
       </div>
     </div>
 
@@ -254,7 +254,7 @@
             <button class="copy-btn" data-target="out-red">本文コピー</button>
           </div>
         </div>
-        <p class="hint">📕 📲=タイトル＋本文をまとめてコピー＋写真を共有シートで渡す（1行目をタイトル欄に移すだけ）。封面文字は画像編集で表紙用。本文上限1,000字。</p>
+        <p class="hint">📕 📲の使い方: 押す→共有シートで<b>「画像を保存」</b>→小紅書アプリの＋→保存した写真を選ぶ→タイトル・本文欄にペースト（コピー済み・1行目がタイトル）。封面文字は表紙画像の文字入れ用。本文上限1,000字。</p>
         <div id="red-check" class="hint" style="display:none;line-height:1.8;margin-top:6px"></div>
       </div>
     </div>
@@ -272,7 +272,7 @@
             <button class="copy-btn" data-target="out-weibo">コピー</button>
           </div>
         </div>
-        <p class="hint">🔶 📲=本文コピー＋写真を共有シートで渡す。140字超は「全文を表示」で折りたたみ。話題タグは #タグ# 形式。</p>
+        <p class="hint">🔶 📲の使い方: 押す→共有シートで<b>Weiboを選ぶ</b>→写真入りの投稿画面→本文欄を長押し→ペースト。140字超は「全文を表示」で折りたたみ。話題タグは #タグ# 形式。</p>
       </div>
     </div>
   </div>
@@ -819,9 +819,25 @@ async function photosAsFiles() {
   return out;
 }
 const HANDOFF = {
-  ig:    { get: () => $("out-ig").value.trim(), fallback: "https://www.instagram.com/", label: "Instagram" },
-  red:   { get: () => [$("title-red").value.trim(), $("out-red").value.trim()].filter(Boolean).join("\n\n"), fallback: "https://creator.xiaohongshu.com/publish/publish", label: "小紅書" },
-  weibo: { get: () => $("out-weibo").value.trim(), fallback: "https://weibo.com/", label: "Weibo" },
+  ig: {
+    get: () => $("out-ig").value.trim(),
+    fallback: "https://www.instagram.com/",
+    label: "Instagram",
+    guide: "共有シートで【Instagram】を選ぶ→写真が投稿画面に入る→キャプション欄を長押し→ペースト",
+  },
+  red: {
+    get: () => [$("title-red").value.trim(), $("out-red").value.trim()].filter(Boolean).join("\n\n"),
+    fallback: "https://www.xiaohongshu.com/",
+    label: "小紅書",
+    // 小紅書はiOSの共有シートに直接出ないことが多い → 「画像を保存」→アプリの＋から選ぶ動線
+    guide: "共有シートで【画像を保存】→小紅書アプリの＋→保存した写真を選ぶ→タイトルと本文をペースト（1行目がタイトル）",
+  },
+  weibo: {
+    get: () => $("out-weibo").value.trim(),
+    fallback: "https://weibo.com/",
+    label: "Weibo",
+    guide: "共有シートで【微博/Weibo】を選ぶ→写真が入る→本文欄を長押し→ペースト",
+  },
 };
 document.querySelectorAll("[data-handoff]").forEach(btn => {
   btn.addEventListener("click", async () => {
@@ -834,10 +850,17 @@ document.querySelectorAll("[data-handoff]").forEach(btn => {
     }
     const files = await photosAsFiles();
     if (files.length && navigator.canShare && navigator.canShare({ files })) {
-      setStatus("文面コピー済み📋 共有先で" + h.label + "を選び、本文欄に貼り付け（⌘V/長押しペースト）");
-      try { await navigator.share({ files }); return; } catch (e) { /* キャンセル時は下のフォールバックへ */ }
+      setStatus("📋 文面コピー済み → " + h.guide);
+      try {
+        await navigator.share({ files });
+      } catch (e) {
+        // キャンセル（外側タップ等）: 余計なページは開かず、やり方だけ再表示
+        setStatus("共有をキャンセルしました。もう一度📲を押して、" + h.guide, true);
+      }
+      return;
     }
-    setStatus("文面コピー済み📋 " + h.label + "を開くので本文欄に貼り付けてください（写真は端末の写真から選択）");
+    // 共有シート非対応（PC等）: コピー＋サイトを開く
+    setStatus("📋 文面コピー済み → " + h.label + "を開くので本文欄に貼り付け（写真は端末から選択）");
     window.open(h.fallback, "_blank");
   });
 });
