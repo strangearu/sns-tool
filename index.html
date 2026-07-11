@@ -192,7 +192,7 @@
       <p>今日もおつかれさま 🌸</p>
     </div>
     <div class="countdown" id="countdown">
-      <div class="lbl">📚 コミケ C106（新刊）まで</div>
+      <div class="lbl">📚 コミケ C108（新刊）まで</div>
       <div class="days" id="cd-days">--</div>
       <div class="date" id="cd-date">2026年8月中旬（日付確定したら更新）</div>
     </div>
@@ -326,7 +326,7 @@
   navBtns.forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
   showTab(localStorage.getItem("hub-tab") || "today");
 
-  /* ===== 次の大目標カウントダウン（C106コミケ・日付は確定したら直す） ===== */
+  /* ===== 次の大目標カウントダウン（C108コミケ・日付は確定したら直す） ===== */
   (function () {
     const target = new Date("2026-08-15T00:00:00+09:00");
     const days = Math.ceil((target - new Date()) / 86400000);
