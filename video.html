@@ -262,7 +262,7 @@
     <div id="ja-trans" style="white-space:pre-wrap;font-size:13px;line-height:1.9"></div>
   </div>
 
-  <footer>📱 このページはブラウザだけで動きます。動画本体は各サイトへそのままアップロードしてください。</footer>
+  <footer>📱 このページはブラウザだけで動きます。動画本体は各サイトへそのままアップロードしてください。<br><span style="opacity:.6">version 2026-07-12b（この表示が無ければ古いキャッシュ→アプリ完全終了して開き直し）</span></footer>
 </div>
 
 <script>
@@ -922,16 +922,25 @@ $("bili-app-copy").addEventListener("click", async () => {
   const text = [title, desc, tags].filter(Boolean).join("\n\n");
   if (!text) { setStatus("先に文面を作ってください（🚀/🤖/⚡のどれかで生成）", true); return; }
   await copyBtn(text, $("bili-app-copy"));
-  if (videoFile && navigator.canShare && navigator.canShare({ files: [videoFile] })) {
-    setStatus("📋 文面コピー済み → 共有シートで【bilibili】を選ぶ→投稿画面に動画が入る→貼り付け");
-    try {
-      await navigator.share({ files: [videoFile] });
-    } catch (e) {
-      setStatus("共有をキャンセルしました。もう一度📲を押すか、bilibiliアプリの＋から動画を選んで貼り付けでもOK", true);
-    }
+  /* 共有シートが開かない時に理由が分かるよう、状態別にメッセージを出す */
+  if (!videoFile) {
+    setStatus("📋 コピーしました（文面のみ）。動画ごとアプリに渡すには、上の【🎬 投稿する動画本体を選ぶ】で動画を選んでから📲を押してください", true);
     return;
   }
-  setStatus("📋 アプリ用にコピー済み → bilibiliアプリの＋ → 動画を選ぶ → 貼り付け（标题・简介・#タグ入り）。🎬で動画を選んでおくと共有シートで動画ごと渡せます");
+  if (!(navigator.share && navigator.canShare && navigator.canShare({ files: [videoFile] }))) {
+    setStatus("📋 コピーしました。⚠️この開き方では動画の共有シートが使えないみたいです → Safariでこのページを開き直すか、bilibiliアプリの＋から動画を選んで貼り付けてください", true);
+    return;
+  }
+  setStatus("📋 文面コピー済み → 共有シートで【bilibili】を選ぶ→投稿画面に動画が入る→貼り付け");
+  try {
+    await navigator.share({ files: [videoFile] });
+  } catch (e) {
+    if (e && e.name === "NotAllowedError") {
+      setStatus("⚠️共有がブロックされました。もう一度📲をタップしてください（連続タップ直後だと弾かれることがあります）", true);
+    } else {
+      setStatus("共有をキャンセルしました。もう一度📲を押すか、bilibiliアプリの＋から動画を選んで貼り付けでもOK", true);
+    }
+  }
 });
 
 function setStatus(msg, isError) {
