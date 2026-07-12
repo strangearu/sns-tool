@@ -107,6 +107,10 @@
     <div style="margin-top:6px">
       <label class="upload-label">📷 スクショ・サムネを追加（最大4枚）<input type="file" id="file-input" accept="image/*" multiple></label>
     </div>
+    <div style="margin-top:8px">
+      <label class="upload-label">🎬 投稿する動画本体を選ぶ（スマホ用・📲でアプリに動画ごと渡せます）<input type="file" id="video-input" accept="video/*"></label>
+      <span id="video-name" style="font-size:12px;color:var(--sub);margin-left:8px"></span>
+    </div>
 
     <label class="head" style="margin-top:14px">⑥ カテゴリ</label>
     <div class="cats" id="cats"></div>
@@ -683,6 +687,7 @@ function buildPrompt(forApi) {
   p += "【TikTokの方針】日本語。フック=動画冒頭に載せる1行テロップ（3秒でスクロールを止める言葉・15字前後、続きが気になる形）。競合分析では「コス×15秒シチュエーション芝居」型がバズ率62%——フックも「状況設定が一瞬でわかる」形（例:「春麗が◯◯したら」「◯◯な日のコスプレイヤー」）を優先する。キャプション=1行目に内容がわかる一言→補足1〜2行→タグ5〜8個（日本語＋英語グローバル混在。例: #コスプレ #cosplay。ダンス動画は曲名タグと#踊ってみた 必須）。恋愛感情を煽る文言（ガチ恋営業）は使わない。\n";
   p += "【日本語の文体（フック・キャプション共通、本人の全X投稿から実測）】短く言い切る（一言＋体言止めが基本）。絵文字は0〜2個（よく使う: ❗️😭🔥🫶✌️）、顔文字・「笑」・「…」は使わない。テンションは「！！」「❗️❗️❗️」連打で。強調は「めちゃくちゃ」「〜すぎる」。つぶやきはタメ口、告知はですます。ダジャレ・遊び（半角カナ「ﾀﾞﾖｰ」等）は積極採用。\n";
   p += "【bilibiliの方針】标题=80字以内。検索キーワード（キャラ名・ゲーム名）を含め、【】でジャンル表記（例:【cosplay】【街霸6】）するのがbilibili文化。简介=親しみやすい自己紹介（日本から来たcoser等）＋動画の見どころ＋一键三连（点赞・投币・收藏）のお願い。加えて简介かタイトルに弹幕を打ちたくなる具体的な問い・お題を1つ仕込む（例:「你们的主用角色是谁？弹幕告诉我」）——弹幕・コメントの互动率が推荐の燃料になる。标签=10個以内、検索される単語で。\n";
+  p += "【bilibiliの実測較正（2026-07・本人アカウントの実データ）】①分区は生活/Vlog区を推奨——同系統の動画で游戏区=3千再生 vs Vlog区=4.5万再生の実測差。ゲーム大会ネタでも「人の物語」として出す ②感動・ストーリー性×コスプレの角度が伸びる（例:「最后忍不住哭了😭」のような感情フックが標題で有効）。ゲーム攻略角度より「日本人coserの挑戦・成長」角度を優先する。\n";
   p += "【小紅書の方針】封面文字=12字以内のフック。タイトル=20字以内で検索KW（キャラ名・作品名）＋物語性（挑战/实录/◯◯日记）必須——KWなしの一言タイトルは首页推荐に乗らない（本人実測: KWなし=300views、KW＋物語=1,000〜10,000views）。本文=友達への分享トーン＋絵文字＋コメントを誘う問いかけ。\n";
   p += "【Weiboの方針】本文＋#话题#形式のタグ5〜8個。\n";
   p += "【ショート動画の転載設計（重要・バズ分析基準）】冒頭3秒がすべて＝ロゴ・挨拶・イントロは動画の減点要素（もし元動画にあれば指摘する）。完走率がゲート（15〜30秒動画は約70%、30〜60秒は約50%が目安）なので、标题・封面文字・简介は「最後まで見る理由」を予告する書き方にする。終わりが冒頭に繋がるループ動画は再生率が跳ねる。保存(收藏)・シェアを誘う一言は元の内容に合う形でだけ入れる（見どころやコツをでっち上げない）。TikTokのウォーターマーク付き動画は他プラットフォームで減点されるため、見つけたら指摘すること。\n";
@@ -899,7 +904,15 @@ document.querySelectorAll(".copy-btn[data-target]").forEach(btn => {
   btn.addEventListener("click", () => copyBtn($(btn.dataset.target).value, btn));
 });
 
-// 📲 bilibiliアプリ用コピー（标题＋简介＋#タグ形式。ブラウザは開かない＝アプリ運用向け）
+// 🎬 動画本体（📲でアプリへ渡す用・端末内だけ、どこにも送信しません）
+let videoFile = null;
+$("video-input").addEventListener("change", (ev) => {
+  videoFile = ev.target.files[0] || null;
+  $("video-name").textContent = videoFile ? "✅ " + videoFile.name : "";
+});
+
+// 📲 bilibiliアプリ用コピー（标题＋简介＋#タグ形式）
+// 動画を選んであれば共有シートで動画ごとアプリへ。ブラウザは開かない
 $("bili-app-copy").addEventListener("click", async () => {
   const title = $("bili-title").value.trim();
   const desc = $("bili-desc").value.trim();
@@ -909,7 +922,16 @@ $("bili-app-copy").addEventListener("click", async () => {
   const text = [title, desc, tags].filter(Boolean).join("\n\n");
   if (!text) { setStatus("先に文面を作ってください（🚀/🤖/⚡のどれかで生成）", true); return; }
   await copyBtn(text, $("bili-app-copy"));
-  setStatus("📋 アプリ用にコピー済み → bilibiliアプリの＋ → 動画を選ぶ → 貼り付け（标题・简介・#タグ入り）");
+  if (videoFile && navigator.canShare && navigator.canShare({ files: [videoFile] })) {
+    setStatus("📋 文面コピー済み → 共有シートで【bilibili】を選ぶ→投稿画面に動画が入る→貼り付け");
+    try {
+      await navigator.share({ files: [videoFile] });
+    } catch (e) {
+      setStatus("共有をキャンセルしました。もう一度📲を押すか、bilibiliアプリの＋から動画を選んで貼り付けでもOK", true);
+    }
+    return;
+  }
+  setStatus("📋 アプリ用にコピー済み → bilibiliアプリの＋ → 動画を選ぶ → 貼り付け（标题・简介・#タグ入り）。🎬で動画を選んでおくと共有シートで動画ごと渡せます");
 });
 
 function setStatus(msg, isError) {
