@@ -190,7 +190,7 @@
         <div class="sugg" id="bili-sugg"></div>
         <span class="field-label">简介（説明文）</span>
         <textarea id="bili-desc"></textarea>
-        <span class="field-label">标签（タグ・最大10個・投稿画面で1つずつ追加）</span>
+        <span class="field-label">标签（タグ・最大10個。PC投稿画面用=カンマ区切り／アプリは下の📲で#形式）</span>
         <div class="row">
           <input type="text" id="bili-tags">
           <button class="copy-btn" data-target="bili-tags" style="background:#6b7280">コピー</button>
@@ -198,11 +198,12 @@
         <div class="card-foot">
           <span class="count" id="count-bili"></span>
           <div class="foot-btns">
-            <a class="open-btn" href="https://member.bilibili.com/platform/upload/video/frame" target="_blank">投稿画面 ↗</a>
+            <button class="copy-btn" id="bili-app-copy" style="background:var(--accent)">📲 アプリ用コピー</button>
+            <a class="open-btn" href="https://member.bilibili.com/platform/upload/video/frame" target="_blank">PC投稿画面 ↗</a>
             <button class="copy-btn" data-target="bili-desc">简介コピー</button>
           </div>
         </div>
-        <p class="hint">📺 标题は検索KW＋【】ジャンル表記が伸びる文化。简介末尾の「一键三连」お願いはbilibiliの定番です。</p>
+        <p class="hint">📺 スマホは📲を押す→<b>bilibiliアプリの＋→動画を選ぶ→貼り付け</b>（标题・简介・#タグがまとめてコピー済み・ブラウザは開きません）。标题は検索KW＋【】ジャンル表記が伸びる文化。简介末尾の「一键三连」お願いはbilibiliの定番です。</p>
       </div>
     </div>
 
@@ -894,8 +895,21 @@ async function copyBtn(text, btn) {
   catch (e) { btn.textContent = "失敗（長押しで選択して）"; }
   setTimeout(() => { btn.textContent = orig; btn.classList.remove("done"); }, 1600);
 }
-document.querySelectorAll(".copy-btn").forEach(btn => {
+document.querySelectorAll(".copy-btn[data-target]").forEach(btn => {
   btn.addEventListener("click", () => copyBtn($(btn.dataset.target).value, btn));
+});
+
+// 📲 bilibiliアプリ用コピー（标题＋简介＋#タグ形式。ブラウザは開かない＝アプリ運用向け）
+$("bili-app-copy").addEventListener("click", async () => {
+  const title = $("bili-title").value.trim();
+  const desc = $("bili-desc").value.trim();
+  const tags = $("bili-tags").value.split(/[,，、\s]+/)
+    .map(t => t.trim().replace(/^#+|#+$/g, "")).filter(Boolean)
+    .map(t => "#" + t).join(" ");
+  const text = [title, desc, tags].filter(Boolean).join("\n\n");
+  if (!text) { setStatus("先に文面を作ってください（🚀/🤖/⚡のどれかで生成）", true); return; }
+  await copyBtn(text, $("bili-app-copy"));
+  setStatus("📋 アプリ用にコピー済み → bilibiliアプリの＋ → 動画を選ぶ → 貼り付け（标题・简介・#タグ入り）");
 });
 
 function setStatus(msg, isError) {
