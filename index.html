@@ -388,13 +388,24 @@
   let doneLog = JSON.parse(localStorage.getItem(DKEY) || "[]");
   function saveDoneLog() { localStorage.setItem(DKEY, JSON.stringify(doneLog)); }
   function thisWeekStart() { const d = new Date(); const day = (d.getDay() + 6) % 7; d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - day); return d.getTime(); }
+  /* チェックの有効期限（項目は消さない・チェックだけ自動リセット）:
+     毎日=あさ6時 / 今週=月曜あさ6時（夜型なので日付は6時切り替え・まいにちクエストと同じ） */
+  function resetBoundary(cat) {
+    if (cat !== "毎日" && cat !== "今週") return 0; /* 案件・いつかは持ち越し */
+    const d = new Date();
+    if (d.getHours() < 6) d.setDate(d.getDate() - 1);
+    d.setHours(6, 0, 0, 0);
+    if (cat === "今週") { const off = (d.getDay() + 6) % 7; d.setDate(d.getDate() - off); }
+    return d.getTime();
+  }
+  function isDone(it) { return !!(it.done && (it.doneAt || 0) >= resetBoundary(it.c)); }
   function weekDoneCount() {
     const ws = thisWeekStart();
     return doneLog.filter(ts => ts >= ws).length + todos.filter(t => t.done && t.doneAt && t.doneAt >= ws).length;
   }
   function makeItem(it) {
     const div = document.createElement("div");
-    div.className = "item" + (it.done ? " done" : "");
+    div.className = "item" + (isDone(it) ? " done" : "");
     div.innerHTML = `<div class="chk">✓</div><div class="body"><div class="t" contenteditable="true" spellcheck="false"></div></div><button class="x pin"></button><button class="x">×</button>`;
     div.querySelector(".t").textContent = it.t;
     const btns = div.querySelectorAll(".x");
@@ -402,7 +413,7 @@
     pin.textContent = it.today ? "⭐" : "☆";
     pin.title = "「今日やる」に固定/解除";
     pin.addEventListener("click", () => { it.today = !it.today; saveTodos(); renderTodos(); });
-    div.querySelector(".chk").addEventListener("click", () => { it.done = !it.done; it.doneAt = it.done ? Date.now() : null; saveTodos(); renderTodos(); });
+    div.querySelector(".chk").addEventListener("click", () => { const v = !isDone(it); it.done = v; it.doneAt = v ? Date.now() : null; saveTodos(); renderTodos(); });
     del.addEventListener("click", () => { todos = todos.filter(t => t.id !== it.id); saveTodos(); renderTodos(); });
     const ed = div.querySelector(".t");
     ed.addEventListener("blur", () => { const v = ed.textContent.trim(); if (v) { it.t = v; saveTodos(); } else { todos = todos.filter(t => t.id !== it.id); saveTodos(); renderTodos(); } });
@@ -411,7 +422,7 @@
   }
   function renderTodos() {
     const wrap = $("todo-list"); wrap.innerHTML = "";
-    const total = todos.length, done = todos.filter(t => t.done).length;
+    const total = todos.length, done = todos.filter(isDone).length;
     const wk = weekDoneCount();
     $("todo-prog").textContent = (total ? `${done}/${total} 完了` : "") + (wk ? `　🔥今週${wk}件` : "");
     if (!total) { wrap.innerHTML = '<div class="empty">まだ何もありません。<br>上の欄から追加してみましょう ✍️</div>'; return; }
@@ -440,7 +451,8 @@
   }
   $("todo-add").addEventListener("click", addTodo);
   $("todo-input").addEventListener("keydown", e => { if (e.key === "Enter") addTodo(); });
-  $("todo-clear").addEventListener("click", () => { todos.filter(t => t.done).forEach(t => doneLog.push(t.doneAt || Date.now())); doneLog = doneLog.filter(ts => ts >= Date.now() - 60 * 24 * 3600 * 1000); saveDoneLog(); todos = todos.filter(t => !t.done); saveTodos(); renderTodos(); });
+  /* 完了一括削除は単発カテゴリ（案件・いつか）だけ。毎日・今週の項目はチェックが自動リセットされるので消さない */
+  $("todo-clear").addEventListener("click", () => { const removable = t => isDone(t) && (t.c === "プロジェクト" || t.c === "いつか"); todos.filter(removable).forEach(t => doneLog.push(t.doneAt || Date.now())); doneLog = doneLog.filter(ts => ts >= Date.now() - 60 * 24 * 3600 * 1000); saveDoneLog(); todos = todos.filter(t => !removable(t)); saveTodos(); renderTodos(); });
   renderTodos();
 
   /* ===== メモ（自由メモ・買い物リスト等） ===== */
