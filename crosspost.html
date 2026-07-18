@@ -641,7 +641,7 @@ function buildClaudePrompt(forApi) {
   p += "【IGの日本語文の文体（本人の全X投稿から実測）】短く言い切る・体言止めOK。絵文字は0〜2個（よく使う: ❗️😭🔥🫶✌️🥹✨）、顔文字・「笑」・「…」は使わない。テンションは「！！」連打で。強調は「めちゃくちゃ」「〜すぎる」。ガチ恋を煽る言い回しはしない。\n";
   if (cat.coverSamples && cat.coverSamples.length) p += "【封面文字の例】" + cat.coverSamples.join(" / ") + "\n";
   p += "【タグ候補（参考リスト・この中から内容に合うものだけ選ぶ。全部は付けない）】\n";
-  p += "・小紅書(8〜12個): " + cat.red.map(t => "#" + t).join(" ") + "\n";
+  p += "・小紅書(5〜8個・2026-07競合実測: 上位ノートは3〜7個が主流。核=#cos＋作品名＋キャラ名＋ジャンル1-2。人気作品名は中国語と原語の両表記を入れる 例:#异形舞台 #alienstage): " + cat.red.map(t => "#" + t).join(" ") + "\n";
   p += "・Instagram(15〜25個): " + cat.ig.map(t => "#" + t).join(" ") + "\n";
   p += "・Weibo(5〜8個): " + cat.weibo.map(t => "#" + t + "#").join(" ") + "\n";
   p += "・bilibili動態(3〜5個・Weiboと同プールから): " + cat.weibo.map(t => "#" + t + "#").join(" ") + "\n";
@@ -952,7 +952,7 @@ function checkRed() {
     const hit = RED_RISK_WORDS.filter(w => (title + " " + body).includes(w));
     if (hit.length) warns.push("🟠 限流リスク語: " + hit.join("・") + "（誇大・外部誘導は審査対象）");
     const tags = (body.match(/#[^#\s]+/g) || []).length;
-    if (tags > 0 && (tags < 5 || tags > 12)) warns.push("🟡 タグ" + tags + "個（推奨5〜12個）");
+    if (tags > 0 && (tags < 3 || tags > 8)) warns.push("🟡 タグ" + tags + "個（推奨5〜8個・競合実測）");
     if (!/[？?]/.test(body.replace(/#[^#\s]+/g, "").trim().slice(-60))) warns.push("💡 末尾に問いかけ推奨（例:「你们觉得呢？」でコメント誘発）");
   }
   box.style.display = "block";
@@ -992,7 +992,7 @@ async function convertSimple(raw, memo) {
   const igTags = uniq([...srcTags, ...smart.events, ...smart.ig, ...filterExcl(catTags("ig"), smart), ...filterExcl(getDefaultTags("ig"), smart)]).slice(0, 25);
   $("out-ig").value = body + "\n.\n" + en + "\n\n" + igTags.map(t => "#" + t).join(" ");
 
-  const redTags = uniq([...smart.events, ...smart.red, ...tagsZh, ...filterExcl(catTags("red"), smart), ...filterExcl(getDefaultTags("red"), smart)]).slice(0, 12);
+  const redTags = uniq([...smart.events, ...smart.red, ...tagsZh, ...filterExcl(catTags("red"), smart), ...filterExcl(getDefaultTags("red"), smart)]).slice(0, 8);
   const zhLines = zh.split("\n").map(l => l.trim()).filter(Boolean);
   const titleLine = zhLines.find(l => [...l].length >= 4) || zhLines[0] || "";
   $("title-red").value = [...titleLine].slice(0, 20).join("");
