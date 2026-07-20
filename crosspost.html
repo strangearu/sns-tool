@@ -261,6 +261,7 @@
           </div>
         </div>
         <p class="hint">📕 📲の使い方: 押す→共有シートで<b>rednote（小紅書）を選ぶ</b>→写真が入る→タイトル・本文欄にペースト（まとめてコピー済み・1行目がタイトル）。rednoteが出ない時は「画像を保存」→アプリの＋から。封面文字は表紙画像の文字入れ用。本文上限1,000字。</p>
+        <p class="hint">⏰ <b>投稿は夜19〜21時台</b>・23時前後の深夜投稿は封印（2026-07バズ実測: 同じ写真でも深夜投稿は初速死で6千v、19時台は8万v）。<b>同じ系統の連投は中3日</b>——忘れても下のチェッカーが見張ります。</p>
         <div id="red-check" class="hint" style="display:none;line-height:1.8;margin-top:6px"></div>
       </div>
     </div>
@@ -632,6 +633,8 @@ function buildClaudePrompt(forApi) {
   p += "【小紅書の質基準（発布前審査と同じ基準で作る）】\n";
   p += "・タイトルは爆款型から内容に合うものを選ぶ: 物語型「◯◯出征EVO/挑战◯◯/◯◯实录/◯◯日记」/身分型「日本coser的◯◯」/数字・好奇型「我花3k假发运费…？」/情緒型。本人の実測（2026-07）では「春丽・街霸などの検索KW＋物語性」が最強——出征応援ノートが通常の10倍（1万views・收藏318）。\n";
   p += "・【本人実測の鉄則】元のX投稿が写真＋一言でも、REDのタイトルは必ず検索KW入りで立てる。KWなしの一言ノートは首页推荐に乗らず300views止まり、KW＋物語タイトルは1,000〜10,000views。\n";
+  p += "・【2026-07バズ実測（8万views/7,466赞「春丽夏日海边☀️」）】流入の96%は首页推荐＝おすすめ一本勝負（検索は0.2%）。合格ライン=封面クリック率23%・赞率9%・收藏率2%。配布は二波構造（3日目深夜に本波）で、審査材料は初日の初速互動——だから末尾の問いかけは「選択式で答えやすく」が必須（実例「你们喜欢这套夏日版，还是经典款？」→コメント51件で過去最多）。\n";
+  p += "・【狙う層の使い分け（受众実測）】海・水着・露出強めの正片＝一般男性プール（バズ時の受众は男性99%・25〜44歳68%・興味は生活記録/体育/时尚）。化妆過程・仿妆・変身・衣装制作・日常系＝二次元・女性層向け。写真の系統を見て、タイトルとタグをその層に寄せる: 男性プール向け=正片・Outfit系・シンプルな季節KW（夏日/海边）／女性層向け=#cos妆 #仿妆 #变身 系タグ＋プロセスや変化を見せるタイトル（例「日本coser用什么化妆」型）。\n";
   p += "・キーワード配置: 核心KW（キャラ名/作品名/cosplay）をタイトル→最初の50字→タグの3か所に自然に置く（検索流入の入口）。最初の50字には続きを読ませるフックも。\n";
   p += "・「最◯◯・第一・100%・绝对」等の誇大語と外部誘導ワード（微信等）は限流対象なので使わない。\n";
   p += "・收藏（保存）要素は【元の投稿/メモ】に実際にある情報（衣装の入手先・イベント情報・制作過程など）が含まれる場合だけ入れる——なければ無理に作らない。情報をでっち上げて清単を作るのは禁止。收藏されやすい実測角度=正片まとめ・格ゲー技の再現ポーズ・イベント実録。\n";
@@ -884,6 +887,7 @@ document.querySelectorAll("[data-handoff]").forEach(btn => {
       setStatus("コピーできませんでした。各欄のコピーボタンを使ってください", true);
       return;
     }
+    if (btn.dataset.handoff === "red") logRedPost();
     const files = await photosAsFiles();
     if (files.length && navigator.canShare && navigator.canShare({ files })) {
       setStatus("📋 文面コピー済み → " + h.guide);
@@ -937,6 +941,46 @@ $("api-go").addEventListener("click", async () => {
   }
 });
 
+// ---- 小紅書 連投ガード（同系統の投稿を中3日以内に繰り返すと警告・コピー時に自動記録） ----
+// 2026-07実測: 海辺テーマ3連投の3本目は中身最高評価でも曝光1/100に絞られた（重複判定）
+const RED_LOG_LS = "red-post-log";
+const RED_THEME_WORDS = ["海边","夏日","泳装","沙滩","比基尼","outfit4","outfit2","化妆","仿妆","变身","舞蹈","漫展","正片","实录","出征","日常","猫耳","旗袍","女仆","婚纱","万圣节","圣诞"];
+function redThemes(s) { const t = (s || "").toLowerCase(); return RED_THEME_WORDS.filter(w => t.includes(w)); }
+function redBigrams(s) {
+  const t = (s || "").toLowerCase().replace(/[#\s。、！!?？~～☀️💙🔥✨🌊]/gu, "");
+  const set = new Set();
+  for (let i = 0; i < t.length - 1; i++) set.add(t.slice(i, i + 2));
+  return set;
+}
+function loadRedLog() { try { return JSON.parse(localStorage.getItem(RED_LOG_LS) || "[]"); } catch (e) { return []; } }
+function logRedPost() {
+  const title = $("title-red").value.trim();
+  if (!title) return;
+  const log = loadRedLog().filter(e => e.title !== title);
+  log.push({ t: Date.now(), title, themes: redThemes(title + " " + $("out-red").value) });
+  localStorage.setItem(RED_LOG_LS, JSON.stringify(log.slice(-10)));
+}
+function checkRento() {
+  const title = $("title-red").value.trim();
+  if (!title) return "";
+  const now = Date.now(), themes = redThemes(title + " " + $("out-red").value), bg = redBigrams(title);
+  for (const e of loadRedLog()) {
+    if (e.title === title) continue; // 同じ投稿の再コピーは連投ではない
+    const days = (now - e.t) / 86400000;
+    if (days > 3) continue;
+    const shared = themes.filter(w => (e.themes || []).includes(w));
+    const bgOld = redBigrams(e.title);
+    let inter = 0; for (const x of bg) if (bgOld.has(x)) inter++;
+    const sim = bg.size && bgOld.size ? inter / (bg.size + bgOld.size - inter) : 0;
+    if (shared.length || sim >= 0.3) {
+      return "🔴 連投ガード: " + Math.max(1, Math.round(days)) + "日前に同系統「" + e.title + "」を投稿済み" +
+        (shared.length ? "（共通テーマ: " + shared.join("・") + "）" : "") +
+        " → 中3日あける or 切り口を変える（正片→技の再現→舞台裏）。実測: 同系統3連投目は曝光1/100";
+    }
+  }
+  return "";
+}
+
 // ---- 小紅書 発布前チェッカー（字数・限流リスク・タグ数・互動を自動審査） ----
 const RED_RISK_WORDS = ["最好","最强","最便宜","最有效","第一","100%","绝对","包治","根治","神效","秒杀","返现","微信","加我","私信我","扫码"];
 function checkRed() {
@@ -945,6 +989,8 @@ function checkRed() {
   const cover = $("cover-red").value.trim(), title = $("title-red").value.trim(), body = $("out-red").value.trim();
   if (!cover && !title && !body) { box.style.display = "none"; return; }
   const len = s => [...s].length, warns = [];
+  const rento = checkRento();
+  if (rento) warns.push(rento);
   if (cover && len(cover) > 12) warns.push("🔴 封面文字 " + len(cover) + "字 → 12字以内に");
   if (title && len(title) > 20) warns.push("🔴 タイトル " + len(title) + "字 → 20字で切れます");
   if (body && len(body) > 1000) warns.push("🔴 本文 " + len(body) + "字 → 上限1,000字");
@@ -956,7 +1002,7 @@ function checkRed() {
     if (!/[？?]/.test(body.replace(/#[^#\s]+/g, "").trim().slice(-60))) warns.push("💡 末尾に問いかけ推奨（例:「你们觉得呢？」でコメント誘発）");
   }
   box.style.display = "block";
-  box.innerHTML = warns.length ? "📋 発布前チェック:<br>" + warns.join("<br>") : "🟢 発布前チェックOK（字数・限流リスク・タグ数）";
+  box.innerHTML = warns.length ? "📋 発布前チェック:<br>" + warns.join("<br>") : "🟢 発布前チェックOK（字数・限流リスク・タグ数・連投）";
 }
 ["cover-red", "title-red", "out-red"].forEach(id => $(id).addEventListener("input", checkRed));
 
@@ -1046,8 +1092,11 @@ async function copyBtn(text, btn) {
   } catch (e) { btn.textContent = "失敗（長押しで選択）"; }
   setTimeout(() => { btn.textContent = orig; btn.classList.remove("done"); }, 1800);
 }
-document.querySelectorAll(".copy-btn").forEach(btn => {
-  btn.addEventListener("click", () => copyBtn($(btn.dataset.target).value, btn));
+document.querySelectorAll(".copy-btn[data-target]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    copyBtn($(btn.dataset.target).value, btn);
+    if (btn.dataset.target === "out-red" || btn.dataset.target === "title-red") logRedPost();
+  });
 });
 
 function setStatus(msg, isError) {
