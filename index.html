@@ -253,6 +253,22 @@
       linear-gradient(125deg, var(--sheen), transparent 42%);
   }
 
+  /* デスクトップ（PC版）レイアウト: 同じガラスのまま多カラムに広がる */
+  @media (min-width: 900px) {
+    .wrap { max-width:1060px; padding-left:32px; padding-right:32px; }
+    .ph { padding-top:24px; }
+    .ph h1 { font-size:38px; }
+    .countdown { padding:26px 16px; }
+    .countdown .days { font-size:64px; }
+    #actions { grid-template-columns:1fr 1fr; }
+    #todo-list .list { grid-template-columns:1fr 1fr; }
+    .tools { grid-template-columns:repeat(4,1fr); }
+    .links { grid-template-columns:repeat(4,1fr); }
+    #memo-list { columns:2; column-gap:12px; }
+    .memo { break-inside:avoid; }
+    nav { bottom:18px; }
+  }
+
   /* アクセシビリティ: 動きと透過の抑制設定を尊重 */
   @media (prefers-reduced-motion: reduce) {
     .tab.active { animation:none; }
