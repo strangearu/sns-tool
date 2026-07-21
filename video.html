@@ -695,7 +695,7 @@ function buildPrompt(forApi) {
   if (det.labels.length) p += "・本文から検出した要素（参考）: " + uniq(det.labels).join("・") + "\n";
   p += "・タグ候補（参考・取捨選択する）: " + cat.zh.map(t => "#" + t).join(" ") + "\n\n";
   if (forApi || window.innerWidth >= 900) p += PC_CTX + "\n\n";
-  p += "必ず下の形式で、見出し行（===…===）はそのままコピーして出力してください:\n";
+  p += "必ず下の形式で出力してください。見出し行（===…===）は一字も変えずそのままコピーすること（別の表記・別の言語に直さない）。見出し行の直後は中身だけを書き、标题・タイトル系は必ず1行で:\n";
   p += M.TH + "\n（15字前後の1行）\n" + M.TC + "\n（本文＋#タグ5〜8個）\n";
   p += M.BT + "\n（80字以内）\n" + M.BD + "\n（简介）\n" + M.BG + "\n（カンマ区切り10個以内）\n";
   p += M.RC + "\n（12字以内）\n" + M.RT + "\n（20字以内）\n" + M.RB + "\n（本文＋#タグ）\n" + M.WB + "\n（本文＋#タグ#）\n";
@@ -720,14 +720,32 @@ function section(text, start, ...ends) {
   for (const e of ends) { const j = text.indexOf(e, from); if (j >= 0 && j < to) to = j; }
   return text.slice(from, to).trim();
 }
+// 生成AIが見出し行の表記を揺らした時の補正（タイトル欄に本文が混入する事故の根治・crosspostと同思想）
+function canonMarks(t) {
+  return t
+    .replace(/^\s*===\s*封面文字\s*===\s*$/gm, M.RC)
+    .replace(/^\s*===\s*小[紅红][書书]\s*(?:タイトル|标题|標題)\s*===\s*$/gm, M.RT)
+    .replace(/^\s*===\s*小[紅红][書书]本文\s*===\s*$/gm, M.RB)
+    .replace(/^\s*===\s*bilibili\s*(?:标题|標題|タイトル)\s*===\s*$/gim, M.BT)
+    .replace(/^\s*===\s*bilibili\s*(?:简介|簡介)\s*===\s*$/gim, M.BD)
+    .replace(/^\s*===\s*bilibili\s*(?:标签|標籤|タグ)\s*===\s*$/gim, M.BG)
+    .replace(/^\s*===\s*Weibo\s*===\s*$/gim, M.WB)
+    .replace(/^\s*===\s*日本[語语][訳译]\s*===\s*$/gm, M.JA);
+}
 function applyReply(t) {
+  t = canonMarks(t);
   const all = Object.values(M);
   const get = (mark) => section(t, mark, ...all.filter(x => x !== mark));
-  const th = get(M.TH), tc = get(M.TC), bt = get(M.BT), bd = get(M.BD), bg = get(M.BG), rc = get(M.RC), rt = get(M.RT), rb = get(M.RB), wb = get(M.WB), ja = get(M.JA);
+  const th = get(M.TH), tc = get(M.TC), bt = get(M.BT), bg = get(M.BG), rc = get(M.RC), wb = get(M.WB), ja = get(M.JA);
+  let bd = get(M.BD), rt = get(M.RT), rb = get(M.RB);
   if (!th && !tc && !bt && !bd && !rb && !wb) return false;
-  $("tt-hook").value = th; $("tt-cap").value = tc;
-  $("bili-title").value = bt; $("bili-desc").value = bd; $("bili-tags").value = bg.replace(/#/g, "");
-  $("red-cover").value = rc; $("red-title").value = rt; $("red-body").value = rb;
+  // タイトル系は必ず1行だけ入れる。万一続きがあれば対応する本文欄へ逃がす（input欄は改行を消して連結してしまうため）
+  const clip1 = s => { const i = s.indexOf("\n"); return i < 0 ? [s, ""] : [s.slice(0, i).trim(), s.slice(i + 1).trim()]; };
+  const [btV, btRest] = clip1(bt); if (btRest && !bd) bd = btRest;
+  const [rtV, rtRest] = clip1(rt); if (rtRest && !rb) rb = rtRest;
+  $("tt-hook").value = clip1(th)[0]; $("tt-cap").value = tc;
+  $("bili-title").value = btV; $("bili-desc").value = bd; $("bili-tags").value = bg.replace(/#/g, "");
+  $("red-cover").value = clip1(rc)[0]; $("red-title").value = rtV; $("red-body").value = rb;
   $("weibo-body").value = wb;
   if (ja) { $("ja-trans").textContent = ja; $("ja-box").style.display = "block"; }
   else { $("ja-box").style.display = "none"; }

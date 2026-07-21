@@ -666,7 +666,7 @@ function buildClaudePrompt(forApi) {
   if (det.labels.length) p += "・本文から検出した要素（タグ選定の参考に）: " + uniq(det.labels).join("・") + "\n";
   p += "\n";
   if (forApi || window.innerWidth >= 900) p += PC_CTX + "\n\n";
-  p += "必ず下の形式で、見出し行（===…===）はそのままコピーして出力してください:\n";
+  p += "必ず下の形式で出力してください。見出し行（===…===）は一字も変えずそのままコピーすること（簡体字に直さない・===タイトル=== 等の表記のまま）。見出し行の直後は中身だけを書き、タイトル系は必ず1行で:\n";
   p += RED_MARK + "\n（12字以内）\n";
   p += TITLE_MARK + "\n（20字以内・検索KW入り）\n";
   p += BODY_MARK + "\n（簡体字の本文＋末尾に#タグ）\n";
@@ -701,22 +701,40 @@ function section(text, start, ...ends) {
   return text.slice(from, to).trim();
 }
 
+// 生成AIが見出し行を簡体字等に揺らした時の補正（タイトル欄に本文が混入する事故の根治）
+function canonMarks(t) {
+  return t
+    .replace(/^\s*===\s*封面文字\s*===\s*$/gm, RED_MARK)
+    .replace(/^\s*===\s*(?:タイトル|标题|標題)\s*===\s*$/gm, TITLE_MARK)
+    .replace(/^\s*===\s*小[紅红][書书]本文\s*===\s*$/gm, BODY_MARK)
+    .replace(/^\s*===\s*Instagram\s*===\s*$/gim, IG_MARK)
+    .replace(/^\s*===\s*Weibo\s*===\s*$/gim, WB_MARK)
+    .replace(/^\s*===\s*bilibili\s*(?:タイトル|标题|標題)\s*===\s*$/gim, BILI_TITLE_MARK)
+    .replace(/^\s*===\s*bilibili\s*[動动][態态]\s*===\s*$/gim, BILI_MARK)
+    .replace(/^\s*===\s*日本[語语][訳译]\s*===\s*$/gm, JA_MARK);
+}
+
 function applyReply(t) {
+  t = canonMarks(t);
   const cover = section(t, RED_MARK, TITLE_MARK, BODY_MARK, IG_MARK, WB_MARK, BILI_TITLE_MARK, BILI_MARK, JA_MARK);
   const title = section(t, TITLE_MARK, BODY_MARK, IG_MARK, WB_MARK, BILI_TITLE_MARK, BILI_MARK, JA_MARK);
-  const body = section(t, BODY_MARK, IG_MARK, WB_MARK, BILI_TITLE_MARK, BILI_MARK, JA_MARK);
+  let body = section(t, BODY_MARK, IG_MARK, WB_MARK, BILI_TITLE_MARK, BILI_MARK, JA_MARK);
   const ig = section(t, IG_MARK, WB_MARK, BILI_TITLE_MARK, BILI_MARK, JA_MARK);
   const wb = section(t, WB_MARK, BILI_TITLE_MARK, BILI_MARK, JA_MARK);
   const biliTitle = section(t, BILI_TITLE_MARK, BILI_MARK, JA_MARK);
-  const bili = section(t, BILI_MARK, JA_MARK);
+  let bili = section(t, BILI_MARK, JA_MARK);
   const ja = section(t, JA_MARK);
   if (!cover && !title && !body && !ig && !wb && !bili) return false;
-  $("cover-red").value = cover;
-  $("title-red").value = title;
+  // タイトル系は必ず1行だけ入れる。万一2行目以降が続いていたら対応する本文欄へ逃がす（input欄は改行を消して連結してしまうため）
+  const clip1 = s => { const i = s.indexOf("\n"); return i < 0 ? [s, ""] : [s.slice(0, i).trim(), s.slice(i + 1).trim()]; };
+  const [titleV, tRest] = clip1(title); if (tRest && !body) body = tRest;
+  const [biliTitleV, bRest] = clip1(biliTitle); if (bRest && !bili) bili = bRest;
+  $("cover-red").value = clip1(cover)[0];
+  $("title-red").value = titleV;
   $("out-red").value = body;
   $("out-ig").value = ig;
   $("out-weibo").value = wb;
-  $("title-bili").value = biliTitle;
+  $("title-bili").value = biliTitleV;
   $("out-bili").value = bili;
   if (ja) { $("ja-trans").textContent = ja; $("ja-box").style.display = "block"; }
   else { $("ja-box").style.display = "none"; }
@@ -1050,16 +1068,20 @@ async function convertSimple(raw, memo) {
   $("out-ig").value = body + "\n.\n" + en + "\n\n" + igTags.map(t => "#" + t).join(" ");
 
   const redTags = uniq([...smart.events, ...smart.red, ...tagsZh, ...filterExcl(catTags("red"), smart), ...filterExcl(getDefaultTags("red"), smart)]).slice(0, 8);
-  const zhLines = zh.split("\n").map(l => l.trim()).filter(Boolean);
-  const titleLine = zhLines.find(l => [...l].length >= 4) || zhLines[0] || "";
-  $("title-red").value = [...titleLine].slice(0, 20).join("");
-  $("cover-red").value = [...titleLine].slice(0, 12).join("");  // 無料モードは題を流用（手直し前提）
+  // タイトル/封面は本文の頭を流用しない（「タイトルに本文が混ざる」2026-07-21FBで廃止）。検出KWから爆款型で組み立てる（手直し前提）
+  const charaRule = CONTENT_RULES.find(r => r.char && r.re.test(cleaned + "\n" + memo));
+  const ev = smart.events[0] || "", kw = (charaRule && charaRule.red[0]) || "";
+  const autoTitle = ev ? "日本coser的" + ev + "实录" : "日本coser的" + (kw || "cos") + "日记";
+  const autoCover = ev ? "直击" + ev + "现场" : (kw ? kw + "cos来啦" : "日本coser来啦");
+  $("title-red").value = [...autoTitle].slice(0, 20).join("");
+  $("cover-red").value = [...autoCover].slice(0, 12).join("");
   $("out-red").value = zh + "\n\n" + redTags.map(t => "#" + t).join(" ");
 
   const wbTags = uniq([...smart.events, ...smart.weibo, ...tagsZh, ...filterExcl(catTags("weibo"), smart), ...filterExcl(getDefaultTags("weibo"), smart)]).slice(0, 8);
   $("out-weibo").value = zh + "\n\n" + wbTags.map(t => "#" + t + "#").join(" ");
 
   const biliTags = uniq([...smart.events, ...smart.weibo, ...tagsZh, ...filterExcl(catTags("weibo"), smart), ...filterExcl(getDefaultTags("bili"), smart)]).slice(0, 5);
+  $("title-bili").value = [...(ev ? "打卡" + ev : "今天的" + (kw || "cos"))].slice(0, 20).join("");
   $("out-bili").value = zh + "\n\n" + biliTags.map(t => "#" + t + "#").join(" ");
 
   for (const k of ["ig", "red", "weibo", "bili"]) {
