@@ -20,33 +20,33 @@
     font-weight:100 900; font-style:normal; font-display:swap;
   }
   :root {
-    --bg:#f2f2f7; --bg2:#e9e9ef; --card:rgba(255,255,255,.45); --card-solid:#ffffff; --card2:rgba(120,120,128,.08);
+    --bg:#f2f2f7; --bg2:#e9e9ef; --card:rgba(255,255,255,.4); --card-solid:#ffffff; --card2:rgba(120,120,128,.08);
     --text:#1d1d1f; --sub:#86868b; --line:rgba(60,60,67,.12); --hair:rgba(60,60,67,.3);
     --accent:#0071e3; --accent2:#0059b3; --gold:#b87c00; --ok:#34c759; --blue:#007aff; --purple:#af52de;
     --tint:rgba(0,113,227,.09); --navbg:rgba(249,249,251,.5);
-    --glass-edge:rgba(255,255,255,.66); --glass-glint:rgba(255,255,255,.8); --sheen:rgba(255,255,255,.5);
-    --blobA:rgba(0,113,227,.22); --blobB:rgba(175,82,222,.18); --blobC:rgba(255,55,120,.13);
+    --glass-edge:rgba(255,255,255,.66); --glass-glint:rgba(255,255,255,.85); --sheen:rgba(255,255,255,.5); --sheen2:rgba(255,255,255,.38); --glass-shade:rgba(0,0,0,.05);
+    --blobA:rgba(0,113,227,.22); --blobB:rgba(122,92,255,.18); --blobC:rgba(90,200,250,.14);
     --shadow:0 1px 2px rgba(0,0,0,.03), 0 6px 18px rgba(30,40,60,.06);
-    --nav-h:76px; --nav-lift:6px;
+    --nav-h:86px; --nav-lift:6px;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg:#000000; --bg2:#1a1a1c; --card:rgba(28,28,30,.3); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
+      --bg:#000000; --bg2:#1a1a1c; --card:rgba(28,28,30,.26); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
       --text:#f5f5f7; --sub:#98989d; --line:rgba(84,84,88,.4); --hair:rgba(84,84,88,.7);
       --accent:#2997ff; --accent2:#64b2ff; --gold:#ffcc00; --ok:#30d158; --blue:#0a84ff; --purple:#bf5af2;
       --tint:rgba(41,151,255,.13); --navbg:rgba(20,20,22,.42);
-      --glass-edge:rgba(255,255,255,.18); --glass-glint:rgba(255,255,255,.17); --sheen:rgba(255,255,255,.09);
-      --blobA:rgba(10,132,255,.42); --blobB:rgba(191,90,242,.32); --blobC:rgba(255,55,120,.24);
+      --glass-edge:rgba(255,255,255,.2); --glass-glint:rgba(255,255,255,.2); --sheen:rgba(255,255,255,.1); --sheen2:rgba(255,255,255,.08); --glass-shade:rgba(0,0,0,.5);
+      --blobA:rgba(10,132,255,.44); --blobB:rgba(122,92,255,.3); --blobC:rgba(90,200,250,.2);
       --shadow:0 1px 2px rgba(0,0,0,.4);
     }
   }
   :root[data-theme="dark"] {
-    --bg:#000000; --bg2:#1a1a1c; --card:rgba(28,28,30,.3); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
+    --bg:#000000; --bg2:#1a1a1c; --card:rgba(28,28,30,.26); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
     --text:#f5f5f7; --sub:#98989d; --line:rgba(84,84,88,.4); --hair:rgba(84,84,88,.7);
     --accent:#2997ff; --accent2:#64b2ff; --gold:#ffcc00; --ok:#30d158; --blue:#0a84ff; --purple:#bf5af2;
     --tint:rgba(41,151,255,.13); --navbg:rgba(20,20,22,.42);
-    --glass-edge:rgba(255,255,255,.18); --glass-glint:rgba(255,255,255,.17); --sheen:rgba(255,255,255,.09);
-    --blobA:rgba(10,132,255,.42); --blobB:rgba(191,90,242,.32); --blobC:rgba(255,55,120,.24);
+    --glass-edge:rgba(255,255,255,.2); --glass-glint:rgba(255,255,255,.2); --sheen:rgba(255,255,255,.1); --sheen2:rgba(255,255,255,.08); --glass-shade:rgba(0,0,0,.5);
+    --blobA:rgba(10,132,255,.44); --blobB:rgba(122,92,255,.3); --blobC:rgba(90,200,250,.2);
     --shadow:0 1px 2px rgba(0,0,0,.4);
   }
   * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
@@ -79,7 +79,7 @@
     background:var(--tint); border:none; border-radius:99px; padding:4px 12px; margin-bottom:8px; text-transform:uppercase; }
   .ph h1 { font-size:30px; font-weight:700; letter-spacing:-.015em; line-height:1.15; }
   .ph h1 .red { color:var(--accent);
-    background:linear-gradient(100deg,#0090ff 10%,#b04bf5 60%,#ff375f 100%);
+    background:linear-gradient(100deg,#0a84ff 5%,#8e5cff 55%,#5ac8fa 100%);
     -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
   .ph p { color:var(--sub); font-size:14px; margin-top:5px; }
 
@@ -89,7 +89,7 @@
   .reset:active { transform:scale(.95); }
 
   /* カウントダウン */
-  .countdown { background:linear-gradient(135deg,var(--tint),var(--card) 70%); border:none; border-radius:20px;
+  .countdown { background:linear-gradient(135deg,var(--tint),var(--card) 70%); border:none; border-radius:24px;
     padding:20px 16px; margin-bottom:10px; text-align:center; box-shadow:var(--shadow); }
   .countdown .lbl { font-size:12px; color:var(--accent); font-weight:700; letter-spacing:.06em; }
   .countdown .days { font-size:54px; font-weight:700; letter-spacing:-.03em; line-height:1.05; margin:6px 0 4px; font-variant-numeric:tabular-nums; }
@@ -99,7 +99,7 @@
 
   /* チェックリスト共通 */
   .list { display:grid; gap:8px; }
-  .item { background:var(--card); border:none; border-radius:16px; padding:14px; display:flex; gap:12px; align-items:flex-start; box-shadow:var(--shadow); }
+  .item { background:var(--card); border:none; border-radius:20px; padding:14px; display:flex; gap:12px; align-items:flex-start; box-shadow:var(--shadow); }
   .item .chk { flex:none; width:26px; height:26px; border-radius:50%; border:1.7px solid var(--hair); display:flex; align-items:center; justify-content:center; font-size:14px; color:transparent; margin-top:1px; cursor:pointer;
     transition:transform .3s cubic-bezier(.2,.8,.3,1), background-color .15s, border-color .15s; }
   .item .chk:active { transform:scale(.85); transition-duration:.1s; }
@@ -129,7 +129,7 @@
   .memo-add { width:100%; background:var(--accent); color:#fff; border:none; border-radius:14px; padding:14px; font-weight:700; font-size:15px; cursor:pointer; font-family:inherit; margin-bottom:14px;
     transition:transform .3s cubic-bezier(.2,.8,.3,1); }
   .memo-add:active { transform:scale(.98); transition-duration:.1s; }
-  .memo { background:var(--card); border:none; border-radius:16px; padding:13px 14px; margin-bottom:10px; box-shadow:var(--shadow); }
+  .memo { background:var(--card); border:none; border-radius:20px; padding:13px 14px; margin-bottom:10px; box-shadow:var(--shadow); }
   .memo textarea { width:100%; border:none; background:none; resize:none; font-family:inherit; font-size:16px; line-height:1.6; color:var(--text); outline:none; min-height:46px; overflow:hidden; display:block; }
   .memo .mfoot { display:flex; align-items:center; margin-top:8px; padding-top:9px; border-top:1px solid var(--line); }
   .memo .md { font-size:11.5px; color:var(--sub); font-weight:600; }
@@ -137,7 +137,7 @@
 
   /* ツール */
   .tools { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .tool { background:var(--card); border:none; border-radius:18px; padding:16px 14px; text-decoration:none; color:var(--text); display:flex; flex-direction:column; gap:7px; min-height:104px; box-shadow:var(--shadow);
+  .tool { background:var(--card); border:none; border-radius:22px; padding:16px 14px; text-decoration:none; color:var(--text); display:flex; flex-direction:column; gap:7px; min-height:104px; box-shadow:var(--shadow);
     transition:transform .3s cubic-bezier(.2,.8,.3,1); }
   .tool:active { transform:scale(.96); transition-duration:.1s; }
   .tool .ico { font-size:23px; width:44px; height:44px; border-radius:11px; display:flex; align-items:center; justify-content:center;
@@ -145,7 +145,7 @@
   .tool .nm { font-weight:700; font-size:15px; letter-spacing:-.01em; }
   .tool .ds { font-size:12px; color:var(--sub); line-height:1.45; }
   .links { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:10px; }
-  .lnk { background:var(--card); border:none; border-radius:14px; padding:13px; text-decoration:none; color:var(--text); font-weight:600; font-size:14px; display:flex; align-items:center; gap:10px; box-shadow:var(--shadow);
+  .lnk { background:var(--card); border:none; border-radius:18px; padding:13px; text-decoration:none; color:var(--text); font-weight:600; font-size:14px; display:flex; align-items:center; gap:10px; box-shadow:var(--shadow);
     transition:transform .3s cubic-bezier(.2,.8,.3,1); }
   .lnk:active { transform:scale(.96); transition-duration:.1s; }
   .lnk .li { font-size:17px; width:32px; height:32px; border-radius:8px; background:var(--card2); flex:none;
@@ -163,7 +163,7 @@
   button.lnk.copied small { color:var(--ok); font-weight:700; }
 
   /* カード（早見表/ロードマップ/マインドセット） */
-  .card-x { background:var(--card); border:none; border-radius:18px; padding:16px; margin-bottom:11px; box-shadow:var(--shadow); }
+  .card-x { background:var(--card); border:none; border-radius:22px; padding:16px; margin-bottom:11px; box-shadow:var(--shadow); }
   .card-x .ct { font-size:15px; font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:8px; letter-spacing:-.01em; }
   .card-x.accent { outline:1.5px solid var(--accent); outline-offset:-1.5px; }
   .card-x.gold .ct { color:var(--gold); }
@@ -195,10 +195,13 @@
   .ask li { padding-left:24px; font-size:14px; font-weight:600; }
 
   /* 下タブナビ（半透明マテリアル。高さは中身基準＝セーフエリアに食われない） */
-  nav { position:fixed; bottom:0; left:0; right:0; background:var(--navbg);
+  nav { position:fixed; left:10px; right:10px; bottom:calc(env(safe-area-inset-bottom,0px) + 10px);
+    max-width:600px; margin:0 auto; background:var(--navbg);
     -webkit-backdrop-filter:blur(20px) saturate(180%); backdrop-filter:blur(20px) saturate(180%);
-    border-top:.5px solid var(--line); display:flex; z-index:50;
-    padding:8px 0 calc(env(safe-area-inset-bottom,0px) + var(--nav-lift)); }
+    border:.5px solid var(--glass-edge); border-radius:30px; display:flex; z-index:50;
+    box-shadow:0 8px 28px rgba(0,0,20,.16), inset 0 1px 0 var(--glass-glint);
+    background-image:linear-gradient(125deg, var(--sheen), transparent 42%);
+    padding:9px 6px; }
   nav button { flex:1; background:none; border:none; color:var(--sub); font-family:inherit; cursor:pointer;
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-size:10.5px; font-weight:600; padding:2px; }
   nav button .ni { width:23px; height:23px; line-height:1; transition:transform .3s cubic-bezier(.2,.8,.3,1); }
@@ -235,13 +238,19 @@
   .relock { display:block; margin:16px auto 0; background:none; border:none; color:var(--sub); font-size:12px; text-decoration:underline; cursor:pointer; font-family:inherit; }
 
   /* すりガラス（浮遊するマテリアル）。内側のチップ(--card2)は重ねない */
-  .item, .tool, .lnk, .card-x, .memo, .countdown, .add input, .add select, .lock-card, .ask {
+  .item, .tool, .card-x, .memo, .countdown, .add input, .lock-card, .ask {
     -webkit-backdrop-filter:blur(18px) saturate(180%); backdrop-filter:blur(18px) saturate(180%);
-    border:.5px solid var(--glass-edge);
-    box-shadow:var(--shadow), inset 0 1px 0 var(--glass-glint);
   }
-  .item, .tool, .lnk, .card-x, .memo, .add input, .lock-card, .ask {
+  .item, .tool, .lnk, .card-x, .memo, .countdown, .add input, .add select, .lock-card, .ask {
+    border:.5px solid var(--glass-edge);
+    box-shadow:var(--shadow), inset 0 1px 0 var(--glass-glint), inset 0 -1px 0 var(--glass-shade);
+  }
+  .item, .lnk, .add input {
     background-image:linear-gradient(125deg, var(--sheen), transparent 42%);
+  }
+  .tool, .card-x, .memo, .lock-card, .ask {
+    background-image:radial-gradient(130% 70% at 50% -25%, var(--sheen2), transparent 55%),
+      linear-gradient(125deg, var(--sheen), transparent 42%);
   }
 
   /* アクセシビリティ: 動きと透過の抑制設定を尊重 */
