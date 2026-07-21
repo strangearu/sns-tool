@@ -16,33 +16,33 @@
 <meta name="mobile-web-app-capable" content="yes">
 <style>
   :root {
-    --bg:#f2f2f7; --bg2:#e9e9ef; --card:rgba(255,255,255,.66); --card-solid:#ffffff; --card2:rgba(120,120,128,.08);
+    --bg:#f2f2f7; --bg2:#e9e9ef; --card:rgba(255,255,255,.55); --card-solid:#ffffff; --card2:rgba(120,120,128,.08);
     --text:#1d1d1f; --sub:#86868b; --line:rgba(60,60,67,.12); --hair:rgba(60,60,67,.3);
     --accent:#0071e3; --accent2:#0059b3; --gold:#b87c00; --ok:#34c759; --blue:#007aff; --purple:#af52de;
-    --tint:rgba(0,113,227,.09); --navbg:rgba(249,249,251,.78);
-    --glass-edge:rgba(255,255,255,.55);
-    --blobA:rgba(0,113,227,.12); --blobB:rgba(175,82,222,.10); --blobC:rgba(0,199,190,.09);
+    --tint:rgba(0,113,227,.09); --navbg:rgba(249,249,251,.6);
+    --glass-edge:rgba(255,255,255,.62); --glass-glint:rgba(255,255,255,.75);
+    --blobA:rgba(0,113,227,.22); --blobB:rgba(175,82,222,.18); --blobC:rgba(255,55,120,.13);
     --shadow:0 1px 2px rgba(0,0,0,.03), 0 6px 18px rgba(30,40,60,.06);
     --nav-h:76px; --nav-lift:6px;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg:#000000; --bg2:#1a1a1c; --card:rgba(28,28,30,.55); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
+      --bg:#000000; --bg2:#1a1a1c; --card:rgba(28,28,30,.4); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
       --text:#f5f5f7; --sub:#98989d; --line:rgba(84,84,88,.4); --hair:rgba(84,84,88,.7);
       --accent:#2997ff; --accent2:#64b2ff; --gold:#ffcc00; --ok:#30d158; --blue:#0a84ff; --purple:#bf5af2;
-      --tint:rgba(41,151,255,.13); --navbg:rgba(22,22,24,.78);
-      --glass-edge:rgba(255,255,255,.09);
-      --blobA:rgba(10,110,230,.22); --blobB:rgba(150,70,220,.16); --blobC:rgba(0,160,170,.12);
+      --tint:rgba(41,151,255,.13); --navbg:rgba(20,20,22,.5);
+      --glass-edge:rgba(255,255,255,.16); --glass-glint:rgba(255,255,255,.14);
+      --blobA:rgba(10,132,255,.42); --blobB:rgba(191,90,242,.32); --blobC:rgba(255,55,120,.24);
       --shadow:0 1px 2px rgba(0,0,0,.4);
     }
   }
   :root[data-theme="dark"] {
-    --bg:#000000; --bg2:#1a1a1c; --card:rgba(28,28,30,.55); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
+    --bg:#000000; --bg2:#1a1a1c; --card:rgba(28,28,30,.4); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
     --text:#f5f5f7; --sub:#98989d; --line:rgba(84,84,88,.4); --hair:rgba(84,84,88,.7);
     --accent:#2997ff; --accent2:#64b2ff; --gold:#ffcc00; --ok:#30d158; --blue:#0a84ff; --purple:#bf5af2;
-    --tint:rgba(41,151,255,.13); --navbg:rgba(22,22,24,.78);
-    --glass-edge:rgba(255,255,255,.09);
-    --blobA:rgba(10,110,230,.22); --blobB:rgba(150,70,220,.16); --blobC:rgba(0,160,170,.12);
+    --tint:rgba(41,151,255,.13); --navbg:rgba(20,20,22,.5);
+    --glass-edge:rgba(255,255,255,.16); --glass-glint:rgba(255,255,255,.14);
+    --blobA:rgba(10,132,255,.42); --blobB:rgba(191,90,242,.32); --blobC:rgba(255,55,120,.24);
     --shadow:0 1px 2px rgba(0,0,0,.4);
   }
   * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
@@ -57,9 +57,9 @@
   body::before {
     content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
     background:
-      radial-gradient(560px 380px at 88% -6%, var(--blobA), transparent 65%),
-      radial-gradient(640px 470px at -14% 22%, var(--blobB), transparent 65%),
-      radial-gradient(540px 430px at 55% 108%, var(--blobC), transparent 65%),
+      radial-gradient(640px 460px at 88% -8%, var(--blobA), transparent 68%),
+      radial-gradient(740px 560px at -16% 24%, var(--blobB), transparent 68%),
+      radial-gradient(620px 500px at 58% 110%, var(--blobC), transparent 68%),
       var(--bg);
   }
   .wrap { max-width:620px; margin:0 auto; padding:calc(12px + env(safe-area-inset-top,0px)) 16px 30px; }
@@ -74,7 +74,9 @@
   .ph .brand { display:inline-block; font-size:11px; letter-spacing:.12em; font-weight:700; color:var(--accent);
     background:var(--tint); border:none; border-radius:99px; padding:4px 12px; margin-bottom:8px; text-transform:uppercase; }
   .ph h1 { font-size:30px; font-weight:800; letter-spacing:-.02em; line-height:1.15; }
-  .ph h1 .red { color:var(--accent); }
+  .ph h1 .red { color:var(--accent);
+    background:linear-gradient(100deg,#0090ff 10%,#b04bf5 60%,#ff375f 100%);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
   .ph p { color:var(--sub); font-size:14px; margin-top:5px; }
 
   .sec-title { font-size:13px; font-weight:600; color:var(--sub); letter-spacing:.02em; margin:26px 6px 9px; display:flex; align-items:center; gap:7px; }
@@ -230,8 +232,9 @@
 
   /* すりガラス（浮遊するマテリアル）。内側のチップ(--card2)は重ねない */
   .item, .tool, .lnk, .card-x, .memo, .countdown, .add input, .add select, .lock-card, .ask {
-    -webkit-backdrop-filter:blur(16px) saturate(170%); backdrop-filter:blur(16px) saturate(170%);
+    -webkit-backdrop-filter:blur(18px) saturate(180%); backdrop-filter:blur(18px) saturate(180%);
     border:.5px solid var(--glass-edge);
+    box-shadow:var(--shadow), inset 0 1px 0 var(--glass-glint);
   }
 
   /* アクセシビリティ: 動きと透過の抑制設定を尊重 */

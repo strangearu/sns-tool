@@ -22,27 +22,27 @@
 
   /* ==== Apple統一テーマ（2026-07-22・ハブと共通。外観=ハブの設定に連動） ==== */
   :root {
-    --bg:#f2f2f7; --card:rgba(255,255,255,.8); --card-solid:#ffffff; --card2:rgba(120,120,128,.08);
+    --bg:#f2f2f7; --card:rgba(255,255,255,.6); --card-solid:#ffffff; --card2:rgba(120,120,128,.08);
     --text:#1d1d1f; --sub:#86868b; --border:rgba(60,60,67,.15); --line:rgba(60,60,67,.15);
     --accent:#0071e3; --accent-d:#0059b3; --accent2:#0059b3; --tint:rgba(0,113,227,.09);
-    --glass-edge:rgba(255,255,255,.55);
-    --blobA:rgba(0,113,227,.12); --blobB:rgba(175,82,222,.10); --blobC:rgba(0,199,190,.09);
+    --glass-edge:rgba(255,255,255,.62); --glass-glint:rgba(255,255,255,.75);
+    --blobA:rgba(0,113,227,.22); --blobB:rgba(175,82,222,.18); --blobC:rgba(255,55,120,.13);
     --shadow:0 1px 2px rgba(0,0,0,.03), 0 6px 18px rgba(30,40,60,.06);
   }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-    --bg:#000000; --card:rgba(28,28,30,.72); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
+    --bg:#000000; --card:rgba(28,28,30,.45); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
     --text:#f5f5f7; --sub:#98989d; --border:rgba(84,84,88,.45); --line:rgba(84,84,88,.45);
     --accent:#2997ff; --accent-d:#64b2ff; --accent2:#64b2ff; --tint:rgba(41,151,255,.13);
-    --glass-edge:rgba(255,255,255,.09);
-    --blobA:rgba(10,110,230,.2); --blobB:rgba(150,70,220,.15); --blobC:rgba(0,160,170,.12);
+    --glass-edge:rgba(255,255,255,.16); --glass-glint:rgba(255,255,255,.14);
+    --blobA:rgba(10,132,255,.42); --blobB:rgba(191,90,242,.32); --blobC:rgba(255,55,120,.24);
     --shadow:0 1px 2px rgba(0,0,0,.4);
   } }
   :root[data-theme="dark"] {
-    --bg:#000000; --card:rgba(28,28,30,.72); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
+    --bg:#000000; --card:rgba(28,28,30,.45); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
     --text:#f5f5f7; --sub:#98989d; --border:rgba(84,84,88,.45); --line:rgba(84,84,88,.45);
     --accent:#2997ff; --accent-d:#64b2ff; --accent2:#64b2ff; --tint:rgba(41,151,255,.13);
-    --glass-edge:rgba(255,255,255,.09);
-    --blobA:rgba(10,110,230,.2); --blobB:rgba(150,70,220,.15); --blobC:rgba(0,160,170,.12);
+    --glass-edge:rgba(255,255,255,.16); --glass-glint:rgba(255,255,255,.14);
+    --blobA:rgba(10,132,255,.42); --blobB:rgba(191,90,242,.32); --blobC:rgba(255,55,120,.24);
     --shadow:0 1px 2px rgba(0,0,0,.4);
   }
   body::before { content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
@@ -150,8 +150,9 @@
 
   /* Apple統一テーマ: ガラス質感 */
   .card, .panel, .settings-inner {
-    -webkit-backdrop-filter:blur(14px) saturate(160%); backdrop-filter:blur(14px) saturate(160%);
+    -webkit-backdrop-filter:blur(18px) saturate(180%); backdrop-filter:blur(18px) saturate(180%);
     border-color:var(--glass-edge);
+    box-shadow:inset 0 1px 0 var(--glass-glint);
   }
 </style>
 </head>
