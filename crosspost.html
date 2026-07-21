@@ -287,6 +287,12 @@
     <div class="card bili" id="card-bili">
       <div class="card-head"><span class="name">bilibili 動態</span><span class="lang">中国語（簡体字）</span></div>
       <div class="card-body">
+        <span class="field-label">タイトル（图文動態の標題欄用・20字以内）</span>
+        <div class="row">
+          <input type="text" id="title-bili">
+          <button class="copy-btn" data-target="title-bili" style="background:#6b7280">コピー</button>
+        </div>
+        <span class="field-label">本文</span>
         <textarea id="out-bili"></textarea>
         <div class="card-foot">
           <span class="count" id="count-bili"></span>
@@ -296,7 +302,7 @@
             <button class="copy-btn" data-target="out-bili">コピー</button>
           </div>
         </div>
-        <p class="hint">📺 動態（どうたい）＝B站のつぶやき（Xのポスト相当）。📲: 押す→共有シートで<b>bilibiliを選ぶ</b>→图文动态に写真が入る→本文をペースト。出ない時は「画像を保存」→アプリの＋から。PCは「開く↗」→投稿欄に貼り付け。タグは #话题# 形式・3〜5個（動態は雑談トーンが正解・競合実測）。</p>
+        <p class="hint">📺 動態（どうたい）＝B站のつぶやき（Xのポスト相当）。📲: 押す→共有シートで<b>bilibiliを選ぶ</b>→图文动态に写真が入る→標題欄にタイトル・本文欄に本文をペースト（まとめてコピー済み・1行目がタイトル）。出ない時は「画像を保存」→アプリの＋から。PCは「開く↗」→投稿欄に貼り付け。タグは #话题# 形式・3〜5個（動態は雑談トーンが正解・競合実測）。</p>
       </div>
     </div>
   </div>
@@ -608,7 +614,7 @@ $("convert").addEventListener("click", async () => {
 // ---- 🤖 Claudeアプリ用プロンプトを作る（課金なし。写真はアプリ側で添付） ----
 const RED_MARK = "===封面文字===", TITLE_MARK = "===タイトル===",
       BODY_MARK = "===小紅書本文===", IG_MARK = "===Instagram===", WB_MARK = "===Weibo===",
-      BILI_MARK = "===bilibili動態===", JA_MARK = "===日本語訳===";
+      BILI_TITLE_MARK = "===bilibiliタイトル===", BILI_MARK = "===bilibili動態===", JA_MARK = "===日本語訳===";
 
 // PC（幅900px以上）とAPI直モードではプロンプトに推敲指示を足して精度を上げる
 const PC_CTX = `【高精度モード（追加の思考指示）】
@@ -629,7 +635,7 @@ function buildClaudePrompt(forApi) {
   p += "【忠実性（最重要・全SNS共通）】本文は【元の投稿/メモ】に書いてあること＋写真から確実に見えること（キャラ・衣装・場所の雰囲気）だけで構成する。本人が言っていない体験談・撮影のコツ・裏話・感想・清単（◯个心得/◯選）を発明しない。アレンジしてよいのは語り口・構成・絵文字・問いかけ・タグまで。元ネタが一言だけなら無理に膨らませず短い投稿にする（その方が自然）。\n\n";
   p += "【元の投稿/メモ】\n" + (raw || "（なし・写真起点で作る）") + (memo ? "\n（撮影メモ・最優先で反映）" + memo : "") + "\n\n";
   p += "【カテゴリ】" + cat.label + "\n";
-  p += "【小紅書の方針】封面文字＝サムネに乗せる12字以内のフック（クリック率が決まる最重要。1枚目の写真の内容と呼応させる）。タイトル＝20字以内で検索キーワード（キャラ名・作品名）必須＋吸引詞。本文＝広告でなく友達への「分享」トーン、絵文字入り、**100字前後まで（2026-07競合実測: 上位ノートは本文短め〜一言＋タグ構成。長い分享文で盛らない）**。露出は控えめに（審査・限流対策）。外部SNSのIDは書かない。\n";
+  p += "【小紅書の方針】封面文字＝サムネに乗せる12字以内のフック（クリック率が決まる最重要。1枚目の写真の内容と呼応させる）。タイトル＝20字以内で検索キーワード（キャラ名・作品名）必須＋吸引詞。本文＝広告でなく友達への「分享」トーン、絵文字入り、**短めが正解: 2〜3文・80字以内目安（タグ除く。2026-07競合実測: 上位ノートは本文短め〜一言＋タグ構成。長い分享文で盛らない。引きは封面とタイトルの仕事——本文で説明・補足をしない）**。露出は控えめに（審査・限流対策）。外部SNSのIDは書かない。\n";
   p += "【小紅書の質基準（発布前審査と同じ基準で作る）】\n";
   p += "・タイトルは爆款型から内容に合うものを選ぶ: 物語型「◯◯出征EVO/挑战◯◯/◯◯实录/◯◯日记」/身分型「日本coser的◯◯」/数字・好奇型「我花3k假发运费…？」/情緒型。本人の実測（2026-07）では「春丽・街霸などの検索KW＋物語性」が最強——出征応援ノートが通常の10倍（1万views・收藏318）。\n";
   p += "・【本人実測の鉄則】元のX投稿が写真＋一言でも、REDのタイトルは必ず検索KW入りで立てる。KWなしの一言ノートは首页推荐に乗らず300views止まり、KW＋物語タイトルは1,000〜10,000views。\n";
@@ -640,11 +646,11 @@ function buildClaudePrompt(forApi) {
   p += "・收藏（保存）要素は【元の投稿/メモ】に実際にある情報（衣装の入手先・イベント情報・制作過程など）が含まれる場合だけ入れる——なければ無理に作らない。情報をでっち上げて清単を作るのは禁止。收藏されやすい実測角度=正片まとめ・格ゲー技の再現ポーズ・イベント実録。\n";
   p += "・末尾の問いかけは答えやすい選択式が最強（例「你们喜欢这套还是上次的？」「弹幕…评论区告诉我」）。漠然とした「你们觉得呢？」より具体的に。\n";
   p += "【Instagramの方針】1文目が検索インデックスと「…続き」折りたたみ前に見える最重要行——写真の内容が伝わる英語1文を置く。本文は1〜3行の短文を空行で区切るリズム（長い段落は読まれない）。日本語↔英語併記。保存・シェアを促す一言は内容に合う時だけ控えめに。\n";
-  p += "【bilibili動態の方針（2026-07競合実測で較正）】動態＝B站のタイムライン投稿。位置づけは「活動シグナル＋ファン雑談」であり成長装置ではない（3.2万粉のcoserでも動態は30〜50いいねが実測値）。だから**気取らない雑談が正解**: 簡体字・30〜80字の短文、仲間内トーン（自虐かわいい・「〜哟」「=v=」的なゆるさ・絵文字やB站スタンプ感）。型は ①イベント/大会の現場打卡 ②動画公開の前後告知・舞台裏 ③自撮り1枚+一言雑談 のどれかに寄せる。末尾の問いかけは軽く。新作動画が文脈にある時だけ「主页最新视频」へ自然に誘導（URLは書かない）。**タグは #话题# 形式で3〜5個だけ**（ネイティブ実測は0〜3個。キャラ名・作品名など検索の核だけに絞り、タグの列で雑談感を壊さない）。\n";
+  p += "【bilibili動態の方針（2026-07競合実測で較正）】動態＝B站のタイムライン投稿。位置づけは「活動シグナル＋ファン雑談」であり成長装置ではない（3.2万粉のcoserでも動態は30〜50いいねが実測値）。だから**気取らない雑談が正解**: 簡体字・30〜80字の短文、仲間内トーン（自虐かわいい・「〜哟」「=v=」的なゆるさ・絵文字やB站スタンプ感）。型は ①イベント/大会の現場打卡 ②動画公開の前後告知・舞台裏 ③自撮り1枚+一言雑談 のどれかに寄せる。末尾の問いかけは軽く。**タイトル＝图文动態の標題欄用に20字以内で1本必ず出す**（検索KW=キャラ名/作品名/cosplayを1つ入れる。ただし小紅書の爆款タイトルの使い回しはNG——動態の空気に合わせた「雑談の見出し」にする 例:「粉毛猫猫coser上线」「今天也是春丽」）。新作動画が文脈にある時だけ「主页最新视频」へ自然に誘導（URLは書かない）。**タグは #话题# 形式で3〜5個だけ**（ネイティブ実測は0〜3個。キャラ名・作品名など検索の核だけに絞り、タグの列で雑談感を壊さない）。\n";
   p += "【IGの日本語文の文体（本人の全X投稿から実測）】短く言い切る・体言止めOK。絵文字は0〜2個（よく使う: ❗️😭🔥🫶✌️🥹✨）、顔文字・「笑」・「…」は使わない。テンションは「！！」連打で。強調は「めちゃくちゃ」「〜すぎる」。ガチ恋を煽る言い回しはしない。\n";
   if (cat.coverSamples && cat.coverSamples.length) p += "【封面文字の例】" + cat.coverSamples.join(" / ") + "\n";
   p += "【タグ候補（参考リスト・この中から内容に合うものだけ選ぶ。全部は付けない）】\n";
-  p += "・小紅書(5〜8個・2026-07競合実測: 上位ノートは3〜7個が主流。核=#cos＋作品名＋キャラ名＋ジャンル1-2。人気作品名は中国語と原語の両表記を入れる 例:#异形舞台 #alienstage): " + cat.red.map(t => "#" + t).join(" ") + "\n";
+  p += "・小紅書(4〜7個・2026-07競合実測: 上位ノートは3〜7個が主流。核=#cos＋作品名＋キャラ名＋ジャンル1-2。人気作品名は中国語と原語の両表記を入れる 例:#异形舞台 #alienstage): " + cat.red.map(t => "#" + t).join(" ") + "\n";
   p += "・Instagram(15〜25個): " + cat.ig.map(t => "#" + t).join(" ") + "\n";
   p += "・Weibo(5〜8個): " + cat.weibo.map(t => "#" + t + "#").join(" ") + "\n";
   p += "・bilibili動態(3〜5個・Weiboと同プールから): " + cat.weibo.map(t => "#" + t + "#").join(" ") + "\n";
@@ -666,8 +672,9 @@ function buildClaudePrompt(forApi) {
   p += BODY_MARK + "\n（簡体字の本文＋末尾に#タグ）\n";
   p += IG_MARK + "\n（日本語本文→英訳→#タグ）\n";
   p += WB_MARK + "\n（簡体字の本文＋#タグ#）\n";
+  p += BILI_TITLE_MARK + "\n（20字以内・雑談の見出し）\n";
   p += BILI_MARK + "\n（簡体字の短い雑談文＋#话题#タグ3〜5個）\n";
-  p += JA_MARK + "\n（封面文字・タイトル・小紅書本文・Weibo・bilibili動態の日本語訳を項目名付きで。本人は中国語が読めないので、検品できるよう省略せず全文訳すこと。最後に、シリーズ化できる定型タグ案や写真の並び順など「次に効く一手」が1つあれば「💡提案:」として1行だけ添える——無ければ書かない。シリーズ名は「日本coser的◯◯」「◯◯日记」型が実測で強い）";
+  p += JA_MARK + "\n（封面文字・タイトル・小紅書本文・Weibo・bilibiliタイトル・bilibili動態の日本語訳を項目名付きで。本人は中国語が読めないので、検品できるよう省略せず全文訳すこと。最後に、シリーズ化できる定型タグ案や写真の並び順など「次に効く一手」が1つあれば「💡提案:」として1行だけ添える——無ければ書かない。シリーズ名は「日本coser的◯◯」「◯◯日记」型が実測で強い）";
   return p;
 }
 
@@ -695,11 +702,12 @@ function section(text, start, ...ends) {
 }
 
 function applyReply(t) {
-  const cover = section(t, RED_MARK, TITLE_MARK, BODY_MARK, IG_MARK, WB_MARK, BILI_MARK, JA_MARK);
-  const title = section(t, TITLE_MARK, BODY_MARK, IG_MARK, WB_MARK, BILI_MARK, JA_MARK);
-  const body = section(t, BODY_MARK, IG_MARK, WB_MARK, BILI_MARK, JA_MARK);
-  const ig = section(t, IG_MARK, WB_MARK, BILI_MARK, JA_MARK);
-  const wb = section(t, WB_MARK, BILI_MARK, JA_MARK);
+  const cover = section(t, RED_MARK, TITLE_MARK, BODY_MARK, IG_MARK, WB_MARK, BILI_TITLE_MARK, BILI_MARK, JA_MARK);
+  const title = section(t, TITLE_MARK, BODY_MARK, IG_MARK, WB_MARK, BILI_TITLE_MARK, BILI_MARK, JA_MARK);
+  const body = section(t, BODY_MARK, IG_MARK, WB_MARK, BILI_TITLE_MARK, BILI_MARK, JA_MARK);
+  const ig = section(t, IG_MARK, WB_MARK, BILI_TITLE_MARK, BILI_MARK, JA_MARK);
+  const wb = section(t, WB_MARK, BILI_TITLE_MARK, BILI_MARK, JA_MARK);
+  const biliTitle = section(t, BILI_TITLE_MARK, BILI_MARK, JA_MARK);
   const bili = section(t, BILI_MARK, JA_MARK);
   const ja = section(t, JA_MARK);
   if (!cover && !title && !body && !ig && !wb && !bili) return false;
@@ -708,6 +716,7 @@ function applyReply(t) {
   $("out-red").value = body;
   $("out-ig").value = ig;
   $("out-weibo").value = wb;
+  $("title-bili").value = biliTitle;
   $("out-bili").value = bili;
   if (ja) { $("ja-trans").textContent = ja; $("ja-box").style.display = "block"; }
   else { $("ja-box").style.display = "none"; }
@@ -872,10 +881,10 @@ const HANDOFF = {
     guide: "共有シートで【微博/Weibo】を選ぶ→写真が入る→本文欄を長押し→ペースト",
   },
   bili: {
-    get: () => $("out-bili").value.trim(),
+    get: () => [$("title-bili").value.trim(), $("out-bili").value.trim()].filter(Boolean).join("\n\n"),
     fallback: "https://t.bilibili.com",
     label: "bilibili動態",
-    guide: "共有シートで【bilibili】を選ぶ→图文动态に写真が入る→本文欄にペースト。出ない時は【画像を保存】→アプリの＋から",
+    guide: "共有シートで【bilibili】を選ぶ→图文动态に写真が入る→標題欄と本文欄にペースト（1行目がタイトル）。出ない時は【画像を保存】→アプリの＋から",
   },
 };
 document.querySelectorAll("[data-handoff]").forEach(btn => {
@@ -995,10 +1004,12 @@ function checkRed() {
   if (title && len(title) > 20) warns.push("🔴 タイトル " + len(title) + "字 → 20字で切れます");
   if (body && len(body) > 1000) warns.push("🔴 本文 " + len(body) + "字 → 上限1,000字");
   if (body) {
+    const bodyNoTags = body.replace(/#[^#\s]+/g, "").trim();
+    if (len(bodyNoTags) > 100) warns.push("🟡 本文" + len(bodyNoTags) + "字（タグ除く）→ 上位ノートは80字以内が主流。引きは封面とタイトルに任せて削る");
     const hit = RED_RISK_WORDS.filter(w => (title + " " + body).includes(w));
     if (hit.length) warns.push("🟠 限流リスク語: " + hit.join("・") + "（誇大・外部誘導は審査対象）");
     const tags = (body.match(/#[^#\s]+/g) || []).length;
-    if (tags > 0 && (tags < 3 || tags > 8)) warns.push("🟡 タグ" + tags + "個（推奨5〜8個・競合実測）");
+    if (tags > 0 && (tags < 3 || tags > 7)) warns.push("🟡 タグ" + tags + "個（推奨4〜7個・上位ノート実測3〜7個）");
     if (!/[？?]/.test(body.replace(/#[^#\s]+/g, "").trim().slice(-60))) warns.push("💡 末尾に問いかけ推奨（例:「你们觉得呢？」でコメント誘発）");
   }
   box.style.display = "block";
