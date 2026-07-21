@@ -5,32 +5,66 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#111111">
 <title>投稿工房 — バズ投稿を考える</title>
+<script>(function(){var t=localStorage.getItem("hub-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;})();</script>
 <style>
   :root {
     --bg: #f4f5f7; --card: #ffffff; --text: #1a1d24; --sub: #6b7280; --border: #e2e4e9;
     --accent: #111111; --x: #111111; --ig: #E1306C; --tt: #161823; --red: #ff2442;
   }
+
+  /* ==== Apple統一テーマ（2026-07-22・ハブと共通。外観=ハブの設定に連動） ==== */
+  :root {
+    --bg:#f2f2f7; --card:rgba(255,255,255,.8); --card-solid:#ffffff; --card2:rgba(120,120,128,.08);
+    --text:#1d1d1f; --sub:#86868b; --border:rgba(60,60,67,.15); --line:rgba(60,60,67,.15);
+    --accent:#0071e3; --accent-d:#0059b3; --accent2:#0059b3; --tint:rgba(0,113,227,.09);
+    --glass-edge:rgba(255,255,255,.55);
+    --blobA:rgba(0,113,227,.12); --blobB:rgba(175,82,222,.10); --blobC:rgba(0,199,190,.09);
+    --shadow:0 1px 2px rgba(0,0,0,.03), 0 6px 18px rgba(30,40,60,.06);
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg:#000000; --card:rgba(28,28,30,.72); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
+    --text:#f5f5f7; --sub:#98989d; --border:rgba(84,84,88,.45); --line:rgba(84,84,88,.45);
+    --accent:#2997ff; --accent-d:#64b2ff; --accent2:#64b2ff; --tint:rgba(41,151,255,.13);
+    --glass-edge:rgba(255,255,255,.09);
+    --blobA:rgba(10,110,230,.2); --blobB:rgba(150,70,220,.15); --blobC:rgba(0,160,170,.12);
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  } }
+  :root[data-theme="dark"] {
+    --bg:#000000; --card:rgba(28,28,30,.72); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
+    --text:#f5f5f7; --sub:#98989d; --border:rgba(84,84,88,.45); --line:rgba(84,84,88,.45);
+    --accent:#2997ff; --accent-d:#64b2ff; --accent2:#64b2ff; --tint:rgba(41,151,255,.13);
+    --glass-edge:rgba(255,255,255,.09);
+    --blobA:rgba(10,110,230,.2); --blobB:rgba(150,70,220,.15); --blobC:rgba(0,160,170,.12);
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+  body::before { content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      radial-gradient(560px 380px at 88% -6%, var(--blobA), transparent 65%),
+      radial-gradient(640px 470px at -14% 22%, var(--blobB), transparent 65%),
+      radial-gradient(540px 430px at 55% 108%, var(--blobC), transparent 65%),
+      var(--bg); }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif; background: var(--bg); color: var(--text); padding: 20px 14px 60px; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro JP","Helvetica Neue","Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif; background: var(--bg); color: var(--text); padding: 20px 14px 60px; }
   .wrap { max-width: 900px; margin: 0 auto; }
   header { text-align: center; margin-bottom: 20px; }
   header h1 { font-size: 21px; letter-spacing: .04em; }
   header p { color: var(--sub); font-size: 12.5px; margin-top: 6px; }
   .panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
   label.head { display: block; font-weight: 700; font-size: 13.5px; margin-bottom: 8px; }
-  textarea, input[type=text] { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 11px 12px; font-size: 14px; line-height: 1.7; resize: vertical; font-family: inherit; background: #fafbfc; }
-  textarea:focus, input:focus { outline: 2px solid var(--accent); outline-offset: -1px; background: #fff; }
+  textarea, input[type=text] { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 11px 12px; font-size: 14px; line-height: 1.7; resize: vertical; font-family: inherit; background: var(--card2); color: var(--text); }
+  textarea:focus, input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
   button { border: none; border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity .15s; white-space: nowrap; }
   button:hover { opacity: .85; }
-  .btn-sub { background: #eef1f5; color: var(--text); font-size: 13px; }
+  .btn-sub { background: var(--card2); color: var(--text); font-size: 13px; }
   .btn-main { background: var(--accent); color: #fff; font-size: 15px; padding: 12px 28px; }
   .chips { display: flex; gap: 8px; flex-wrap: wrap; }
-  .chip { background: #eef1f5; color: var(--text); border: 1px solid var(--border); border-radius: 99px; padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .chip { background: var(--card2); color: var(--text); border: 1px solid var(--border); border-radius: 99px; padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; }
   .chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
   .actions { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
   .status { font-size: 13px; color: var(--sub); }
   .status.error { color: #dc2626; font-weight: 700; }
-  .open-btn { background: #eef1f5; color: var(--text); padding: 8px 14px; font-size: 13px; text-decoration: none; border-radius: 10px; font-weight: 700; display: inline-flex; align-items: center; }
+  .open-btn { background: var(--card2); color: var(--text); padding: 8px 14px; font-size: 13px; text-decoration: none; border-radius: 10px; font-weight: 700; display: inline-flex; align-items: center; }
   .hint { font-size: 11.5px; color: var(--sub); line-height: 1.6; }
   .idea { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 14px; }
   .idea-head { padding: 10px 15px; background: var(--accent); color: #fff; font-weight: 800; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
@@ -43,9 +77,15 @@
   .copy-btn.done { background: #16a34a; }
   details.brain { margin-top: 10px; }
   details.brain summary { cursor: pointer; font-size: 12.5px; color: var(--sub); font-weight: 700; }
-  details.brain pre { white-space: pre-wrap; font-family: inherit; font-size: 12px; color: var(--sub); line-height: 1.8; margin-top: 8px; background: #fafbfc; border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
+  details.brain pre { white-space: pre-wrap; font-family: inherit; font-size: 12px; color: var(--sub); line-height: 1.8; margin-top: 8px; background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
   footer { text-align: center; margin-top: 24px; font-size: 12px; color: var(--sub); line-height: 1.8; }
   @media (max-width: 480px) { body { padding: 14px 10px 50px; } .panel { padding: 13px; } .btn-main { width: 100%; } }
+
+  /* Apple統一テーマ: ガラス質感 */
+  .idea, .panel {
+    -webkit-backdrop-filter:blur(14px) saturate(160%); backdrop-filter:blur(14px) saturate(160%);
+    border-color:var(--glass-edge);
+  }
 </style>
 </head>
 <body>

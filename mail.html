@@ -4,10 +4,44 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>メール返信ヘルパー — あやね マネージャーHub</title>
+<script>(function(){var t=localStorage.getItem("hub-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;})();</script>
 <style>
   :root { --bg:#f4f5f7; --card:#fff; --text:#1a1d24; --sub:#6b7280; --border:#e2e4e9; --accent:#7c3aed; --accent-d:#6d28d9; }
+
+  /* ==== Apple統一テーマ（2026-07-22・ハブと共通。外観=ハブの設定に連動） ==== */
+  :root {
+    --bg:#f2f2f7; --card:rgba(255,255,255,.8); --card-solid:#ffffff; --card2:rgba(120,120,128,.08);
+    --text:#1d1d1f; --sub:#86868b; --border:rgba(60,60,67,.15); --line:rgba(60,60,67,.15);
+    --accent:#0071e3; --accent-d:#0059b3; --accent2:#0059b3; --tint:rgba(0,113,227,.09);
+    --glass-edge:rgba(255,255,255,.55);
+    --blobA:rgba(0,113,227,.12); --blobB:rgba(175,82,222,.10); --blobC:rgba(0,199,190,.09);
+    --shadow:0 1px 2px rgba(0,0,0,.03), 0 6px 18px rgba(30,40,60,.06);
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg:#000000; --card:rgba(28,28,30,.72); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
+    --text:#f5f5f7; --sub:#98989d; --border:rgba(84,84,88,.45); --line:rgba(84,84,88,.45);
+    --accent:#2997ff; --accent-d:#64b2ff; --accent2:#64b2ff; --tint:rgba(41,151,255,.13);
+    --glass-edge:rgba(255,255,255,.09);
+    --blobA:rgba(10,110,230,.2); --blobB:rgba(150,70,220,.15); --blobC:rgba(0,160,170,.12);
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  } }
+  :root[data-theme="dark"] {
+    --bg:#000000; --card:rgba(28,28,30,.72); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
+    --text:#f5f5f7; --sub:#98989d; --border:rgba(84,84,88,.45); --line:rgba(84,84,88,.45);
+    --accent:#2997ff; --accent-d:#64b2ff; --accent2:#64b2ff; --tint:rgba(41,151,255,.13);
+    --glass-edge:rgba(255,255,255,.09);
+    --blobA:rgba(10,110,230,.2); --blobB:rgba(150,70,220,.15); --blobC:rgba(0,160,170,.12);
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+  body::before { content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      radial-gradient(560px 380px at 88% -6%, var(--blobA), transparent 65%),
+      radial-gradient(640px 470px at -14% 22%, var(--blobB), transparent 65%),
+      radial-gradient(540px 430px at 55% 108%, var(--blobC), transparent 65%),
+      var(--bg); }
+
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { font-family:"Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif; background:var(--bg); color:var(--text); padding:18px 14px 60px; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro JP","Helvetica Neue","Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif; background:var(--bg); color:var(--text); padding:18px 14px 60px; }
   .wrap { max-width: 720px; margin: 0 auto; }
   .back { color: var(--accent); text-decoration: none; font-weight: 700; font-size: 13px; }
   h1 { font-size: 20px; margin: 10px 0 4px; }
@@ -16,17 +50,17 @@
   .panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
   label { display: block; font-size: 12.5px; font-weight: 700; color: var(--sub); margin: 12px 0 6px; }
   label:first-child { margin-top: 0; }
-  textarea, input, select { width: 100%; border: 1px solid var(--border); border-radius: 9px; padding: 11px; font-size: 14px; font-family: inherit; background: #fafbfc; line-height: 1.6; }
-  textarea:focus, input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; background: #fff; }
+  textarea, input, select { width: 100%; border: 1px solid var(--border); border-radius: 9px; padding: 11px; font-size: 14px; font-family: inherit; background: var(--card2); color: var(--text); line-height: 1.6; }
+  textarea:focus, input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
   #received { min-height: 120px; }
 
   .chips { display: flex; flex-wrap: wrap; gap: 7px; }
-  .chip { border: 1px solid var(--border); background: #fafbfc; border-radius: 99px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .chip { border: 1px solid var(--border); background: var(--card2); color: var(--text); border-radius: 99px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; }
   .chip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
 
   button { border: none; border-radius: 10px; padding: 12px 20px; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; }
   .btn-main { background: var(--accent); color: #fff; width: 100%; font-size: 15px; }
-  .btn-sub { background: #eef1f5; color: var(--text); }
+  .btn-sub { background: var(--card2); color: var(--text); }
 
   .result { margin-top: 14px; display: none; }
   .result.show { display: block; }
@@ -37,18 +71,24 @@
   .step .st { font-size: 13.5px; font-weight: 700; line-height: 1.5; }
   .step .sd { font-size: 12px; color: var(--sub); margin-top: 2px; line-height: 1.5; }
   .step .go { margin-top: 8px; display: inline-flex; gap: 6px; align-items: center; background: var(--accent); color: #fff; text-decoration: none; border-radius: 9px; padding: 9px 16px; font-weight: 800; font-size: 13px; }
-  .btn-copy { background: #fff; color: var(--accent); border: 1px solid var(--accent); margin-top: 10px; }
+  .btn-copy { background: var(--card2); color: var(--accent); border: 1px solid var(--accent); margin-top: 10px; }
   .btn-copy.done { background: #16a34a; color: #fff; border-color: #16a34a; }
 
   .tmpl-list { display: grid; gap: 8px; }
-  .tmpl { background: #fafbfc; border: 1px solid var(--border); border-radius: 10px; padding: 12px; cursor: pointer; }
-  .tmpl:active { background: #eef1f5; }
+  .tmpl { background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; cursor: pointer; }
+  .tmpl:active { background: var(--tint); }
   .tmpl .tt { font-weight: 800; font-size: 13.5px; }
   .tmpl .td { font-size: 11.5px; color: var(--sub); margin-top: 2px; }
   details summary { cursor: pointer; font-weight: 800; font-size: 14px; }
   .out { margin-top: 12px; }
   .out textarea { min-height: 200px; font-size: 13px; }
   .hint { font-size: 11.5px; color: var(--sub); line-height: 1.6; margin-top: 8px; }
+
+  /* Apple統一テーマ: ガラス質感 */
+  .panel, .step {
+    -webkit-backdrop-filter:blur(14px) saturate(160%); backdrop-filter:blur(14px) saturate(160%);
+    border-color:var(--glass-edge);
+  }
 </style>
 </head>
 <body>

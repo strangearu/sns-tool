@@ -3,8 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#ffe9ef">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <title>収益ダッシュボード</title>
+<script>(function(){var t=localStorage.getItem("hub-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;})();</script>
 <style>
   :root {
     --bg:#f7f8fc; --card:#ffffff; --card2:#f3f5fb;
@@ -12,10 +14,43 @@
     --accent:#ff2d55; --accent2:#e11d48; --gold:#c4860a; --ok:#16a34a; --blue:#2563eb; --purple:#7c3aed;
     --shadow:0 2px 10px rgba(31,41,80,.06);
   }
+
+  /* ==== Apple統一テーマ（2026-07-22・ハブと共通。外観=ハブの設定に連動） ==== */
+  :root {
+    --bg:#f2f2f7; --card:rgba(255,255,255,.8); --card-solid:#ffffff; --card2:rgba(120,120,128,.08);
+    --text:#1d1d1f; --sub:#86868b; --border:rgba(60,60,67,.15); --line:rgba(60,60,67,.15);
+    --accent:#0071e3; --accent-d:#0059b3; --accent2:#0059b3; --tint:rgba(0,113,227,.09);
+    --glass-edge:rgba(255,255,255,.55);
+    --blobA:rgba(0,113,227,.12); --blobB:rgba(175,82,222,.10); --blobC:rgba(0,199,190,.09);
+    --shadow:0 1px 2px rgba(0,0,0,.03), 0 6px 18px rgba(30,40,60,.06);
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg:#000000; --card:rgba(28,28,30,.72); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
+    --text:#f5f5f7; --sub:#98989d; --border:rgba(84,84,88,.45); --line:rgba(84,84,88,.45);
+    --accent:#2997ff; --accent-d:#64b2ff; --accent2:#64b2ff; --tint:rgba(41,151,255,.13);
+    --glass-edge:rgba(255,255,255,.09);
+    --blobA:rgba(10,110,230,.2); --blobB:rgba(150,70,220,.15); --blobC:rgba(0,160,170,.12);
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  } }
+  :root[data-theme="dark"] {
+    --bg:#000000; --card:rgba(28,28,30,.72); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
+    --text:#f5f5f7; --sub:#98989d; --border:rgba(84,84,88,.45); --line:rgba(84,84,88,.45);
+    --accent:#2997ff; --accent-d:#64b2ff; --accent2:#64b2ff; --tint:rgba(41,151,255,.13);
+    --glass-edge:rgba(255,255,255,.09);
+    --blobA:rgba(10,110,230,.2); --blobB:rgba(150,70,220,.15); --blobC:rgba(0,160,170,.12);
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+  body::before { content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      radial-gradient(560px 380px at 88% -6%, var(--blobA), transparent 65%),
+      radial-gradient(640px 470px at -14% 22%, var(--blobB), transparent 65%),
+      radial-gradient(540px 430px at 55% 108%, var(--blobC), transparent 65%),
+      var(--bg); }
+
   * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
   body {
-    font-family:"Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif;
-    background: radial-gradient(1100px 560px at 50% -180px, #ffe7ee 0%, var(--bg) 50%);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro JP","Helvetica Neue","Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif;
+    background: var(--bg);
     background-attachment:fixed; color:var(--text); min-height:100vh; padding-bottom:40px;
   }
   .wrap { max-width:620px; margin:0 auto; padding:16px 14px 30px; }
@@ -34,7 +69,7 @@
   .monthbar .m { font-weight:800; font-size:15px; min-width:120px; text-align:center; }
 
   /* 合計ヒーロー */
-  .hero { background:linear-gradient(135deg,#fff1f4,#ffe2ea); border:1px solid var(--accent); border-radius:20px;
+  .hero { background:linear-gradient(135deg,var(--tint),var(--card) 70%); border:1px solid var(--glass-edge); border-radius:20px;
     padding:20px 18px; text-align:center; box-shadow:0 6px 22px rgba(255,45,85,.13); margin-bottom:8px; }
   .hero .lbl { font-size:11.5px; color:var(--accent2); font-weight:800; letter-spacing:.1em; }
   .hero .big { font-size:42px; font-weight:900; line-height:1.05; margin:6px 0 2px; }
@@ -57,7 +92,7 @@
   .rec .seg button { border:1px solid var(--line); background:var(--card2); border-radius:10px; padding:9px 2px; font-size:11px;
     font-weight:800; color:var(--sub); cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:3px; }
   .rec .seg button .si { font-size:18px; }
-  .rec .seg button.on { border-color:var(--accent); background:#fff1f4; color:var(--accent2); }
+  .rec .seg button.on { border-color:var(--accent); background:var(--tint); color:var(--accent); }
   .rec .amt { display:flex; align-items:center; gap:8px; border:1px solid var(--line); border-radius:11px; padding:0 12px; background:var(--card2); }
   .rec .amt:focus-within { outline:2px solid var(--accent); background:#fff; }
   .rec .amt .y { font-size:18px; font-weight:800; color:var(--sub); }
@@ -100,6 +135,12 @@
   .card-x li { font-size:12.5px; color:var(--text); line-height:1.6; padding-left:18px; position:relative; list-style:none; margin-bottom:4px; }
   .card-x li::before { content:"▸"; position:absolute; left:0; color:var(--accent); }
   footer { text-align:center; color:var(--sub); font-size:10.5px; margin-top:24px; line-height:1.8; }
+
+  /* Apple統一テーマ: ガラス質感 */
+  .card-x, .rec, .row, .src {
+    -webkit-backdrop-filter:blur(14px) saturate(160%); backdrop-filter:blur(14px) saturate(160%);
+    border-color:var(--glass-edge);
+  }
 </style>
 </head>
 <body>
