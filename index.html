@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" id="meta-tc-light" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" id="meta-tc-dark" content="#000000" media="(prefers-color-scheme: dark)">
+<script>(function(){var t=localStorage.getItem("hub-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;})();</script>
 <title>My Hub</title>
 <!-- PWA（ホーム画面アプリ化） -->
 <link rel="manifest" href="manifest.json">
@@ -15,21 +16,28 @@
 <meta name="mobile-web-app-capable" content="yes">
 <style>
   :root {
-    --bg:#f2f2f7; --bg2:#e9e9ef; --card:#ffffff; --card2:#f5f5fa;
-    --text:#1c1c1e; --sub:#85858c; --line:rgba(60,60,67,.13); --hair:rgba(60,60,67,.3);
-    --accent:#ff2d55; --accent2:#e11d48; --gold:#b87c00; --ok:#34c759; --blue:#007aff; --purple:#af52de;
-    --tint:#fff0f4; --navbg:rgba(255,255,255,.78);
-    --shadow:0 1px 2px rgba(0,0,0,.03), 0 4px 14px rgba(31,41,80,.05);
-    --nav-h:60px;
+    --bg:#f2f2f7; --bg2:#e9e9ef; --card:#ffffff; --card2:#f2f2f6;
+    --text:#1d1d1f; --sub:#86868b; --line:rgba(60,60,67,.12); --hair:rgba(60,60,67,.3);
+    --accent:#0071e3; --accent2:#0059b3; --gold:#b87c00; --ok:#34c759; --blue:#007aff; --purple:#af52de;
+    --tint:#eef4fd; --navbg:rgba(249,249,251,.8);
+    --shadow:0 1px 2px rgba(0,0,0,.03), 0 4px 14px rgba(30,40,60,.05);
+    --nav-h:76px; --nav-lift:6px;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]) {
       --bg:#000000; --bg2:#131315; --card:#1c1c1e; --card2:#2c2c2e;
-      --text:#f2f2f7; --sub:#9c9ca3; --line:rgba(84,84,88,.4); --hair:rgba(84,84,88,.7);
-      --accent:#ff375f; --accent2:#ff5f7e; --gold:#ffcc00; --ok:#30d158; --blue:#0a84ff; --purple:#bf5af2;
-      --tint:#2b131a; --navbg:rgba(24,24,26,.78);
+      --text:#f5f5f7; --sub:#98989d; --line:rgba(84,84,88,.4); --hair:rgba(84,84,88,.7);
+      --accent:#2997ff; --accent2:#64b2ff; --gold:#ffcc00; --ok:#30d158; --blue:#0a84ff; --purple:#bf5af2;
+      --tint:#101c2b; --navbg:rgba(22,22,24,.8);
       --shadow:0 1px 2px rgba(0,0,0,.4);
     }
+  }
+  :root[data-theme="dark"] {
+    --bg:#000000; --bg2:#131315; --card:#1c1c1e; --card2:#2c2c2e;
+    --text:#f5f5f7; --sub:#98989d; --line:rgba(84,84,88,.4); --hair:rgba(84,84,88,.7);
+    --accent:#2997ff; --accent2:#64b2ff; --gold:#ffcc00; --ok:#30d158; --blue:#0a84ff; --purple:#bf5af2;
+    --tint:#101c2b; --navbg:rgba(22,22,24,.8);
+    --shadow:0 1px 2px rgba(0,0,0,.4);
   }
   * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
   html { -webkit-text-size-adjust:100%; }
@@ -161,17 +169,23 @@
   .ask li::before { content:"❔"; }
   .ask li { padding-left:24px; font-size:14px; font-weight:600; }
 
-  /* 下タブナビ（半透明マテリアル） */
-  nav { position:fixed; bottom:0; left:0; right:0; height:var(--nav-h); background:var(--navbg);
+  /* 下タブナビ（半透明マテリアル。高さは中身基準＝セーフエリアに食われない） */
+  nav { position:fixed; bottom:0; left:0; right:0; background:var(--navbg);
     -webkit-backdrop-filter:blur(20px) saturate(180%); backdrop-filter:blur(20px) saturate(180%);
     border-top:.5px solid var(--line); display:flex; z-index:50;
-    padding-bottom:env(safe-area-inset-bottom,0px); }
+    padding:8px 0 calc(env(safe-area-inset-bottom,0px) + var(--nav-lift)); }
   nav button { flex:1; background:none; border:none; color:var(--sub); font-family:inherit; cursor:pointer;
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:10.5px; font-weight:600; padding:6px 2px; }
-  nav button .ni { font-size:21px; line-height:1; transition:transform .3s cubic-bezier(.2,.8,.3,1); }
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-size:10.5px; font-weight:600; padding:2px; }
+  nav button .ni { width:23px; height:23px; line-height:1; transition:transform .3s cubic-bezier(.2,.8,.3,1); }
+  nav button svg.ni { stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
   nav button:active .ni { transform:scale(.85); transition-duration:.1s; }
   nav button.on { color:var(--accent); }
   nav button.on .ni { transform:translateY(-1px); }
+
+  /* 外観切替（iOSセグメント風） */
+  .seg { display:flex; background:var(--bg2); border-radius:12px; padding:3px; gap:2px; margin-top:10px; }
+  .seg button { flex:1; background:none; border:none; border-radius:10px; padding:9px 0; font-family:inherit; font-size:13.5px; font-weight:600; color:var(--sub); cursor:pointer; }
+  .seg button.on { background:var(--card); color:var(--text); box-shadow:0 1px 4px rgba(0,0,0,.1); }
 
   footer { text-align:center; color:var(--sub); font-size:12px; margin-top:26px; line-height:1.8; }
 
@@ -249,7 +263,7 @@
 
   <!-- ===== やること ===== -->
   <section class="tab" id="tab-todo">
-    <div class="ph"><h1>✅ やることリスト</h1><p>自由に追加・編集・削除できます（この端末に保存）</p></div>
+    <div class="ph"><h1>やること</h1><p>自由に追加・編集・削除できます（この端末に保存）</p></div>
     <div class="add">
       <input id="todo-input" placeholder="やることを入力…" enterkeyhint="done">
       <select id="todo-cat">
@@ -267,28 +281,28 @@
 
   <!-- ===== メモ ===== -->
   <section class="tab" id="tab-memo">
-    <div class="ph"><h1>📝 メモ</h1><p>買い物・今日のこと・思いつき、なんでも自由に</p></div>
+    <div class="ph"><h1>メモ</h1><p>買い物・今日のこと・思いつき、なんでも自由に</p></div>
     <button class="memo-add" id="memo-add">＋ 新しいメモ</button>
     <div id="memo-list"></div>
   </section>
 
   <!-- ===== 計画（ロードマップ） ===== -->
   <section class="tab" id="tab-plan">
-    <div class="ph"><h1>🗺 ロードマップ</h1><p>定期的に見返して、ブレない</p></div>
+    <div class="ph"><h1>ロードマップ</h1><p>定期的に見返して、ブレない</p></div>
 
     <div id="plan-content"></div>
   </section>
 
   <!-- ===== 心得（マインドセット） ===== -->
   <section class="tab" id="tab-mind">
-    <div class="ph"><h1>🧠 マインドセット</h1><p>迷ったら、ここに戻る</p></div>
+    <div class="ph"><h1>マインドセット</h1><p>迷ったら、ここに戻る</p></div>
 
     <div id="mind-content"></div>
   </section>
 
   <!-- ===== ツール ===== -->
   <section class="tab" id="tab-tools">
-    <div class="ph"><h1>🔧 ツール</h1><p>マネージャー機能</p></div>
+    <div class="ph"><h1>ツール</h1><p>マネージャー機能</p></div>
     <div class="tools">
       <a class="tool" href="http://192.168.10.104:8761"><span class="ico">📈</span><span class="nm">SNSトラッカー</span><span class="ds">数字・競合分析・今週の投稿案（自宅Wi-Fi＋PC起動中）</span></a>
       <a class="tool" href="money.html"><span class="ico">💰</span><span class="nm">収益ダッシュボード</span><span class="ds">月100万への現在地を見る</span></a>
@@ -329,6 +343,12 @@
       <a class="lnk" href="https://weibo.com/u/7737210867" rel="noopener"><span class="li">🌐</span><span>Weibo<small>最新情報</small></span></a>
       <a class="lnk" href="https://space.bilibili.com/3546597218584661" rel="noopener"><span class="li">📺</span><span>bilibili<small>動画投稿</small></span></a>
     </div>
+    <div class="sec-title">外観</div>
+    <div class="seg" id="theme-seg">
+      <button data-th="auto">自動</button>
+      <button data-th="light">ライト</button>
+      <button data-th="dark">ダーク</button>
+    </div>
     <button class="relock" id="relock">🔒 ロックする（共有端末・パスコード変更時）</button>
     <footer>📱 ホーム画面に追加して毎日開く</footer>
   </section>
@@ -336,12 +356,12 @@
 
 <!-- 下タブナビ -->
 <nav id="nav">
-  <button data-tab="today" class="on"><span class="ni">🎯</span>今日</button>
-  <button data-tab="todo"><span class="ni">✅</span>やること</button>
-  <button data-tab="memo"><span class="ni">📝</span>メモ</button>
-  <button data-tab="plan"><span class="ni">🗺</span>計画</button>
-  <button data-tab="mind"><span class="ni">🧠</span>心得</button>
-  <button data-tab="tools"><span class="ni">🔧</span>ツール</button>
+  <button data-tab="today" class="on"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.8" width="17" height="15.7" rx="3.5"/><path d="M3.5 9.6h17M8 2.6v3.6M16 2.6v3.6"/><circle cx="12" cy="15" r="1.3" fill="currentColor" stroke="none"/></svg>今日</button>
+  <button data-tab="todo"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.7"/><path d="M8.4 12.3l2.5 2.5 4.7-5.2"/></svg>やること</button>
+  <button data-tab="memo"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="3.8" width="15" height="16.5" rx="3.2"/><path d="M8.5 9h7M8.5 12.6h7M8.5 16.2h4"/></svg>メモ</button>
+  <button data-tab="plan"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 21.2V4.4"/><path d="M5.5 4.8c2.3-1.5 4.3-1.5 6.4-.1s4.2 1.4 6.6 0v8.9c-2.4 1.4-4.5 1.4-6.6 0s-4.1-1.4-6.4.1z"/></svg>計画</button>
+  <button data-tab="mind"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6.4 6.4 0 0 1 3.7 11.6c-.7.5-1.1 1.2-1.1 2v.5H9.4v-.5c0-.8-.4-1.5-1.1-2A6.4 6.4 0 0 1 12 3z"/><path d="M9.8 20.6h4.4"/></svg>心得</button>
+  <button data-tab="tools"><svg class="ni" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 7h8.2M17 7h3.2M3.8 12h3.2M12 12h8.2M3.8 17h8.2M17 17h3.2"/><circle cx="14.9" cy="7" r="2.1"/><circle cx="9.1" cy="12" r="2.1"/><circle cx="14.9" cy="17" r="2.1"/></svg>ツール</button>
 </nav>
 
 <script>
@@ -362,6 +382,25 @@
   }
   navBtns.forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
   showTab(localStorage.getItem("hub-tab") || "today");
+
+  /* ===== 外観（自動/ライト/ダーク切替。head側で起動時に先行適用済み） ===== */
+  (function () {
+    const KEY = "hub-theme";
+    const segBtns = document.querySelectorAll("#theme-seg button");
+    function apply(v) {
+      if (v !== "light" && v !== "dark") v = "auto";
+      if (v === "auto") delete document.documentElement.dataset.theme;
+      else document.documentElement.dataset.theme = v;
+      const l = $("meta-tc-light"), d = $("meta-tc-dark");
+      if (v === "light") { l.content = "#f2f2f7"; d.content = "#f2f2f7"; }
+      else if (v === "dark") { l.content = "#000000"; d.content = "#000000"; }
+      else { l.content = "#f2f2f7"; d.content = "#000000"; }
+      segBtns.forEach(b => b.classList.toggle("on", b.dataset.th === v));
+      localStorage.setItem(KEY, v);
+    }
+    segBtns.forEach(b => b.addEventListener("click", () => apply(b.dataset.th)));
+    apply(localStorage.getItem(KEY) || "auto");
+  })();
 
   /* ===== 次の大目標カウントダウン（C108コミケ・日付は確定したら直す） ===== */
   (function () {
