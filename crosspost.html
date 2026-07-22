@@ -235,6 +235,7 @@
         <select id="api-model" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text)">
           <option value="claude-sonnet-5">Sonnet 5（推奨・1回約4〜9円）</option>
           <option value="claude-opus-4-8">Opus 4.8（最高品質・1回約10〜15円）</option>
+          <option value="claude-fable-5">Fable 5（最上位モデル・1回約20〜40円）</option>
         </select>
       </div>
       <button class="btn-sub" id="api-save" style="background:var(--accent);color:#fff;justify-self:start;">保存</button>
@@ -803,7 +804,7 @@ $("ai-apply").addEventListener("click", () => {
 
 // ---- 🚀 API直モード（Claude APIをブラウザから直接呼ぶ・写真ごと送信） ----
 const API_KEY_LS = "anthropic-api-key", API_MODEL_LS = "anthropic-api-model";
-const API_PRICES = { "claude-sonnet-5": { i: 3, o: 15 }, "claude-opus-4-8": { i: 5, o: 25 } }; // $/100万tok
+const API_PRICES = { "claude-sonnet-5": { i: 3, o: 15 }, "claude-opus-4-8": { i: 5, o: 25 }, "claude-fable-5": { i: 10, o: 50 } }; // $/100万tok
 const YEN = 150;
 
 function apiImageBlocks() {
