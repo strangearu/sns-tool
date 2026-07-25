@@ -234,7 +234,7 @@
         <label for="api-model">モデル</label>
         <select id="api-model" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text)">
           <option value="claude-sonnet-5">Sonnet 5（推奨・1回約4〜9円）</option>
-          <option value="claude-opus-4-8">Opus 4.8（最高品質・1回約10〜15円）</option>
+          <option value="claude-opus-5">Opus 5（最高品質・1回約10〜15円）</option>
           <option value="claude-fable-5">Fable 5（最上位モデル・1回約20〜40円）</option>
         </select>
       </div>
@@ -805,7 +805,7 @@ $("ai-apply").addEventListener("click", () => {
 
 // ---- 🚀 API直モード（Claude APIをブラウザから直接呼ぶ・写真ごと送信） ----
 const API_KEY_LS = "anthropic-api-key", API_MODEL_LS = "anthropic-api-model";
-const API_PRICES = { "claude-sonnet-5": { i: 3, o: 15 }, "claude-opus-4-8": { i: 5, o: 25 }, "claude-fable-5": { i: 10, o: 50 } }; // $/100万tok
+const API_PRICES = { "claude-sonnet-5": { i: 3, o: 15 }, "claude-opus-5": { i: 5, o: 25 }, "claude-fable-5": { i: 10, o: 50 } }; // $/100万tok
 const YEN = 150;
 
 function apiImageBlocks() {
@@ -897,6 +897,7 @@ function saveApiSettings() {
 }
 
 function loadApiSettings() {
+  if (localStorage.getItem(API_MODEL_LS) === "claude-opus-4-8") localStorage.setItem(API_MODEL_LS, "claude-opus-5"); // 旧Opus4.8保存分をOpus5へ移行（同価格）
   if ($("api-key")) $("api-key").value = localStorage.getItem(API_KEY_LS) || "";
   if ($("api-model")) $("api-model").value = localStorage.getItem(API_MODEL_LS) || "claude-sonnet-5";
 }
@@ -1009,7 +1010,7 @@ $("api-go").addEventListener("click", async () => {
       setStatus("🚀 " + phase + "… " + sec + "秒・" + chars + "字（画面を閉じないで）");
     });
     if (!applyReply(res.text)) throw new Error("返答の形式が想定と違いました。もう一度お試しください");
-    setStatus("完成 ✅ 📖日本語訳で検品を（今回: 約" + res.yen.toFixed(1) + "円・" + (res.model.includes("opus") ? "Opus" : "Sonnet") + "）");
+    setStatus("完成 ✅ 📖日本語訳で検品を（今回: 約" + res.yen.toFixed(1) + "円・" + (res.model.includes("opus") ? "Opus" : res.model.includes("fable") ? "Fable" : "Sonnet") + "）");
   } catch (e) {
     if (e.message === "NO_KEY") setStatus("⚙️API設定でAPIキーを保存してください", true);
     else setStatus("エラー: " + e.message, true);
