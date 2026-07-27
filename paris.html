@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<script>(function(){var t=localStorage.getItem("hub-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;})();</script>
+<title>パリEWC やることリスト</title>
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+  :root {
+    --bg:#f2f2f7; --bg2:#e9e9ef; --card:rgba(255,255,255,.4); --card-solid:#ffffff; --card2:rgba(120,120,128,.08);
+    --text:#1d1d1f; --sub:#86868b; --line:rgba(60,60,67,.12); --hair:rgba(60,60,67,.3);
+    --accent:#0071e3; --gold:#b87c00; --ok:#34c759; --blue:#007aff; --purple:#af52de; --red:#ff3b30;
+    --tint:rgba(0,113,227,.09);
+    --glass-edge:rgba(255,255,255,.66); --glass-glint:rgba(255,255,255,.85); --sheen:rgba(255,255,255,.5); --sheen2:rgba(255,255,255,.38); --glass-shade:rgba(0,0,0,.05);
+    --blobA:rgba(0,113,227,.22); --blobB:rgba(122,92,255,.18); --blobC:rgba(90,200,250,.14);
+    --shadow:0 1px 2px rgba(0,0,0,.03), 0 6px 18px rgba(30,40,60,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:#000000; --bg2:#1a1a1c; --card:rgba(28,28,30,.26); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
+      --text:#f5f5f7; --sub:#98989d; --line:rgba(84,84,88,.4); --hair:rgba(84,84,88,.7);
+      --accent:#2997ff; --gold:#ffcc00; --ok:#30d158; --blue:#0a84ff; --purple:#bf5af2; --red:#ff453a;
+      --tint:rgba(41,151,255,.13);
+      --glass-edge:rgba(255,255,255,.2); --glass-glint:rgba(255,255,255,.2); --sheen:rgba(255,255,255,.1); --sheen2:rgba(255,255,255,.08); --glass-shade:rgba(0,0,0,.5);
+      --blobA:rgba(10,132,255,.44); --blobB:rgba(122,92,255,.3); --blobC:rgba(90,200,250,.2);
+      --shadow:0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:#000000; --bg2:#1a1a1c; --card:rgba(28,28,30,.26); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
+    --text:#f5f5f7; --sub:#98989d; --line:rgba(84,84,88,.4); --hair:rgba(84,84,88,.7);
+    --accent:#2997ff; --gold:#ffcc00; --ok:#30d158; --blue:#0a84ff; --purple:#bf5af2; --red:#ff453a;
+    --tint:rgba(41,151,255,.13);
+    --glass-edge:rgba(255,255,255,.2); --glass-glint:rgba(255,255,255,.2); --sheen:rgba(255,255,255,.1); --sheen2:rgba(255,255,255,.08); --glass-shade:rgba(0,0,0,.5);
+    --blobA:rgba(10,132,255,.44); --blobB:rgba(122,92,255,.3); --blobC:rgba(90,200,250,.2);
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html { -webkit-text-size-adjust:100%; }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro JP","Helvetica Neue","Hiragino Kaku Gothic Pro","Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif;
+    background:var(--bg); color:var(--text); min-height:100vh; line-height:1.5; -webkit-font-smoothing:antialiased;
+    padding-bottom:calc(30px + env(safe-area-inset-bottom,0px));
+  }
+  body::before {
+    content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      radial-gradient(640px 460px at 88% -8%, var(--blobA), transparent 68%),
+      radial-gradient(740px 560px at -16% 24%, var(--blobB), transparent 68%),
+      radial-gradient(620px 500px at 58% 110%, var(--blobC), transparent 68%),
+      var(--bg);
+  }
+  .wrap { max-width:620px; margin:0 auto; padding:calc(12px + env(safe-area-inset-top,0px)) 16px 30px; }
+  .back { display:inline-flex; align-items:center; gap:5px; color:var(--accent); text-decoration:none; font-weight:600; font-size:14px; padding:6px 2px; }
+  .ph { text-align:left; padding:6px 2px 12px; }
+  .ph h1 { font-size:28px; font-weight:700; letter-spacing:-.015em; line-height:1.2; }
+  .ph h1 .red { color:var(--accent);
+    background:linear-gradient(100deg,#0a84ff 5%,#8e5cff 55%,#5ac8fa 100%);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .ph p { color:var(--sub); font-size:13.5px; margin-top:5px; }
+
+  .clock { background:linear-gradient(135deg,var(--tint),var(--card) 70%); border-radius:22px; padding:14px 16px; margin-bottom:12px;
+    display:flex; gap:14px; align-items:center; justify-content:center; text-align:center; box-shadow:var(--shadow); }
+  .clock .z { flex:1; }
+  .clock .z .l { font-size:11px; color:var(--sub); font-weight:700; letter-spacing:.06em; }
+  .clock .z .t { font-size:26px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+  .clock .sep { color:var(--hair); font-size:20px; }
+
+  .sec-title { font-size:13px; font-weight:600; color:var(--sub); letter-spacing:.02em; margin:24px 6px 9px; display:flex; align-items:center; gap:7px; }
+  .sec-title .r { margin-left:auto; }
+  .prog { font-size:12px; color:var(--sub); font-weight:600; font-variant-numeric:tabular-nums; }
+  .reset { color:var(--sub); font-size:12px; cursor:pointer; background:var(--card2); border:none; border-radius:99px; padding:5px 12px; font-family:inherit; font-weight:600; }
+
+  .card-x { background:var(--card); border-radius:22px; padding:16px; margin-bottom:11px; box-shadow:var(--shadow); }
+  .card-x .ct { font-size:15px; font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:8px; letter-spacing:-.01em; }
+  .card-x.gold .ct { color:var(--gold); }
+  .card-x.red .ct { color:var(--red); }
+  .card-x.blue .ct { color:var(--blue); }
+  .card-x.purple .ct { color:var(--purple); }
+  .card-x ul { list-style:none; display:grid; gap:8px; }
+  .card-x li { font-size:14px; color:var(--text); line-height:1.55; padding-left:18px; position:relative; }
+  .card-x li::before { content:"▸"; position:absolute; left:0; color:var(--accent); }
+  .card-x.red li::before { color:var(--red); }
+  .card-x.gold li::before { color:var(--gold); }
+  .card-x li b { color:var(--accent); }
+  .card-x.red li b { color:var(--red); }
+
+  .rule { display:flex; gap:11px; padding:10px 0; border-top:1px solid var(--line); }
+  .rule:first-child { border-top:none; padding-top:0; }
+  .rule .em { font-size:18px; flex:none; }
+  .rule .rt { font-size:14.5px; font-weight:600; line-height:1.45; }
+  .rule .rd { font-size:12.5px; color:var(--sub); margin-top:2px; line-height:1.5; }
+  .rule .rd b { color:var(--accent); }
+
+  .day { margin-bottom:14px; }
+  .day-h { display:flex; align-items:baseline; gap:8px; margin:0 6px 8px; }
+  .day-h .dt { font-size:15px; font-weight:800; letter-spacing:-.01em; }
+  .day-h .dl { font-size:12.5px; color:var(--sub); font-weight:600; }
+  .day-h .today-badge { margin-left:auto; font-size:11px; font-weight:700; color:#fff; background:var(--accent); border-radius:99px; padding:3px 10px; }
+  .day.today .list { outline:1.5px solid var(--accent); outline-offset:2px; border-radius:20px; }
+
+  .list { display:grid; gap:8px; }
+  .item { background:var(--card); border-radius:20px; padding:13px 14px; display:flex; gap:12px; align-items:flex-start; box-shadow:var(--shadow); }
+  .item .chk { flex:none; width:26px; height:26px; border-radius:50%; border:1.7px solid var(--hair); display:flex; align-items:center; justify-content:center; font-size:14px; color:transparent; margin-top:1px; cursor:pointer;
+    transition:transform .3s cubic-bezier(.2,.8,.3,1), background-color .15s, border-color .15s; }
+  .item .chk:active { transform:scale(.85); transition-duration:.1s; }
+  .item.done .chk { background:var(--ok); border-color:var(--ok); color:#fff; }
+  .item .body { flex:1; min-width:0; }
+  .item .body .t { font-weight:600; font-size:15.5px; line-height:1.45; }
+  .item.done .body .t { text-decoration:line-through; color:var(--sub); }
+  .item .body .d { font-size:12.5px; color:var(--sub); margin-top:3px; line-height:1.5; }
+
+  .drafts { display:grid; gap:8px; }
+  .draft { background:var(--card); border:.5px solid var(--glass-edge); border-radius:18px; padding:13px 14px; cursor:pointer; font-family:inherit; text-align:left;
+    display:flex; gap:11px; align-items:center; box-shadow:var(--shadow), inset 0 1px 0 var(--glass-glint), inset 0 -1px 0 var(--glass-shade);
+    background-image:linear-gradient(125deg, var(--sheen), transparent 42%);
+    transition:transform .3s cubic-bezier(.2,.8,.3,1); color:var(--text); }
+  .draft:active { transform:scale(.97); transition-duration:.1s; }
+  .draft .ico { font-size:17px; width:34px; height:34px; border-radius:9px; background:var(--card2); flex:none; display:flex; align-items:center; justify-content:center; }
+  .draft .bd { flex:1; min-width:0; }
+  .draft .tx { font-size:15px; font-weight:600; line-height:1.5; }
+  .draft .when { font-size:11.5px; color:var(--sub); margin-top:2px; font-weight:600; }
+  .draft.copied { outline:2px solid var(--ok); outline-offset:-2px; }
+  .draft.copied .when { color:var(--ok); font-weight:700; }
+
+  footer { text-align:center; color:var(--sub); font-size:12px; margin-top:26px; line-height:1.8; }
+
+  .item, .card-x, .clock, .draft {
+    -webkit-backdrop-filter:blur(18px) saturate(180%); backdrop-filter:blur(18px) saturate(180%);
+    border:.5px solid var(--glass-edge);
+    box-shadow:var(--shadow), inset 0 1px 0 var(--glass-glint), inset 0 -1px 0 var(--glass-shade);
+  }
+  .item { background-image:linear-gradient(125deg, var(--sheen), transparent 42%); }
+  .card-x { background-image:radial-gradient(130% 70% at 50% -25%, var(--sheen2), transparent 55%), linear-gradient(125deg, var(--sheen), transparent 42%); }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .item, .card-x, .clock, .draft { background:var(--card-solid); -webkit-backdrop-filter:none; backdrop-filter:none; border-color:var(--line); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">‹ ハブに戻る</a>
+  <div class="ph">
+    <h1>🇫🇷 パリ<span class="red">EWC</span> やることリスト</h1>
+    <p>7/28〜8/2 現地 ・ スト6部門 7/29〜8/1 ・ 会場 Paris Expo Porte de Versailles<br>一度開けばオフライン（機内・海外回線）でも見られます</p>
+  </div>
+
+  <div class="clock">
+    <div class="z"><div class="l">🇫🇷 パリ</div><div class="t" id="t-paris">--:--</div></div>
+    <div class="sep">·</div>
+    <div class="z"><div class="l">🇯🇵 日本</div><div class="t" id="t-japan">--:--</div></div>
+  </div>
+
+  <div class="card-x blue">
+    <div class="ct">⏰ 投稿時間はこれだけ覚える（時差 −7時間）</div>
+    <div class="rule"><span class="em">🌅</span><div><div class="rt">おはよう投稿 ＝ パリの深夜0時・寝る前</div><div class="rd">日本の朝7時枠（中央値<b>2,035いいね</b>の最強枠）を旅先でも維持</div></div></div>
+    <div class="rule"><span class="em">📸</span><div><div class="rt">その日のベスト写真 ＝ パリ13〜14時</div><div class="rd">日本の<b>20〜21時ゴールデン</b>に直撃。ちょうど会場にいる時間</div></div></div>
+    <div class="rule"><span class="em">🚫</span><div><div class="rt">パリ15時以降は良い写真を温存</div><div class="rd">日本の22〜23時はバズ率が落ちる枠。翌日の昼に回す</div></div></div>
+    <div class="rule"><span class="em">1️⃣</span><div><div class="rt">写真1投稿1枚・タグ必須はパリでも同じ</div><div class="rd">#EWC2026 #SF6 は英語圏共通タグ。日本語のままで海外にも届く</div></div></div>
+  </div>
+
+  <div class="sec-title">✅ チェックリスト <span class="r prog" id="prog"></span><button class="reset" id="reset" style="margin-left:8px">リセット</button></div>
+  <div id="days"></div>
+
+  <div class="sec-title">📝 投稿下書き（タップでコピー→Xに貼る）</div>
+  <div class="drafts" id="drafts"></div>
+
+  <div class="card-x red" style="margin-top:24px">
+    <div class="ct">⚠️ これだけは守る</div>
+    <ul>
+      <li><b>試合画面・公式配信の映像はVlogに使わない</b>（転載扱いでYT/bilibili両方リスク）。自分のリアクション・会場の風景・人との写真が主役</li>
+      <li>選手との2ショットは<b>「載せていいですか？」を一言</b>もらってから</li>
+      <li>スリ対策: Osmoはストラップ、スマホは前ポケット。撮影に夢中な時が一番危ない</li>
+      <li>会場の観客コスプレ規定は入場時に確認。トゲブレスは持ち込みチェックに引っかかるかも。<b>衣装はホテルから着ていく前提</b>が安全</li>
+      <li>毎晩SDカードをスマホかSSDへバックアップ。<b>素材が今回の最大資産</b></li>
+    </ul>
+  </div>
+
+  <div class="card-x gold">
+    <div class="ct">🛬 帰国後（8/3〜）にやること</div>
+    <ul>
+      <li>8/4(火)朝10時に通知が来ます: 収益記帳・営業4件・UR化・月次まとめ</li>
+      <li>パリVlog前後編を編集 → 8月の土曜18時 週1枠へ</li>
+      <li>Fanbox「パリセット」を帰国48時間以内に下書き</li>
+      <li>帰国報告配信（イベント後48時間ルール）</li>
+      <li>メディアキットと営業文面に「EWC2026現地発信」実績を追加</li>
+    </ul>
+  </div>
+
+  <footer>いってらっしゃい！パリ、獲ってきて 🔥</footer>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+
+  /* ===== いまの時刻（パリ⇄日本） ===== */
+  function tick() {
+    const now = new Date();
+    const f = tz => new Intl.DateTimeFormat("ja-JP", { timeZone: tz, hour: "2-digit", minute: "2-digit", hour12: false }).format(now);
+    $("t-paris").textContent = f("Europe/Paris");
+    $("t-japan").textContent = f("Asia/Tokyo");
+  }
+  tick(); setInterval(tick, 15000);
+
+  /* ===== 日別チェックリスト ===== */
+  const DAYS = [
+    { d: "2026-07-27", dt: "今夜（出発前）", dl: "深夜便で出発", items: [
+      { t: "✈️ 春麗衣装・Osmo一式は機内持ち込みに", d: "ロスバゲしたら戦略ごと崩れる。預け荷物に入れない" },
+      { t: "🔋 SD2枚以上・充電器・モバイルバッテリー", d: "モバブは預け入れ不可＝必ず手荷物" },
+      { t: "🔌 変換プラグ（C/Eタイプ）・eSIM", d: "eSIMは搭乗前にアプリで買っておくと着いてすぐ使える" },
+      { t: "📤 出発ポストを1本", d: "下の下書き「出発」をコピーして空港写真と一緒に" },
+    ]},
+    { d: "2026-07-28", dt: "7/28(火)", dl: "パリ到着日", items: [
+      { t: "📤 「パリついた」を1本", d: "凝らなくていい。着いた報告＋写真1枚で十分" },
+      { t: "😴 時差調整を最優先", d: "初日に飛ばさない。夜ちゃんと寝ると残り5日が全部強くなる" },
+      { t: "🎥 Osmoの試し撮り", d: "ホテル周りで5分。設定と手ブレの確認だけ" },
+    ]},
+    { d: "2026-07-29", dt: "7/29(水)", dl: "スト6 初日", items: [
+      { t: "📤 「会場めちゃ広いヨ」型を初日に投下", d: "EVO2024で1.2万いいねの実績型。会場に着いたらすぐ1枚" },
+      { t: "📤 観戦リアクション（タメ口・！連打）", d: "REJECT勢の試合中はその場の熱をそのまま書く" },
+      { t: "🎥 Osmo素材10分（移動・入場・観客席・ごはん）", d: "毎日これだけでVlog2本分たまる" },
+      { t: "🌅 寝る前におはよう投稿（パリ0時）", d: "日本の朝7時枠" },
+      { t: "💾 SDバックアップ", d: "" },
+    ]},
+    { d: "2026-07-30", dt: "7/30(木)", dl: "グループステージ", items: [
+      { t: "📤 ベスト写真をパリ13〜14時に1本", d: "日本の20〜21時ゴールデン直撃" },
+      { t: "🤝 選手・海外勢との2ショット（許可を一言）", d: "" },
+      { t: "🎥 Osmo素材10分", d: "" },
+      { t: "🇨🇳 クロス投稿ツールで中国SNSへ転用1回", d: "EWCの中国語表記は「电竞世界杯」" },
+      { t: "🌅 寝る前におはよう投稿 ＋ 💾 バックアップ", d: "" },
+    ]},
+    { d: "2026-07-31", dt: "7/31(金)", dl: "プレーオフ", items: [
+      { t: "📤 ベスト写真をパリ13〜14時に1本", d: "" },
+      { t: "🎥 Osmo素材10分（明日の春麗に備えて軽めでOK）", d: "" },
+      { t: "🧵 春麗コスの準備（衣装・メイク道具の確認）", d: "会場コスOKか当日の様子で最終判断" },
+      { t: "🌅 寝る前におはよう投稿 ＋ 💾 バックアップ", d: "" },
+    ]},
+    { d: "2026-08-01", dt: "8/1(土)", dl: "決勝 ＝ 春麗の日", items: [
+      { t: "👘 春麗コス投入（会場NGなら朝に市街で撮影→観戦）", d: "今回の遠征の主役カット" },
+      { t: "📤 「パリ春麗」をパリ13時に投下", d: "日本の20時。#EWC2026 #SF6 で海外FGCにも届く" },
+      { t: "📤 決勝のリアクション", d: "優勝の瞬間は動画でも1本撮っておく（自分のリアクションを撮る）" },
+      { t: "🎥 Osmo回しっぱなし推奨の日", d: "" },
+      { t: "💾 バックアップ（今日のデータが一番大事）", d: "" },
+    ]},
+    { d: "2026-08-02", dt: "8/2(日)", dl: "パリ市内・野外イベント", items: [
+      { t: "🗼 エッフェル塔×春麗 or 私服パリスナップ", d: "トロカデロ広場は朝イチが人少なめ＆スリ回避" },
+      { t: "💎 Fanbox用ストック撮影（ここが差別化）", d: "旅の裏側はFanboxでしか見られない、を作る日" },
+      { t: "🎪 EWC野外イベント（無料）をのぞく", d: "市内開催。時間が合えば素材として最高" },
+      { t: "💾 最終バックアップ＋パッキング", d: "" },
+    ]},
+  ];
+  const KEY = "paris-ewc-2026";
+  let state = JSON.parse(localStorage.getItem(KEY) || "[]");
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+
+  const todayParis = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Paris" }).format(new Date());
+  function render() {
+    const box = $("days"); box.innerHTML = "";
+    let total = 0, done = 0;
+    DAYS.forEach((day, di) => {
+      const wrap = document.createElement("div");
+      wrap.className = "day" + (day.d === todayParis ? " today" : "");
+      const h = document.createElement("div"); h.className = "day-h";
+      h.innerHTML = `<span class="dt">${day.dt}</span><span class="dl">${day.dl}</span>` + (day.d === todayParis ? '<span class="today-badge">きょう</span>' : "");
+      wrap.appendChild(h);
+      const list = document.createElement("div"); list.className = "list";
+      day.items.forEach((it, ii) => {
+        const id = di + "-" + ii; total++;
+        const isDone = state.includes(id); if (isDone) done++;
+        const div = document.createElement("div");
+        div.className = "item" + (isDone ? " done" : "");
+        div.innerHTML = `<div class="chk">✓</div><div class="body"><div class="t">${it.t}</div>${it.d ? `<div class="d">${it.d}</div>` : ""}</div>`;
+        div.querySelector(".chk").addEventListener("click", () => {
+          state = state.includes(id) ? state.filter(x => x !== id) : [...state, id];
+          save(); render();
+        });
+        list.appendChild(div);
+      });
+      wrap.appendChild(list);
+      box.appendChild(wrap);
+    });
+    $("prog").textContent = `${done}/${total}`;
+  }
+  render();
+  $("reset").addEventListener("click", () => { if (confirm("チェックを全部リセットしますか？")) { state = []; save(); render(); } });
+
+  /* ===== 投稿下書き（タップでコピー） ===== */
+  const DRAFTS = [
+    { ico: "✈️", when: "出発（今夜・空港で）", tx: "パリいってきます！！EWCでスト6見てくるよ〜" },
+    { ico: "🛬", when: "到着（7/28）", tx: "パリついた〜！！" },
+    { ico: "🏟", when: "会場初日（7/29）— 実績1.2万いいねの型", tx: "今回も会場めちゃ広いヨ #EWC2026" },
+    { ico: "🔥", when: "観戦中（そのままでも、名前を変えても）", tx: "ウメハラさんの試合を目の前で見てる、、うおおおお" },
+    { ico: "👘", when: "決勝日（8/1・パリ13時＝日本20時）", tx: "パリ春麗 #EWC2026 #SF6" },
+    { ico: "🗼", when: "市内（8/2）", tx: "エッフェル塔と春麗" },
+  ];
+  async function copyText(t) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try { await navigator.clipboard.writeText(t); return true; } catch (e) {}
+    }
+    try {
+      const ta = document.createElement("textarea"); ta.value = t;
+      ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      const ok = document.execCommand("copy"); ta.remove();
+      return ok;
+    } catch (e) { return false; }
+  }
+  const dbox = $("drafts");
+  DRAFTS.forEach(d => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "draft";
+    b.innerHTML = `<span class="ico">${d.ico}</span><span class="bd"><span class="tx"></span><span class="when" style="display:block"></span></span>`;
+    b.querySelector(".tx").textContent = d.tx;
+    b.querySelector(".when").textContent = d.when;
+    b.addEventListener("click", async () => {
+      const ok = await copyText(d.tx);
+      const w = b.querySelector(".when"), org = d.when;
+      if (ok) b.classList.add("copied");
+      w.textContent = ok ? "✓ コピーしました → Xに貼って写真を付ける" : "✗ コピー失敗（長押しで選択してください）";
+      setTimeout(() => { b.classList.remove("copied"); w.textContent = org; }, 1600);
+    });
+    dbox.appendChild(b);
+  });
+</script>
+</body>
+</html>
