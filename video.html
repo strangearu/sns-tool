@@ -93,6 +93,9 @@
   .copy-btn.done { background: #16a34a; }
   .open-btn { background: var(--card2); color: var(--text); padding: 8px 14px; font-size: 13px; text-decoration: none; border-radius: 10px; font-weight: 700; display: inline-flex; align-items: center; }
   .hint { font-size: 11.5px; color: var(--sub); line-height: 1.6; }
+  .ja-note { background: var(--card2); border: 1px dashed var(--border); border-radius: 10px; padding: 9px 11px; font-size: 12.5px; line-height: 1.8; }
+  .ja-note .ja-head { font-weight: 700; color: var(--sub); font-size: 11px; margin-bottom: 3px; }
+  .ja-note .ja-body { white-space: pre-wrap; }
   .sugg { display: flex; flex-wrap: wrap; gap: 6px; }
   .sugg:empty { display: none; }
   .sugg .sg { background: #eef7fb; border: 1px solid var(--bili); color: #0b6e8f; border-radius: 10px; padding: 7px 11px; font-size: 12px; text-align: left; line-height: 1.4; }
@@ -128,7 +131,7 @@
   <header>
     <p style="text-align:left;margin-bottom:10px"><a href="index.html" style="color:var(--accent);text-decoration:none;font-weight:700;font-size:13px">← マネージャーHubに戻る</a></p>
     <h1>🎬 動画クロス投稿ツール</h1>
-    <p>動画1本から、TikTok・bilibili・小紅書・Weibo向けの投稿文を作ります（Vlogショートの一次投稿にも、転載にも）｜v12d</p>
+    <p>動画1本から、TikTok・bilibili・小紅書・Weibo向けの投稿文を作ります（Vlogショートの一次投稿にも、転載にも）｜v13a</p>
   </header>
 
   <div class="panel">
@@ -243,6 +246,7 @@
           <input type="text" id="bili-tags">
           <button class="copy-btn" data-target="bili-tags" style="background:#6b7280">コピー</button>
         </div>
+        <div class="ja-note" id="ja-bili" style="display:none"><div class="ja-head">📖 bilibiliの日本語訳（検品用・投稿しない）</div><div class="ja-body"></div></div>
         <div class="card-foot">
           <span class="count" id="count-bili"></span>
           <div class="foot-btns">
@@ -273,6 +277,7 @@
         </div>
         <span class="field-label">本文</span>
         <textarea id="red-body"></textarea>
+        <div class="ja-note" id="ja-red" style="display:none"><div class="ja-head">📖 小紅書の日本語訳（検品用・投稿しない）</div><div class="ja-body"></div></div>
         <div class="card-foot">
           <span class="count" id="count-red"></span>
           <div class="foot-btns">
@@ -289,6 +294,7 @@
       <div class="card-head"><span class="name">Weibo 微博（動画）</span><span class="lang">中国語（簡体字）</span></div>
       <div class="card-body">
         <textarea id="weibo-body"></textarea>
+        <div class="ja-note" id="ja-weibo" style="display:none"><div class="ja-head">📖 Weiboの日本語訳（検品用・投稿しない）</div><div class="ja-body"></div></div>
         <div class="card-foot">
           <span class="count" id="count-weibo"></span>
           <div class="foot-btns">
@@ -301,13 +307,13 @@
     </div>
   </div>
 
-  <!-- 日本語訳（中国語の検品用・投稿はしない） -->
+  <!-- 訳は各SNSカード内に表示。ここは旧形式の返事のフォールバックと💡提案の置き場 -->
   <div class="panel" id="ja-box" style="display:none">
-    <label class="head">📖 日本語訳（検品用・これは投稿しない）</label>
+    <label class="head" id="ja-box-label">📖 日本語訳（検品用・これは投稿しない）</label>
     <div id="ja-trans" style="white-space:pre-wrap;font-size:13px;line-height:1.9"></div>
   </div>
 
-  <footer>📱 このページはブラウザだけで動きます。動画本体は各サイトへそのままアップロードしてください。<br><span style="opacity:.6">version 2026-07-12b（この表示が無ければ古いキャッシュ→アプリ完全終了して開き直し）</span></footer>
+  <footer>📱 このページはブラウザだけで動きます。動画本体は各サイトへそのままアップロードしてください。<br><span style="opacity:.6">version 2026-08-19a（この表示が無ければ古いキャッシュ→アプリ完全終了して開き直し）</span></footer>
 </div>
 
 <script>
@@ -612,8 +618,16 @@ async function translate(text, target) {
 const ZH_FIX = [
   [/强袭6|罢工6|斯托6|斯特6|条纹6/g, "街霸6"],
   [/街头快打|街头斗士/g, "街头霸王"],
+  [/阿塔塔/g, "atata"],
 ];
 function fixZh(s) { for (const [re, to] of ZH_FIX) s = s.replace(re, to); return s; }
+
+// 機械翻訳に渡す前の固有名詞ガード（「あたた」→atata等。訳文でひらがな残り・誤訳になるのを防ぐ）
+const SRC_GLOSSARY = [
+  [/あたた(?![かま])/g, "atata"],   // あたたかい・あたたまる は除外
+  [/コミックマーケット|コミケ/g, "Comiket"],
+];
+function glossSrc(s) { for (const [re, to] of SRC_GLOSSARY) s = s.replace(re, to); return s; }
 
 // ==== ⚡ 自動翻訳 ====
 $("convert").addEventListener("click", async () => {
@@ -629,12 +643,13 @@ $("convert").addEventListener("click", async () => {
     const catDef = CATEGORIES[curCat] || CATEGORIES.generic;
     const catZh = catDef.zh;
     let [zhTitle, zhDesc] = await Promise.all([
-      translate(title, "zh-CN"),
-      translate([desc, memo].filter(Boolean).join("\n"), "zh-CN"),
+      translate(glossSrc(title), "zh-CN"),
+      translate(glossSrc([desc, memo].filter(Boolean).join("\n")), "zh-CN"),
     ]);
     zhTitle = fixZh(zhTitle); zhDesc = fixZh(zhDesc);
-    // 曲名はイベント名と同格の必須タグ（原題のまま全SNSへ）
-    const tags = uniq([...smart.events, ...(smart.song ? [smart.song] : []), ...smart.zh, ...catZh]);
+    // 曲名はイベント名と同格の必須タグ（原題のまま全SNSへ）。中国語圏タグの日本語イベント名は現地表記へ（コミケ→Comiket）
+    const zhEvent = t => t === "コミケ" ? "Comiket" : t;
+    const tags = uniq([...smart.events.map(zhEvent), ...(smart.song ? [smart.song] : []), ...smart.zh, ...catZh]);
 
     // ジャンル別バズ型でタイトル候補を生成（機械翻訳の直訳より優先）
     const genre = resolveGenre(smart);
@@ -666,6 +681,9 @@ $("convert").addEventListener("click", async () => {
     renderSugg("tt-sugg", hooks.slice(1), "tt-hook", "💡 冒頭フックの候補（タップで差し替え）");
 
     for (const k of ["tiktok", "bili", "red", "weibo"]) $("card-" + k).classList.add("show");
+    // ⚡は翻訳元の日本語が入力欄に残っているので訳表示は不要。前回のAI生成の訳が残らないよう消す
+    setJaNote("bili", ""); setJaNote("red", ""); setJaNote("weibo", "");
+    $("ja-box").style.display = "none";
     updateCounts();
     const found = smart.labels.length ? `　🎯 検出: ${uniq(smart.labels).join("・")}｜バズ型: ${buzz.label}` : "";
     setStatus("変換が完了しました ✅ 各欄は手直しできます" + found);
@@ -698,6 +716,7 @@ function renderSugg(boxId, items, targetId, label) {
 const M = { TH: "===TikTokフック===", TC: "===TikTokキャプション===",
             BT: "===bilibili标题===", BD: "===bilibili简介===", BG: "===bilibili标签===",
             RC: "===封面文字===", RT: "===小紅書タイトル===", RB: "===小紅書本文===", WB: "===Weibo===",
+            BJ: "===bilibili訳===", RJ: "===小紅書訳===", WJ: "===Weibo訳===", SG: "===提案===",
             JA: "===日本語訳===" };
 
 // PC（幅900px以上）とAPI直モードではプロンプトに推敲指示を足して精度を上げる
@@ -713,6 +732,7 @@ function buildPrompt(forApi) {
   const det = detectSmart([title, desc, memo].join("\n"));
   let p = "あなたは日本のコスプレイヤー「あたた」の動画SNS投稿を作る専属アシスタントです。1本の動画（Vlogショート含む）から、TikTok（日本語・一次投稿）と、bilibili・小紅書・Weibo（中国語・転載）の投稿文を作ってください。目的は各SNSでのフォロワー獲得。\n";
   p += "【人設・ブランド（全SNS共通・最優先で守る）】あたた＝「日本一美しいゲーマー」。格闘ゲームガチ勢×洗練されたコスプレ、清潔感ある美人路線。中国語圏では「日本から発信している日本人coser」の親近感が最大の武器。トーンは自信があって親しみやすい・ポジティブ。恋愛感情を煽る文言（ガチ恋営業・匂わせ）は絶対に使わない。色気・露出を売りにする書き方もしない。売るのは「憧れ」。\n";
+  p += "【固有名詞・用語辞書（翻訳時必須）】名前「あたた」は中国語・英語の文中では必ず小文字ローマ字の「atata」——ひらがなのまま出さない・「阿塔塔」等の音訳もしない。コミケ/コミックマーケット→中国語は「CM（Comic Market）」か回次表記（C108等）・英語は「Comiket」（汎用語の「漫展」だけに置き換えない）。定訳: スト6=街霸6・ストリートファイター=街头霸王・KOF=拳皇・鉄拳=铁拳・ランクマ=排位・マスターランク=大师段位・チェキ=拍立得・踊ってみた=翻跳。上記以外の人名・イベント名・作品名は中国語圏で定着した公式表記を使い、確信が無ければ原語のまま残す（誤った当て字は禁止）。\n";
   if (photos.length) p += "【スクショの読み取り（最初にやること）】添付したスクショ・サムネから次を観察する: ①キャラ・作品名（確信がある場合のみ名指し）②衣装・シーンの内容 ③画面の雰囲気・色調 ④テロップや画面内の文字。タイトル・概要欄が薄い場合はこの「見えている事実」が主素材——各SNSのネイティブが書くような一人称の投稿文を、見えるものだけで組み立てる。見えないこと（撮影裏話・苦労・本人の感想）は作らない。\n";
   p += "【忠実性（最重要・全SNS共通）】本文はタイトル・概要欄・内容メモに書いてあること＋添付スクショから確実に分かることだけで構成する。本人が言っていない見どころ・体験談・コツ・裏話を発明しない。アレンジしてよいのは語り口・構成・絵文字・問いかけ・タグまで。元ネタが薄ければ無理に膨らませず短くてよい。\n\n";
   p += "【元動画のタイトル（日本語）】\n" + (title || "（なし）") + "\n";
@@ -748,7 +768,10 @@ function buildPrompt(forApi) {
   p += M.TH + "\n（15字前後の1行）\n" + M.TC + "\n（本文＋#タグ5〜8個）\n";
   p += M.BT + "\n（80字以内）\n" + M.BD + "\n（简介）\n" + M.BG + "\n（カンマ区切り10個以内）\n";
   p += M.RC + "\n（12字以内）\n" + M.RT + "\n（20字以内）\n" + M.RB + "\n（本文＋#タグ）\n" + M.WB + "\n（本文＋#タグ#）\n";
-  p += M.JA + "\n（bilibili标题・简介・封面文字・小紅書タイトル/本文・Weiboの日本語訳を項目名付きで。本人は中国語が読めないので、検品できるよう省略せず全文訳すこと。最後に、シリーズ化できる企画・サムネ改善など「次に効く一手」が1つあれば「💡提案:」として1行だけ添える——無ければ書かない）";
+  p += M.BJ + "\n（bilibiliの日本語訳。「标题:」「简介:」のラベル付きで。本人は中国語が読めないので、検品できるよう省略せず全文訳すこと）\n";
+  p += M.RJ + "\n（小紅書の日本語訳。「封面文字:」「タイトル:」「本文:」のラベル付き・全文）\n";
+  p += M.WJ + "\n（Weibo本文の日本語訳・全文）\n";
+  p += M.SG + "\n（シリーズ化できる企画・サムネ改善など「次に効く一手」が1つあれば1行だけ。無ければこの見出しごと省略）";
   return p;
 }
 
@@ -779,13 +802,26 @@ function canonMarks(t) {
     .replace(/^\s*===\s*bilibili\s*(?:简介|簡介)\s*===\s*$/gim, M.BD)
     .replace(/^\s*===\s*bilibili\s*(?:标签|標籤|タグ)\s*===\s*$/gim, M.BG)
     .replace(/^\s*===\s*Weibo\s*===\s*$/gim, M.WB)
+    .replace(/^\s*===\s*bilibili\s*(?:の)?[訳译]\s*===\s*$/gim, M.BJ)
+    .replace(/^\s*===\s*小[紅红][書书]\s*(?:の)?[訳译]\s*===\s*$/gm, M.RJ)
+    .replace(/^\s*===\s*Weibo\s*(?:の)?[訳译]\s*===\s*$/gim, M.WJ)
+    .replace(/^\s*===\s*(?:💡\s*)?提案\s*===\s*$/gm, M.SG)
     .replace(/^\s*===\s*日本[語语][訳译]\s*===\s*$/gm, M.JA);
 }
+// 各SNSカード内の訳表示（空なら非表示）
+function setJaNote(k, text) {
+  const box = $("ja-" + k);
+  if (!box) return;
+  box.querySelector(".ja-body").textContent = text || "";
+  box.style.display = text ? "block" : "none";
+}
+
 function applyReply(t) {
   t = canonMarks(t);
   const all = Object.values(M);
   const get = (mark) => section(t, mark, ...all.filter(x => x !== mark));
   const th = get(M.TH), tc = get(M.TC), bt = get(M.BT), bg = get(M.BG), rc = get(M.RC), wb = get(M.WB), ja = get(M.JA);
+  const bj = get(M.BJ), rj = get(M.RJ), wj = get(M.WJ), sg = get(M.SG);
   let bd = get(M.BD), rt = get(M.RT), rb = get(M.RB);
   if (!th && !tc && !bt && !bd && !rb && !wb) return false;
   // タイトル系は必ず1行だけ入れる。万一続きがあれば対応する本文欄へ逃がす（input欄は改行を消して連結してしまうため）
@@ -796,8 +832,15 @@ function applyReply(t) {
   $("bili-title").value = btV; $("bili-desc").value = bd; $("bili-tags").value = bg.replace(/#/g, "");
   $("red-cover").value = clip1(rc)[0]; $("red-title").value = rtV; $("red-body").value = rb;
   $("weibo-body").value = wb;
-  if (ja) { $("ja-trans").textContent = ja; $("ja-box").style.display = "block"; }
-  else { $("ja-box").style.display = "none"; }
+  // 訳は各SNSカード内へ（スクロール不要で検品できる）。旧形式（===日本語訳===まとめ）は下のパネルへフォールバック
+  setJaNote("bili", bj); setJaNote("red", rj); setJaNote("weibo", wj);
+  const legacy = (!bj && !rj && !wj) ? ja : "";
+  const foot = [legacy, sg].filter(Boolean).join("\n");
+  if (foot) {
+    $("ja-box-label").textContent = legacy ? "📖 日本語訳（検品用・これは投稿しない）" : "💡 AIからの提案（次に効く一手）";
+    $("ja-trans").textContent = foot;
+    $("ja-box").style.display = "block";
+  } else { $("ja-box").style.display = "none"; }
   for (const k of ["tiktok", "bili", "red", "weibo"]) $("card-" + k).classList.add("show");
   updateCounts();
   return true;
@@ -807,7 +850,7 @@ $("ai-apply").addEventListener("click", () => {
   const t = $("ai-reply").value;
   if (!t.trim()) { setStatus("Claudeの返事を貼り付けてください", true); return; }
   if (!applyReply(t)) { setStatus("見出し（===…===）が見つかりません。返事をまるごと貼り付けてください", true); return; }
-  setStatus("各欄に反映しました ✅ 下の📖日本語訳で中身を検品してください");
+  setStatus("各欄に反映しました ✅ 各カード内の📖日本語訳で中身を検品してください");
 });
 
 // ==== 🚀 API直モード（Claude APIをブラウザから直接呼ぶ・スクショごと送信） ====
@@ -925,7 +968,7 @@ $("api-go").addEventListener("click", async () => {
       setStatus("🚀 " + phase + "… " + sec + "秒・" + chars + "字（画面を閉じないで）");
     });
     if (!applyReply(res.text)) throw new Error("返答の形式が想定と違いました。もう一度お試しください");
-    setStatus("完成 ✅ 📖日本語訳で検品を（今回: 約" + res.yen.toFixed(1) + "円・" + (res.model.includes("opus") ? "Opus" : res.model.includes("fable") ? "Fable" : "Sonnet") + "）");
+    setStatus("完成 ✅ 各カード内の📖日本語訳で検品を（今回: 約" + res.yen.toFixed(1) + "円・" + (res.model.includes("opus") ? "Opus" : res.model.includes("fable") ? "Fable" : "Sonnet") + "）");
   } catch (e) {
     if (e.message === "NO_KEY") setStatus("⚙️API設定でAPIキーを保存してください", true);
     else setStatus("エラー: " + e.message, true);
