@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<script>(function(){var t=localStorage.getItem("hub-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;})();</script>
+<title>TGS2026 告知セット</title>
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+  :root {
+    --bg:#f2f2f7; --bg2:#e9e9ef; --card:rgba(255,255,255,.4); --card-solid:#ffffff; --card2:rgba(120,120,128,.08);
+    --text:#1d1d1f; --sub:#86868b; --line:rgba(60,60,67,.12); --hair:rgba(60,60,67,.3);
+    --accent:#0071e3; --gold:#b87c00; --ok:#34c759; --blue:#007aff; --purple:#af52de; --red:#ff3b30;
+    --tint:rgba(0,113,227,.09);
+    --glass-edge:rgba(255,255,255,.66); --glass-glint:rgba(255,255,255,.85); --sheen:rgba(255,255,255,.5); --sheen2:rgba(255,255,255,.38); --glass-shade:rgba(0,0,0,.05);
+    --blobA:rgba(0,113,227,.22); --blobB:rgba(122,92,255,.18); --blobC:rgba(90,200,250,.14);
+    --shadow:0 1px 2px rgba(0,0,0,.03), 0 6px 18px rgba(30,40,60,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:#000000; --bg2:#1a1a1c; --card:rgba(28,28,30,.26); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
+      --text:#f5f5f7; --sub:#98989d; --line:rgba(84,84,88,.4); --hair:rgba(84,84,88,.7);
+      --accent:#2997ff; --gold:#ffcc00; --ok:#30d158; --blue:#0a84ff; --purple:#bf5af2; --red:#ff453a;
+      --tint:rgba(41,151,255,.13);
+      --glass-edge:rgba(255,255,255,.2); --glass-glint:rgba(255,255,255,.2); --sheen:rgba(255,255,255,.1); --sheen2:rgba(255,255,255,.08); --glass-shade:rgba(0,0,0,.5);
+      --blobA:rgba(10,132,255,.44); --blobB:rgba(122,92,255,.3); --blobC:rgba(90,200,250,.2);
+      --shadow:0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:#000000; --bg2:#1a1a1c; --card:rgba(28,28,30,.26); --card-solid:#1c1c1e; --card2:rgba(120,120,128,.16);
+    --text:#f5f5f7; --sub:#98989d; --line:rgba(84,84,88,.4); --hair:rgba(84,84,88,.7);
+    --accent:#2997ff; --gold:#ffcc00; --ok:#30d158; --blue:#0a84ff; --purple:#bf5af2; --red:#ff453a;
+    --tint:rgba(41,151,255,.13);
+    --glass-edge:rgba(255,255,255,.2); --glass-glint:rgba(255,255,255,.2); --sheen:rgba(255,255,255,.1); --sheen2:rgba(255,255,255,.08); --glass-shade:rgba(0,0,0,.5);
+    --blobA:rgba(10,132,255,.44); --blobB:rgba(122,92,255,.3); --blobC:rgba(90,200,250,.2);
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html { -webkit-text-size-adjust:100%; }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro JP","Helvetica Neue","Hiragino Kaku Gothic Pro","Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif;
+    background:var(--bg); color:var(--text); min-height:100vh; line-height:1.5; -webkit-font-smoothing:antialiased;
+    padding-bottom:calc(30px + env(safe-area-inset-bottom,0px));
+  }
+  body::before {
+    content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      radial-gradient(640px 460px at 88% -8%, var(--blobA), transparent 68%),
+      radial-gradient(740px 560px at -16% 24%, var(--blobB), transparent 68%),
+      radial-gradient(620px 500px at 58% 110%, var(--blobC), transparent 68%),
+      var(--bg);
+  }
+  .wrap { max-width:620px; margin:0 auto; padding:calc(12px + env(safe-area-inset-top,0px)) 16px 30px; }
+  .back { display:inline-flex; align-items:center; gap:5px; color:var(--accent); text-decoration:none; font-weight:600; font-size:14px; padding:6px 2px; }
+  .ph { text-align:left; padding:6px 2px 12px; }
+  .ph h1 { font-size:28px; font-weight:700; letter-spacing:-.015em; line-height:1.2; }
+  .ph h1 .red { color:var(--accent);
+    background:linear-gradient(100deg,#0a84ff 5%,#8e5cff 55%,#5ac8fa 100%);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .ph p { color:var(--sub); font-size:13.5px; margin-top:5px; }
+
+  .clock { background:linear-gradient(135deg,var(--tint),var(--card) 70%); border-radius:22px; padding:14px 16px; margin-bottom:12px;
+    display:flex; gap:14px; align-items:center; justify-content:center; text-align:center; box-shadow:var(--shadow); }
+  .clock .z { flex:1; }
+  .clock .z .l { font-size:11px; color:var(--sub); font-weight:700; letter-spacing:.06em; }
+  .clock .z .t { font-size:26px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+  .clock .sep { color:var(--hair); font-size:20px; }
+
+  .sec-title { font-size:13px; font-weight:600; color:var(--sub); letter-spacing:.02em; margin:24px 6px 9px; display:flex; align-items:center; gap:7px; }
+
+  .card-x { background:var(--card); border-radius:22px; padding:16px; margin-bottom:11px; box-shadow:var(--shadow); }
+  .card-x .ct { font-size:15px; font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:8px; letter-spacing:-.01em; }
+  .card-x.gold .ct { color:var(--gold); }
+  .card-x.red .ct { color:var(--red); }
+  .card-x.blue .ct { color:var(--blue); }
+  .card-x ul { list-style:none; display:grid; gap:8px; }
+  .card-x li { font-size:14px; color:var(--text); line-height:1.55; padding-left:18px; position:relative; }
+  .card-x li::before { content:"▸"; position:absolute; left:0; color:var(--accent); }
+  .card-x.red li::before { color:var(--red); }
+  .card-x.gold li::before { color:var(--gold); }
+  .card-x li b { color:var(--accent); }
+  .card-x.red li b { color:var(--red); }
+
+  .rule { display:flex; gap:11px; padding:10px 0; border-top:1px solid var(--line); }
+  .rule:first-child { border-top:none; padding-top:0; }
+  .rule .em { font-size:18px; flex:none; }
+  .rule .rt { font-size:14.5px; font-weight:600; line-height:1.45; }
+  .rule .rd { font-size:12.5px; color:var(--sub); margin-top:2px; line-height:1.5; }
+  .rule .rd b { color:var(--accent); }
+
+  .drafts { display:grid; gap:8px; }
+  .draft { background:var(--card); border:.5px solid var(--glass-edge); border-radius:18px; padding:13px 14px; cursor:pointer; font-family:inherit; text-align:left;
+    display:flex; gap:11px; align-items:flex-start; box-shadow:var(--shadow), inset 0 1px 0 var(--glass-glint), inset 0 -1px 0 var(--glass-shade);
+    background-image:linear-gradient(125deg, var(--sheen), transparent 42%);
+    transition:transform .3s cubic-bezier(.2,.8,.3,1); color:var(--text); }
+  .draft:active { transform:scale(.97); transition-duration:.1s; }
+  .draft .ico { font-size:17px; width:34px; height:34px; border-radius:9px; background:var(--card2); flex:none; display:flex; align-items:center; justify-content:center; margin-top:2px; }
+  .draft .bd { flex:1; min-width:0; }
+  .draft .when { font-size:11.5px; color:var(--accent); font-weight:700; }
+  .draft .tx { font-size:14.5px; font-weight:500; line-height:1.6; white-space:pre-wrap; word-break:break-word; margin-top:4px; display:block; }
+  .draft .memo { font-size:11.5px; color:var(--sub); margin-top:5px; line-height:1.5; display:block; }
+  .draft.copied { outline:2px solid var(--ok); outline-offset:-2px; }
+  .draft.copied .when { color:var(--ok); }
+
+  footer { text-align:center; color:var(--sub); font-size:12px; margin-top:26px; line-height:1.8; }
+
+  .card-x, .clock, .draft {
+    -webkit-backdrop-filter:blur(18px) saturate(180%); backdrop-filter:blur(18px) saturate(180%);
+    border:.5px solid var(--glass-edge);
+    box-shadow:var(--shadow), inset 0 1px 0 var(--glass-glint), inset 0 -1px 0 var(--glass-shade);
+  }
+  .card-x { background-image:radial-gradient(130% 70% at 50% -25%, var(--sheen2), transparent 55%), linear-gradient(125deg, var(--sheen), transparent 42%); }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .card-x, .clock, .draft { background:var(--card-solid); -webkit-backdrop-filter:none; backdrop-filter:none; border-color:var(--line); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">‹ ハブに戻る</a>
+  <div class="ph">
+    <h1>🕹️ TGS<span class="red">2026</span> 告知セット</h1>
+    <p>AORUSブース出演 ・ 9/19(土)〜21(月祝) ・ 幕張メッセ ホール6【06-C02】<br>春麗・ジュリ・キャミィ登場（公式発表 9/3）・ブースで写真撮影OK</p>
+  </div>
+
+  <div class="clock">
+    <div class="z"><div class="l">🕹️ TGS初日 9/19(土)まで</div><div class="t" id="cd-days">--</div></div>
+    <div class="sep">·</div>
+    <div class="z"><div class="l">📤 本命告知のベスト枠</div><div class="t" style="font-size:20px" id="cd-slot">朝9〜11時</div></div>
+  </div>
+
+  <div class="card-x red">
+    <div class="ct">✅ 投稿する前に3つだけ確認</div>
+    <ul>
+      <li>下書きは<b>春麗担当の前提</b>で書いてます（いつもの看板が春麗なので）。ジュリ／キャミィ担当なら名前を置き換え</li>
+      <li><b>出演日が3日間フルかシフト制か</b>を確認 → 違ったら日付の行を自分の出演日に直す</li>
+      <li>企業出演なので<b>文面の事前共有・解禁ルール・PR表記の要否</b>をAORUS担当さんに一言確認しておくと安心</li>
+    </ul>
+  </div>
+
+  <div class="sec-title">📝 告知ツイート下書き（タップでコピー → Xに貼る）</div>
+  <div class="drafts" id="drafts"></div>
+
+  <div class="card-x blue" style="margin-top:24px">
+    <div class="ct">⏰ 出し方はこれだけ守る（実データ準拠）</div>
+    <div class="rule"><span class="em">🌅</span><div><div class="rt">本命告知は朝9〜11時に投下</div><div class="rd">バズ率<b>22〜24.5%</b>のゴールデン。夜21〜23時は最低帯（5〜9%）なので、夜に出したくなっても翌朝に回す</div></div></div>
+    <div class="rule"><span class="em">1️⃣</span><div><div class="rt">写真1枚を必ず添える</div><div class="rd">画像1枚のバズ率<b>29.8%</b>／テキストのみ0.2%。春麗コスの既存ベストカット1枚でOK（3枚以上は逆効果）</div></div></div>
+    <div class="rule"><span class="em">🔗</span><div><div class="rt">AORUSの告知URLは本文に入れず自己リプへ</div><div class="rd">外部リンク入り本文は配布が落ちる。<b>引用ポストにするならそのままでOK</b>（引用は減点対象じゃない）</div></div></div>
+    <div class="rule"><span class="em">☀️</span><div><div class="rt">当日は朝7時の「おはよ」枠をブース告知に使う</div><div class="rd">おはよ＋写真1枚は中央値<b>2,035いいね</b>の最強枠。会場に向かう前に1本</div></div></div>
+    <div class="rule"><span class="em">🔁</span><div><div class="rt">生誕祭（9/12）関連の投稿と2〜3時間空ける</div><div class="rd">連投は配布を食い合う。9月は告知が渋滞するので時間割で回す</div></div></div>
+  </div>
+
+  <footer>文面はぜんぶ下書き。キャラ・出演日・言い回しは自分の言葉に直してから投稿してね 🔥<br><a class="back" href="index.html" style="padding:0">‹ ハブに戻る</a></footer>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+
+  /* ===== カウントダウン（日本時間で9/19まで） ===== */
+  (function () {
+    const todayJp = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Tokyo" }).format(new Date());
+    const diff = Math.round((new Date("2026-09-19T00:00:00+09:00") - new Date(todayJp + "T00:00:00+09:00")) / 864e5);
+    $("cd-days").textContent = diff > 0 ? "あと" + diff + "日" : (diff >= -2 ? "開催中🔥" : "終了");
+  })();
+
+  /* ===== 下書き（タップでコピー） ===== */
+  const DRAFTS = [
+    { ico: "📣", when: "① 本命（引用ポスト用）— AORUSの公式告知を引用して出す", tx:
+`【出演のお知らせ】
+TGS2026、AORUS(@AORUS_JP)ブースに春麗で出演します！！
+
+📅 9/19(土)〜21(月祝)
+📍 ホール6【06-C02】
+📸 ブースで写真撮影OK
+
+めちゃくちゃ会いに来てほしいです🔥
+#TGS2026`,
+      memo: "引用元: AORUS公式ポスト（下の⑦のURL）。引用なら本文リンクの減点なし" },
+    { ico: "🚀", when: "② 本命（拡散重視）— 単独ポスト＋春麗写真1枚。URLは③を自己リプ", tx:
+`TGS2026！！
+AORUSブースに春麗で出演します🔥
+
+📅 9/19(土)〜21(月祝)
+📍 ホール6【06-C02】・撮影OK
+
+3日間ブースにいます！ぜひ会いに来てください！
+#TGS2026`,
+      memo: "①か②のどちらか1本でOK。写真はいつもの春麗ベストカット1枚" },
+    { ico: "🔗", when: "③ ②の自己リプ用（投稿直後にぶら下げる）", tx:
+`詳細はAORUSさんの公式告知をチェック🫶
+https://x.com/aorus_jp/status/2095348336593367158`,
+      memo: "外部リンクは本文だと配布が落ちるので自己リプに置く" },
+    { ico: "⏳", when: "④ 前日リマインド（9/18・朝9〜11時）", tx:
+`いよいよ明日からTGS2026！！
+AORUSブース(ホール6【06-C02】)で春麗でお待ちしてます
+撮影OKなので気軽に声かけてください🫶
+#TGS2026`,
+      memo: "" },
+    { ico: "☀️", when: "⑤ 当日おはよ（各日・朝7時＋写真1枚）— 言い方は毎回変える", tx:
+`おはよううう！！今日からTGS2026🔥
+AORUSブース(ホール6 06-C02)に春麗でいます！
+#TGS2026`,
+      memo: "2日目例:「おはよー！！TGS2日目！今日もAORUSブースにいるよ〜」／最終日例:「おはよん☀ TGS最終日！！AORUSブースで会いましょう」" },
+    { ico: "🫶", when: "⑥ お礼（最終日の翌朝9/22・写真と一緒に）", tx:
+`TGS2026、3日間ありがとうございました！！
+会いに来てくれたみんな、AORUSブースのみなさんに感謝です
+めちゃくちゃ楽しかった、、！また会おうね🔥
+#TGS2026`,
+      memo: "当日夜(21〜23時)は最低帯なので、お礼＋ベスト写真は翌朝に回すと伸びる" },
+    { ico: "📎", when: "⑦ AORUS公式ポストURL（引用ポスト用・トラッカー除去済み）", tx:
+`https://x.com/aorus_jp/status/2095348336593367158`,
+      memo: "" },
+  ];
+
+  async function copyText(t) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try { await navigator.clipboard.writeText(t); return true; } catch (e) {}
+    }
+    try {
+      const ta = document.createElement("textarea"); ta.value = t;
+      ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      const ok = document.execCommand("copy"); ta.remove();
+      return ok;
+    } catch (e) { return false; }
+  }
+
+  const dbox = $("drafts");
+  DRAFTS.forEach(d => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "draft";
+    b.innerHTML = `<span class="ico">${d.ico}</span><span class="bd"><span class="when"></span><span class="tx"></span><span class="memo"></span></span>`;
+    b.querySelector(".when").textContent = d.when;
+    b.querySelector(".tx").textContent = d.tx;
+    const memoEl = b.querySelector(".memo");
+    if (d.memo) memoEl.textContent = "💡 " + d.memo; else memoEl.remove();
+    b.addEventListener("click", async () => {
+      const ok = await copyText(d.tx);
+      const w = b.querySelector(".when"), org = d.when;
+      if (ok) b.classList.add("copied");
+      w.textContent = ok ? "✓ コピーしました → Xに貼って写真を付ける" : "✗ コピー失敗（長押しで選択してください）";
+      setTimeout(() => { b.classList.remove("copied"); w.textContent = org; }, 1600);
+    });
+    dbox.appendChild(b);
+  });
+</script>
+</body>
+</html>
