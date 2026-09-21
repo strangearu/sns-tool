@@ -131,7 +131,7 @@
   <header>
     <p style="text-align:left;margin-bottom:10px"><a href="index.html" style="color:var(--accent);text-decoration:none;font-weight:700;font-size:13px">← マネージャーHubに戻る</a></p>
     <h1>🎬 動画クロス投稿ツール</h1>
-    <p>動画1本から、TikTok・bilibili・小紅書・Weibo向けの投稿文を作ります（Vlogショートの一次投稿にも、転載にも）｜v13a</p>
+    <p>動画1本から、TikTok・bilibili・小紅書・Weibo向けの投稿文を作ります（Vlogショートの一次投稿にも、転載にも）｜v14a</p>
   </header>
 
   <div class="panel">
@@ -160,6 +160,10 @@
 
     <label class="head" style="margin-top:14px">⑥ カテゴリ</label>
     <div class="cats" id="cats"></div>
+
+    <label class="head" style="margin-top:14px">⑦ 動画の種類（内容の逸脱を防ぐ・迷ったら自動判定）</label>
+    <div class="cats" id="kinds"></div>
+    <p class="hint" style="margin-top:6px">芝居・ダンス・メイクなど「見ればわかる動画」は意味づけを足さず短く仕上げます。「Vlog」「直击现场」系の言い回しは「現地レポ・Vlog」を選んだ時だけ使います。</p>
 
     <div class="actions">
       <button class="btn-main" id="api-go">🚀 その場で完成（スクショごとAI送信）</button>
@@ -313,7 +317,7 @@
     <div id="ja-trans" style="white-space:pre-wrap;font-size:13px;line-height:1.9"></div>
   </div>
 
-  <footer>📱 このページはブラウザだけで動きます。動画本体は各サイトへそのままアップロードしてください。<br><span style="opacity:.6">version 2026-08-19a（この表示が無ければ古いキャッシュ→アプリ完全終了して開き直し）</span></footer>
+  <footer>📱 このページはブラウザだけで動きます。動画本体は各サイトへそのままアップロードしてください。<br><span style="opacity:.6">version 2026-09-21a（この表示が無ければ古いキャッシュ→アプリ完全終了して開き直し）</span></footer>
 </div>
 
 <script>
@@ -364,6 +368,8 @@ const CONTENT_RULES = [
   { re: /春麗|チュンリー|春丽|chun[\s\-]?li/i, label: "春麗", kind: "chara", zh: ["春丽","街霸6"] },
   { re: /不知火舞|不知火|shiranui/i, label: "不知火舞", kind: "chara", zh: ["不知火舞","拳皇"] },
   { re: /キャミィ|cammy/i, label: "キャミィ", kind: "chara", zh: ["嘉米","街霸6"] },
+  { re: /ジュリ(?![アエオ])|juri/i, label: "ジュリ", kind: "chara", zh: ["朱莉","街霸6"] },
+  { re: /芝居|コント|寸劇|小ネタ|話を聞い|セリフ|ショートドラマ|小剧场/i, label: "芝居", kind: "skit", zh: [] },
   { re: /スト6|ストリートファイター|street\s*fighter|\bSF6\b|街霸/i, label: "スト6", kind: "game", zh: ["街霸6","街头霸王","格斗游戏"] },
   { re: /鉄拳|tekken/i, label: "鉄拳", kind: "game", zh: ["铁拳8"] },
   { re: /\bKOF\b|拳皇/i, label: "KOF", kind: "game", zh: ["拳皇"] },
@@ -371,14 +377,16 @@ const CONTENT_RULES = [
   { re: /配信|生放送|実況|stream|twitch/i, label: "実況・配信", zh: ["游戏实况","游戏直播"] },
   { re: /ラスベガス|las\s*vegas|ベガス/i, label: "ラスベガス", zh: ["拉斯维加斯"] },
   { re: /メイキング|舞台裏|behind/i, label: "メイキング", zh: ["幕后花絮"] },
-  { re: /メイク|化粧/, label: "メイク", zh: ["cos妆","仿妆"] },
+  { re: /メイク|化粧|変身|仿妆|着替え/, label: "メイク", kind: "makeup", zh: ["cos妆","仿妆"] },
   { re: /踊|ダンス|dance|振り?付け|チャレンジ|challenge|翻跳/i, label: "ダンス", kind: "dance", zh: ["舞蹈","翻跳","舞蹈挑战"] },
   { re: /k-?pop|kpop|케이팝|韓流|韩流/i, label: "K-POP", zh: ["kpop","韩舞"] },
   { re: /歌ってみた|カバー曲|歌枕|翻唱/i, label: "歌", zh: ["翻唱"] },
 ];
 function detectSmart(text) {
-  const out = { events: [], zh: [], labels: [], chara: "", charaJa: "", game: "", gameJa: "", song: "" };
+  const out = { events: [], zh: [], labels: [], chara: "", charaJa: "", chara2: "", chara2Ja: "", game: "", gameJa: "", song: "", skit: false, makeup: false, venue: false };
   if (!text || !text.trim()) return out;
+  // 会場記録の合図（これが無ければイベント名があっても「現地レポ」扱いにしない）
+  out.venue = /現場|会場|行ってきた|行ってきました|レポ|密着|来場|ブース巡り|一日|1日|vlog|ブイログ/i.test(text);
   // 曲名検出: 「◯◯」『◯◯』のカッコ内、または「◯◯踊ってみた/チャレンジ」の◯◯
   const sm = text.match(/[「『]([^」』]{1,25})[」』]/);
   if (sm) out.song = sm[1];
@@ -394,13 +402,18 @@ function detectSmart(text) {
   for (const r of CONTENT_RULES) {
     if (r.re.test(text)) {
       out.zh.push(...r.zh); out.labels.push(r.label);
-      if (r.kind === "chara" && !out.chara) { out.chara = r.zh[0]; out.charaJa = r.label; }
+      if (r.kind === "chara") {
+        if (!out.chara) { out.chara = r.zh[0]; out.charaJa = r.label; }
+        else if (!out.chara2 && r.zh[0] !== out.chara) { out.chara2 = r.zh[0]; out.chara2Ja = r.label; }  // 2人目（芝居の相手役など）
+      }
       if (r.kind === "game" && !out.game) { out.game = r.zh[0]; out.gameJa = r.label; }
+      if (r.kind === "skit") out.skit = true;
+      if (r.kind === "makeup") out.makeup = true;
     }
   }
   // キャラからゲームを補完（春麗→街霸6等）
   if (out.chara && !out.game) {
-    const g = { "春丽": "街霸6", "嘉米": "街霸6", "不知火舞": "拳皇" }[out.chara];
+    const g = { "春丽": "街霸6", "嘉米": "街霸6", "朱莉": "街霸6", "不知火舞": "拳皇" }[out.chara];
     if (g) out.game = g;
   }
   return out;
@@ -468,6 +481,33 @@ const BUZZ = {
       e => `${e.song || "这个舞"}完整版来了`
     ]
   },
+  skit: {
+    label: "コス芝居・小ネタ",
+    tips: {
+      bili: "「当◯◯遇到△△」「◯◯：△△，听我说！」のシチュエーション型。芝居のセリフ・状況をそのまま标题に出す（見ればわかる動画なので意味づけ・ストーリー解説は足さない）。会場記録・Vlog系の言い回し（直击现场/记录/一天）は使わない。",
+      red: "封面文字=セリフか状況の一言（例「朱莉，听我说！」）。ギャップ型・日常型で、説明を足さない。",
+      weibo: "短文＋キャラタグ。芝居の一言をそのまま。"
+    },
+    biliTitles: [
+      e => `【cosplay】${e.chara || "春丽"}${e.chara2 ? "和" + e.chara2 : ""}的小剧场`,
+      e => `当${e.chara || "coser"}遇到${e.chara2 || "她"}…【日本coser】`,
+      e => `【${e.game || "街霸6"}】${e.chara || "春丽"}${e.chara2 ? "：" + e.chara2 + "，听我说！" : "的日常"}`
+    ],
+    redCovers: [e => `${e.chara || "cos"}小剧场🎭`, e => (e.chara2 ? `${e.chara2}，听我说！` : "日本coser的小剧场")]
+  },
+  makeup: {
+    label: "メイク・変身",
+    tips: {
+      bili: "「仿妆」「变身」「化妆过程」が検索語。素颜→キャラのギャップ型。工程の解説や苦労話を捏造しない（映っている工程だけ）。",
+      red: "「日本coser用什么化妆」「变身◯◯」型。#cos妆 #仿妆 で女性・二次元層に届く。",
+      weibo: "#仿妆#＋キャラタグ＋短文。"
+    },
+    biliTitles: [
+      e => `【仿妆】日本coser变身${e.chara || "游戏角色"}`,
+      e => `素颜→${e.chara || "cos"}，日本coser的变身过程`
+    ],
+    redCovers: [e => `变身${e.chara || "cos"}💄`, e => `日本coser的cos妆`]
+  },
   daily: {
     label: "日常・Vlog",
     tips: {
@@ -496,14 +536,25 @@ const TT_HOOKS = {
   chara:   e => [`本気の${e.charaJa || "コスプレ"}、見て`, `${e.charaJa ? e.charaJa + "コス" : "このコス"}、何点？`, `${e.charaJa || "キャラ"}になってみた👊`],
   game:    e => [`${e.gameJa || "格ゲー"}ガチ勢の日常🎮`, `この試合、最後まで見て`, `女子ゲーマーの本気`],
   dance:   e => [`${e.song ? "「" + e.song + "」" : "これ"}踊ってみた💃`, `このダンス、難しすぎた`, `${e.charaJa ? e.charaJa + "が踊ったら" : "完コピ"}チャレンジ`],
+  skit:    e => [`${e.charaJa || "コス"}${e.chara2Ja ? "×" + e.chara2Ja : ""}でひと芝居`, `これは${e.charaJa || "彼女"}の日常`, `続きは想像にお任せ`],
+  makeup:  e => [`${e.charaJa || "キャラ"}になるまで`, `メイク前→メイク後`, `変身、見てて`],
   daily:   e => [`コスプレイヤーの1日vlog`, `${e.event || "今日"}の記録🌷`, `密着してみた`],
   generic: e => [`新作できました🌟`, `これ、どう？`]
 };
 
+// ==== 動画の種類（本人指定。auto=内容から判定）。動画ごとに違うので保存しない（前回の選択が残る事故を防ぐ） ====
+const KINDS = { auto: "自動判定", skit: "芝居・小ネタ", dance: "ダンス", makeup: "メイク・変身", game: "ゲームプレイ", event: "現地レポ・Vlog", photo: "正片・写真MV" };
+const KIND_GENRE = { skit: "skit", dance: "dance", makeup: "makeup", game: "game", event: "event", photo: "chara" };
+let curKind = "auto";
+
 function resolveGenre(smart) {
-  if (smart.events.length) return "event";
+  if (curKind !== "auto") return KIND_GENRE[curKind] || "generic";
+  // 自動判定: 「イベント名がある」だけで現地レポにしない（芝居や仕事の合間の動画がVlog化した2026-09-21の実害）
+  if (smart.skit) return "skit";
   // ダンスはキャラより優先（コス×ダンスのギャップ型が最強のため）
   if (smart.labels.includes("ダンス") || curCat === "dance") return "dance";
+  if (smart.makeup) return "makeup";
+  if (smart.events.length && smart.venue) return "event";
   if (smart.chara) return "chara";
   if (smart.labels.includes("実況・配信") || curCat === "game") return "game";
   if (curCat === "daily") return "daily";
@@ -526,6 +577,17 @@ function renderCats() {
   }
 }
 renderCats();
+function renderKinds() {
+  const box = $("kinds"); if (!box) return; box.innerHTML = "";
+  for (const key of Object.keys(KINDS)) {
+    const b = document.createElement("button");
+    b.className = "cat-btn" + (key === curKind ? " active" : "");
+    b.textContent = KINDS[key];
+    b.addEventListener("click", () => { curKind = key; renderKinds(); });
+    box.appendChild(b);
+  }
+}
+renderKinds();
 
 // ==== 動画URL読み込み（YouTube=noembed / TikTok=公式oEmbed） ====
 $("load-video").addEventListener("click", async () => {
@@ -653,7 +715,7 @@ $("convert").addEventListener("click", async () => {
 
     // ジャンル別バズ型でタイトル候補を生成（機械翻訳の直訳より優先）
     const genre = resolveGenre(smart);
-    const e = { event: smart.events[0] || "", chara: smart.chara, game: smart.game, song: smart.song };
+    const e = { event: smart.events[0] || "", chara: smart.chara, chara2: smart.chara2, game: smart.game, song: smart.song };
     const buzz = BUZZ[genre];
     const biliCands = uniq([...buzz.biliTitles.map(f => f(e)), zhTitle]).filter(Boolean);
     const coverCands = uniq([...buzz.redCovers.map(f => f(e)), [...zhTitle].slice(0, 12).join("")]).filter(Boolean);
@@ -675,7 +737,7 @@ $("convert").addEventListener("click", async () => {
 
     // TikTok（日本語・一次投稿）
     const jpTags = uniq([...smart.events, ...(smart.song ? [smart.song] : []), ...(catDef.jp || [])]).slice(0, 8);
-    const hooks = (TT_HOOKS[genre] || TT_HOOKS.generic)({ event: e.event, song: e.song, charaJa: smart.charaJa, gameJa: smart.gameJa });
+    const hooks = (TT_HOOKS[genre] || TT_HOOKS.generic)({ event: e.event, song: e.song, charaJa: smart.charaJa, chara2Ja: smart.chara2Ja, gameJa: smart.gameJa });
     $("tt-hook").value = hooks[0] || "";
     $("tt-cap").value = (memo || title) + "\n\n" + jpTags.map(t => "#" + t).join(" ");
     renderSugg("tt-sugg", hooks.slice(1), "tt-hook", "💡 冒頭フックの候補（タップで差し替え）");
@@ -722,7 +784,7 @@ const M = { TH: "===TikTokフック===", TC: "===TikTokキャプション===",
 // PC（幅900px以上）とAPI直モードではプロンプトに推敲指示を足して精度を上げる
 const PC_CTX = `【高精度モード（追加の思考指示）】
 ・标题・封面文字・TikTokフックはまず頭の中で3案比較し、一番強い1つだけを出力する
-・出力前にセルフレビューを1周: ①忠実性（言っていない見どころ・体験を足していないか）②冒頭3秒と完走率の観点でフックが機能するか③タグ・字数制限④人設（ガチ恋営業になっていないか）——問題があれば直してから出す`;
+・出力前にセルフレビューを1周: ①忠実性（言っていない見どころ・体験を足していないか）②冒頭3秒と完走率の観点でフックが機能するか③タグ・字数制限④人設（ガチ恋営業になっていないか）⑤種類の逸脱（芝居・ダンス等をVlog/現地レポ化していないか・意味づけを足していないか・登場キャラを落としていないか）——問題があれば直してから出す`;
 
 function buildPrompt(forApi) {
   const cat = CATEGORIES[curCat] || CATEGORIES.generic;
@@ -732,18 +794,29 @@ function buildPrompt(forApi) {
   const det = detectSmart([title, desc, memo].join("\n"));
   let p = "あなたは日本のコスプレイヤー「あたた」の動画SNS投稿を作る専属アシスタントです。1本の動画（Vlogショート含む）から、TikTok（日本語・一次投稿）と、bilibili・小紅書・Weibo（中国語・転載）の投稿文を作ってください。目的は各SNSでのフォロワー獲得。\n";
   p += "【人設・ブランド（全SNS共通・最優先で守る）】あたた＝「日本一美しいゲーマー」。格闘ゲームガチ勢×洗練されたコスプレ、清潔感ある美人路線。中国語圏では「日本から発信している日本人coser」の親近感が最大の武器。トーンは自信があって親しみやすい・ポジティブ。恋愛感情を煽る文言（ガチ恋営業・匂わせ）は絶対に使わない。色気・露出を売りにする書き方もしない。売るのは「憧れ」。\n";
-  p += "【固有名詞・用語辞書（翻訳時必須）】名前「あたた」は中国語・英語の文中では必ず小文字ローマ字の「atata」——ひらがなのまま出さない・「阿塔塔」等の音訳もしない。コミケ/コミックマーケット→中国語は「CM（Comic Market）」か回次表記（C108等）・英語は「Comiket」（汎用語の「漫展」だけに置き換えない）。定訳: スト6=街霸6・ストリートファイター=街头霸王・KOF=拳皇・鉄拳=铁拳・ランクマ=排位・マスターランク=大师段位・チェキ=拍立得・踊ってみた=翻跳。上記以外の人名・イベント名・作品名は中国語圏で定着した公式表記を使い、確信が無ければ原語のまま残す（誤った当て字は禁止）。\n";
+  p += "【固有名詞・用語辞書（翻訳時必須）】名前「あたた」は中国語・英語の文中では必ず小文字ローマ字の「atata」——ひらがなのまま出さない・「阿塔塔」等の音訳もしない。コミケ/コミックマーケット→中国語は「CM（Comic Market）」か回次表記（C108等）・英語は「Comiket」（汎用語の「漫展」だけに置き換えない）。定訳: スト6=街霸6・ストリートファイター=街头霸王・KOF=拳皇・鉄拳=铁拳・ランクマ=排位・マスターランク=大师段位・チェキ=拍立得・踊ってみた=翻跳・春麗=春丽・ジュリ=朱莉・キャミィ=嘉米・TGS=东京电玩展(TGS)。上記以外の人名・イベント名・作品名は中国語圏で定着した公式表記を使い、確信が無ければ原語のまま残す（誤った当て字は禁止）。\n";
   if (photos.length) p += "【スクショの読み取り（最初にやること）】添付したスクショ・サムネから次を観察する: ①キャラ・作品名（確信がある場合のみ名指し）②衣装・シーンの内容 ③画面の雰囲気・色調 ④テロップや画面内の文字。タイトル・概要欄が薄い場合はこの「見えている事実」が主素材——各SNSのネイティブが書くような一人称の投稿文を、見えるものだけで組み立てる。見えないこと（撮影裏話・苦労・本人の感想）は作らない。\n";
-  p += "【忠実性（最重要・全SNS共通）】本文はタイトル・概要欄・内容メモに書いてあること＋添付スクショから確実に分かることだけで構成する。本人が言っていない見どころ・体験談・コツ・裏話を発明しない。アレンジしてよいのは語り口・構成・絵文字・問いかけ・タグまで。元ネタが薄ければ無理に膨らませず短くてよい。\n\n";
+  p += "【忠実性（最重要・全SNS共通）】本文はタイトル・概要欄・内容メモに書いてあること＋添付スクショから確実に分かることだけで構成する。本人が言っていない見どころ・体験談・コツ・裏話を発明しない。アレンジしてよいのは語り口・構成・絵文字・問いかけ・タグまで。元ネタが薄ければ無理に膨らませず短くてよい。\n";
+  const kindLabel = curKind !== "auto" ? KINDS[curKind] : "";
+  p += "【動画の種類（最初に確定する・最重要）】" + (kindLabel
+    ? "本人指定＝「" + kindLabel + "」。必ずこの種類の動画として書き、他の種類の言い回しに変えない。"
+    : "本人未指定。タイトル・概要欄・メモ・スクショに書いてあることだけから、芝居・小ネタ／ダンス／メイク・変身／ゲームプレイ／現地レポ・Vlog／正片・写真MV／その他 のどれか1つに決めてから書く（決めた種類は出力に書かなくてよい）。")
+    + "イベント名（TGS・EVO・コミケ等）が出てきても、動画の中身が会場の記録でなければ「現地レポ・Vlog」扱いにしない（例: TGSの仕事の合間に撮ったコス芝居→芝居。TGSは标题の文脈とタグに使うだけ）。\n";
+  p += "【逸脱の禁止（本人FB 2026-09-21・忠実性と同格の最優先ルール）】\n";
+  p += "・「Vlog」「密着」「記録（记录）」「◯◯的一天」「直击现场」「现场的样子」などの現地レポ表現は、種類が「現地レポ・Vlog」のときだけ使う。それ以外の動画には一切付けない\n";
+  p += "・芝居・ダンス・メイクのような「見ればわかる短い動画」には、意味づけ・ストーリー・教訓・見どころ解説を足さない。标题＝何をしている動画かが一目でわかる一言＋キャラ名/作品名（例:【cosplay】春丽：朱莉，听我说！！）。简介＝自己紹介1行＋元の投稿文の訳＋一键三连で終える（3〜4行で十分。長くしない）\n";
+  p += "・元の投稿文に無い出来事（「現場の様子を記録した」「一日を追った」「〜に挑戦した」等）を書かない。概要欄が一言なら、简介もその訳＋一言まで\n";
+  p += "・弹幕を誘う問いは、動画の中身に直結する軽い一言だけ（例: 芝居なら「你们站哪边？」）。内容と無関係なアンケート（好きなキャラ投票・次のコス希望など）は作らない。無ければ省略してよい\n";
+  p += "・登場キャラは全員書く（例: 春麗とジュリの芝居なら两人とも标题かタグに。片方を落とさない）\n\n";
   p += "【元動画のタイトル（日本語）】\n" + (title || "（なし）") + "\n";
   if (desc) p += "【概要欄・投稿文】\n" + desc + "\n";
   if (memo) p += "【動画の内容メモ（最優先で反映）】\n" + memo + "\n";
   p += "【カテゴリ】" + cat.label + "\n\n";
   const genre = resolveGenre(det);
   const buzz = BUZZ[genre];
-  const ent = { event: det.events[0] || "", chara: det.chara, game: det.game, song: det.song };
-  p += "【ジャンル判定】" + buzz.label + "\n";
-  p += "【このジャンルのバズ型（分析済み・タイトルは必ずこの型をベースに作ること）】\n";
+  const ent = { event: det.events[0] || "", chara: det.chara, chara2: det.chara2, game: det.game, song: det.song };
+  p += "【ジャンル判定】" + buzz.label + (kindLabel ? "（本人指定）" : "（自動判定・上の【動画の種類】と食い違う場合は種類を優先し、この型は無視する）") + "\n";
+  p += "【このジャンルのバズ型（参考。動画の種類と合う時だけ使う——種類と食い違う型・言い回しは捨てる）】\n";
   p += "・bilibili: " + buzz.tips.bili + "\n";
   p += "  标题の例: " + buzz.biliTitles.map(f => f(ent)).join(" ／ ") + "\n";
   p += "・小紅書: " + buzz.tips.red + "\n";
@@ -751,9 +824,9 @@ function buildPrompt(forApi) {
   p += "・Weibo: " + buzz.tips.weibo + "\n\n";
   p += "【TikTokの方針】日本語。フック=動画冒頭に載せる1行テロップ（3秒でスクロールを止める言葉・15字前後、続きが気になる形）。競合分析では「コス×15秒シチュエーション芝居」型がバズ率62%——フックも「状況設定が一瞬でわかる」形（例:「春麗が◯◯したら」「◯◯な日のコスプレイヤー」）を優先する。キャプション=1行目に内容がわかる一言→補足1〜2行→タグ5〜8個（日本語＋英語グローバル混在。例: #コスプレ #cosplay。ダンス動画は曲名タグと#踊ってみた 必須）。恋愛感情を煽る文言（ガチ恋営業）は使わない。\n";
   p += "【日本語の文体（フック・キャプション共通、本人の全X投稿から実測）】短く言い切る（一言＋体言止めが基本）。絵文字は0〜2個（よく使う: ❗️😭🔥🫶✌️）、顔文字・「笑」・「…」は使わない。テンションは「！！」「❗️❗️❗️」連打で。強調は「めちゃくちゃ」「〜すぎる」。つぶやきはタメ口、告知はですます。ダジャレ・遊び（半角カナ「ﾀﾞﾖｰ」等）は積極採用。\n";
-  p += "【bilibiliの方針】标题=80字以内。検索キーワード（キャラ名・ゲーム名）を含め、【】でジャンル表記（例:【cosplay】【街霸6】）するのがbilibili文化。简介=親しみやすい自己紹介（日本から来たcoser等）＋動画の見どころ＋一键三连（点赞・投币・收藏）のお願い。加えて简介かタイトルに弹幕を打ちたくなる具体的な問い・お題を1つ仕込む（例:「你们的主用角色是谁？弹幕告诉我」）——弹幕・コメントの互动率が推荐の燃料になる。标签=10個以内、検索される単語で。\n";
-  p += "【bilibiliの実測較正（2026-07・本人アカウントの実データ）】①分区は生活/Vlog区を推奨——同系統の動画で游戏区=3千再生 vs Vlog区=4.5万再生の実測差。ゲーム大会ネタでも「人の物語」として出す ②感動・ストーリー性×コスプレの角度が伸びる（例:「最后忍不住哭了😭」のような感情フックが標題で有効）。ゲーム攻略角度より「日本人coserの挑戦・成長」角度を優先する。\n";
-  p += "【小紅書の方針】封面文字=12字以内のフック。タイトル=20字以内で検索KW（キャラ名・作品名）＋物語性（挑战/实录/◯◯日记）必須——KWなしの一言タイトルは首页推荐に乗らない（本人実測: KWなし=300views、KW＋物語=1,000〜10,000views）。本文=友達への分享トーン＋絵文字＋コメントを誘う問いかけ。**短めが正解: 2〜3文・80字以内目安（タグ除く。上位ノートは本文短め〜一言＋タグ構成——引きは封面とタイトルの仕事）**。2026-07バズ実測（8万views）: 流入の96%が首页推荐＝初日の初速互動が命なので、末尾の問いかけは「選択式で答えやすく」（実例「你们喜欢这套夏日版，还是经典款？」→コメント51件）。\n";
+  p += "【bilibiliの方針】标题=80字以内。検索キーワード（キャラ名・ゲーム名）を含め、【】でジャンル表記（例:【cosplay】【街霸6】）するのがbilibili文化。简介=自己紹介1行（日本から来たcoser等）＋動画の内容（元ネタにある情報だけ。見どころが書かれていなければ足さない）＋一键三连（点赞・投币・收藏）のお願い。弹幕を誘うお題は動画の中身に直結する時だけ1つ（無理に作らない）。标签=10個以内、検索される単語で。\n";
+  p += "【bilibiliの実測較正（2026-07・本人アカウントの実データ）】①分区は生活/Vlog区を推奨——同系統の動画で游戏区=3千再生 vs Vlog区=4.5万再生の実測差（※投稿先の分区の話であって、动画をVlogと呼ぶ許可ではない）②感動・ストーリー性×コスプレの角度が伸びる（例:「最后忍不住哭了😭」のような感情フックが標題で有効）——ただし元ネタにその感情・物語が実際にある時だけ。芝居・ダンス等の短い動画に物語を作って足すのは禁止。\n";
+  p += "【小紅書の方針】封面文字=12字以内のフック。タイトル=20字以内で検索KW（キャラ名・作品名）必須＋内容に合う型（現地レポなら实录/日记、芝居なら「◯◯小剧场」、ダンスなら「挑战◯◯」——動画の種類と違う物語型を当てない）——KWなしの一言タイトルは首页推荐に乗らない（本人実測: KWなし=300views、KW＋物語=1,000〜10,000views）。本文=友達への分享トーン＋絵文字＋コメントを誘う問いかけ。**短めが正解: 2〜3文・80字以内目安（タグ除く。上位ノートは本文短め〜一言＋タグ構成——引きは封面とタイトルの仕事）**。2026-07バズ実測（8万views）: 流入の96%が首页推荐＝初日の初速互動が命なので、末尾の問いかけは「選択式で答えやすく」（実例「你们喜欢这套夏日版，还是经典款？」→コメント51件）。\n";
   p += "【Weiboの方針】本文＋#话题#形式のタグ5〜8個。\n";
   p += "【ショート動画の転載設計（重要・バズ分析基準）】冒頭3秒がすべて＝ロゴ・挨拶・イントロは動画の減点要素（もし元動画にあれば指摘する）。完走率がゲート（15〜30秒動画は約70%、30〜60秒は約50%が目安）なので、标题・封面文字・简介は「最後まで見る理由」を予告する書き方にする。終わりが冒頭に繋がるループ動画は再生率が跳ねる。保存(收藏)・シェアを誘う一言は元の内容に合う形でだけ入れる（見どころやコツをでっち上げない）。TikTokのウォーターマーク付き動画は他プラットフォームで減点されるため、見つけたら指摘すること。\n";
   p += "【タグの方針】内容に合うものだけ選ぶ。合わないタグは付けない。確信できない固有名詞は付けない。\n";
@@ -1061,6 +1134,8 @@ $("claude-open").addEventListener("click", e => {
   if (qp.get("memo")) $("v-memo").value = qp.get("memo");
   const c = qp.get("cat");
   if (c && CATEGORIES[c]) { curCat = c; localStorage.setItem("videopost-cat", c); renderCats(); }
+  const k = qp.get("kind");
+  if (k && KINDS[k]) { curKind = k; renderKinds(); }
   setStatus("vlog-pipelineのショートを読み込みました ✅ 🤖ボタンで投稿文を作ってください");
 })();
 </script>
