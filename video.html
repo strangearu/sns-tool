@@ -131,7 +131,7 @@
   <header>
     <p style="text-align:left;margin-bottom:10px"><a href="index.html" style="color:var(--accent);text-decoration:none;font-weight:700;font-size:13px">← マネージャーHubに戻る</a></p>
     <h1>🎬 動画クロス投稿ツール</h1>
-    <p>動画1本から、TikTok・bilibili・小紅書・Weibo向けの投稿文を作ります（Vlogショートの一次投稿にも、転載にも）｜v14a</p>
+    <p>動画1本から、TikTok・bilibili・小紅書・Weibo向けの投稿文を作ります（Vlogショートの一次投稿にも、転載にも）｜v15a</p>
   </header>
 
   <div class="panel">
@@ -158,12 +158,11 @@
       <label class="upload-label">📷 スクショ・サムネを追加（最大4枚）<input type="file" id="file-input" accept="image/*" multiple></label>
     </div>
 
-    <label class="head" style="margin-top:14px">⑥ カテゴリ</label>
-    <div class="cats" id="cats"></div>
-
-    <label class="head" style="margin-top:14px">⑦ 動画の種類（内容の逸脱を防ぐ・迷ったら自動判定）</label>
+    <label class="head" style="margin-top:14px">⑥ 動画の種類（何の動画か・迷ったら自動判定）</label>
     <div class="cats" id="kinds"></div>
-    <p class="hint" style="margin-top:6px">芝居・ダンス・メイクなど「見ればわかる動画」は意味づけを足さず短く仕上げます。「Vlog」「直击现场」系の言い回しは「現地レポ・Vlog」を選んだ時だけ使います。</p>
+    <label class="head" style="margin-top:14px">⑦ 衣装（何を着ているか）</label>
+    <div class="cats" id="outfits"></div>
+    <p class="hint" style="margin-top:6px">種類×衣装でタグ・タイトルの型・書き方の制限が決まります。芝居・ダンス・メイクなど「見ればわかる動画」は意味づけを足さず短く。「Vlog」は「日常・Vlog」、「直击现场」は「イベント現地レポ」の時だけ。「私服・コスなし」ではコスプレタグを付けません。</p>
 
     <div class="actions">
       <button class="btn-main" id="api-go">🚀 その場で完成（スクショごとAI送信）</button>
@@ -317,34 +316,28 @@
     <div id="ja-trans" style="white-space:pre-wrap;font-size:13px;line-height:1.9"></div>
   </div>
 
-  <footer>📱 このページはブラウザだけで動きます。動画本体は各サイトへそのままアップロードしてください。<br><span style="opacity:.6">version 2026-09-21a（この表示が無ければ古いキャッシュ→アプリ完全終了して開き直し）</span></footer>
+  <footer>📱 このページはブラウザだけで動きます。動画本体は各サイトへそのままアップロードしてください。<br><span style="opacity:.6">version 2026-09-21b（種類×衣装の2軸。この表示が無ければ古いキャッシュ→アプリ完全終了して開き直し）</span></footer>
 </div>
 
 <script>
-// ==== カテゴリ（クロス投稿ツールと同じ世界観・動画向け） ====
-const CATEGORIES = {
-  chunli: { label: "春麗・格ゲーコス",
-    zh: ["cosplay","cos正片","春丽","街头霸王","街霸6","格斗游戏","二次元","日本coser","游戏实况"],
-    jp: ["コスプレ","cosplay","春麗","chunli","スト6","streetfighter6","格ゲー","ゲーム女子"],
-    cover: ["春丽cos来啦💙","日本coser的春丽","街霸春丽👊"] },
-  game: { label: "ゲーム実況・配信",
-    zh: ["游戏实况","格斗游戏","街霸6","电竞","游戏直播","日本玩家","搞笑"],
-    jp: ["ゲーム実況","スト6","格ゲー","gaming","ゲーム女子","fgc"],
-    cover: ["日本玩家的日常","这波操作太秀了","实况精彩片段"] },
-  dance: { label: "ダンス・踊ってみた",
-    zh: ["舞蹈","翻跳","韩舞","kpop","宅舞","舞蹈挑战","日本coser"],
-    jp: ["踊ってみた","ダンス","dance","kpop","dancechallenge","コスプレ"],
-    cover: ["挑战最火的舞💃","这个舞太上头了","春丽跳kpop？！"] },
-  daily: { label: "日常・Vlog",
-    zh: ["日常","vlog","生活记录","日本生活","coser日常","日系穿搭"],
-    jp: ["vlog","日常","コスプレイヤーの日常","dailyvlog","日本"],
-    cover: ["coser的日常","日本生活vlog","今天的记录"] },
-  generic: { label: "汎用",
-    zh: ["cosplay","二次元","日本coser","日常","游戏"],
-    jp: ["コスプレ","cosplay","ゲーム","日常"],
-    cover: [] }
+// ==== 軸1「動画の種類」× 軸2「衣装」のタグ辞書（旧カテゴリを2026-09-21に廃止・本人承認の案A） ====
+const KIND_TAGS = {
+  skit:   { zh: ["cosplay","cos小剧场","二次元","日本coser"], jp: ["コスプレ","cosplay"] },
+  dance:  { zh: ["舞蹈","翻跳","舞蹈挑战","宅舞"], jp: ["踊ってみた","ダンス","dance","dancechallenge"] },
+  makeup: { zh: ["cos妆","仿妆","变身","化妆"], jp: ["メイク","コスプレメイク","変身","makeup"] },
+  game:   { zh: ["游戏实况","格斗游戏","电竞","游戏直播","日本玩家"], jp: ["ゲーム実況","gaming","ゲーム女子","fgc"] },
+  daily:  { zh: ["日常","vlog","生活记录","日本生活"], jp: ["vlog","日常","dailyvlog"] },
+  event:  { zh: ["日本coser","二次元"], jp: [] },
+  photo:  { zh: ["cosplay","cos正片","二次元","日本coser","人像摄影"], jp: ["コスプレ","cosplay","cosplayer"] },
+  generic:{ zh: ["日本coser"], jp: [] }
 };
-let curCat = localStorage.getItem("videopost-cat") || "chunli";
+const OUTFIT_TAGS = {
+  chunli: { zh: ["春丽","街霸6","街头霸王","cosplay","coser"], jp: ["春麗","chunli","スト6","streetfighter6","コスプレ"] },
+  other:  { zh: ["cosplay","coser"], jp: ["コスプレ","cosplay"] },   // キャラ名は本文検出（CONTENT_RULES）から
+  plain:  { zh: ["日本女生"], jp: [] }
+};
+// 私服・コスなしのとき外すタグ（コスプレ扱いにしない）
+const COS_TAG_RE = /cos|コス|코스|二次元|coser|春丽|春麗|chunli|춘리|街霸|街头霸王|street\s*fighter|sf6|fgc|朱莉|嘉米|不知火舞|铁拳|拳皇|仿妆|变身/i;
 
 // ==== スマートタグエンジン（クロス投稿ツールと同じ） ====
 const EVENT_RULES = [
@@ -383,7 +376,7 @@ const CONTENT_RULES = [
   { re: /歌ってみた|カバー曲|歌枕|翻唱/i, label: "歌", zh: ["翻唱"] },
 ];
 function detectSmart(text) {
-  const out = { events: [], zh: [], labels: [], chara: "", charaJa: "", chara2: "", chara2Ja: "", game: "", gameJa: "", song: "", skit: false, makeup: false, venue: false };
+  const out = { events: [], zh: [], labels: [], chara: "", charaJa: "", chara2: "", chara2Ja: "", game: "", gameJa: "", song: "", skit: false, makeup: false, venue: false, text: text || "" };
   if (!text || !text.trim()) return out;
   // 会場記録の合図（これが無ければイベント名があっても「現地レポ」扱いにしない）
   out.venue = /現場|会場|行ってきた|行ってきました|レポ|密着|来場|ブース巡り|一日|1日|vlog|ブイログ/i.test(text);
@@ -542,52 +535,54 @@ const TT_HOOKS = {
   generic: e => [`新作できました🌟`, `これ、どう？`]
 };
 
-// ==== 動画の種類（本人指定。auto=内容から判定）。動画ごとに違うので保存しない（前回の選択が残る事故を防ぐ） ====
-const KINDS = { auto: "自動判定", skit: "芝居・小ネタ", dance: "ダンス", makeup: "メイク・変身", game: "ゲームプレイ", event: "現地レポ・Vlog", photo: "正片・写真MV" };
-const KIND_GENRE = { skit: "skit", dance: "dance", makeup: "makeup", game: "game", event: "event", photo: "chara" };
-let curKind = "auto";
+// ==== 軸1「動画の種類」・軸2「衣装」（本人指定。auto=内容から判定）。動画ごとに違うので保存しない（前回の選択が残る事故を防ぐ） ====
+const KINDS = { auto: "自動判定", skit: "芝居・小ネタ", dance: "ダンス・踊ってみた", makeup: "メイク・変身", game: "ゲームプレイ・実況", daily: "日常・Vlog", event: "イベント現地レポ", photo: "正片・写真MV" };
+const KIND_GENRE = { skit: "skit", dance: "dance", makeup: "makeup", game: "game", daily: "daily", event: "event", photo: "chara" };
+const OUTFITS = { auto: "自動（写真・本文から判定）", chunli: "春麗", other: "他キャラのコス", plain: "私服・コスなし" };
+let curKind = "auto", curOutfit = "auto";
 
 function resolveGenre(smart) {
   if (curKind !== "auto") return KIND_GENRE[curKind] || "generic";
   // 自動判定: 「イベント名がある」だけで現地レポにしない（芝居や仕事の合間の動画がVlog化した2026-09-21の実害）
   if (smart.skit) return "skit";
   // ダンスはキャラより優先（コス×ダンスのギャップ型が最強のため）
-  if (smart.labels.includes("ダンス") || curCat === "dance") return "dance";
+  if (smart.labels.includes("ダンス")) return "dance";
   if (smart.makeup) return "makeup";
   if (smart.events.length && smart.venue) return "event";
+  if (smart.labels.includes("実況・配信")) return "game";
+  if (/vlog|ブイログ|日常|一日|1日/i.test(smart.text)) return "daily";
   if (smart.chara) return "chara";
-  if (smart.labels.includes("実況・配信") || curCat === "game") return "game";
-  if (curCat === "daily") return "daily";
   return "generic";
 }
+// 衣装の実効値（⚡用。🚀🤖は「自動」のままAIにスクショで判定させる）
+function resolveOutfit(smart) {
+  if (curOutfit !== "auto") return curOutfit;
+  if (smart.chara === "春丽") return "chunli";
+  if (smart.chara || /コス|cosplay|coser/i.test(smart.text)) return "other";
+  return "plain";
+}
+// 種類のタグ辞書キー（正片・写真MVはchara型を使うのでphotoへ）
+function kindKey(genre) { return genre === "chara" ? "photo" : (KIND_TAGS[genre] ? genre : "generic"); }
 
 const $ = id => document.getElementById(id);
 function uniq(arr) { return [...new Set(arr)]; }
 
-// ==== カテゴリUI ====
-function renderCats() {
-  const box = $("cats"); box.innerHTML = "";
-  if (!CATEGORIES[curCat]) curCat = "chunli";
-  for (const key of Object.keys(CATEGORIES)) {
+// ==== 軸1・軸2のチップUI ====
+function renderChips(boxId, dict, getCur, setCur) {
+  const box = $(boxId); if (!box) return; box.innerHTML = "";
+  for (const key of Object.keys(dict)) {
     const b = document.createElement("button");
-    b.className = "cat-btn" + (key === curCat ? " active" : "");
-    b.textContent = CATEGORIES[key].label;
-    b.addEventListener("click", () => { curCat = key; localStorage.setItem("videopost-cat", key); renderCats(); });
+    b.className = "cat-btn" + (key === getCur() ? " active" : "");
+    b.textContent = dict[key];
+    b.addEventListener("click", () => { setCur(key); renderAxes(); });
     box.appendChild(b);
   }
 }
-renderCats();
-function renderKinds() {
-  const box = $("kinds"); if (!box) return; box.innerHTML = "";
-  for (const key of Object.keys(KINDS)) {
-    const b = document.createElement("button");
-    b.className = "cat-btn" + (key === curKind ? " active" : "");
-    b.textContent = KINDS[key];
-    b.addEventListener("click", () => { curKind = key; renderKinds(); });
-    box.appendChild(b);
-  }
+function renderAxes() {
+  renderChips("kinds", KINDS, () => curKind, k => { curKind = k; });
+  renderChips("outfits", OUTFITS, () => curOutfit, k => { curOutfit = k; });
 }
-renderKinds();
+renderAxes();
 
 // ==== 動画URL読み込み（YouTube=noembed / TikTok=公式oEmbed） ====
 $("load-video").addEventListener("click", async () => {
@@ -702,8 +697,8 @@ $("convert").addEventListener("click", async () => {
   setStatus("翻訳中…（数秒かかります）");
   try {
     const smart = detectSmart([title, desc, memo].join("\n"));
-    const catDef = CATEGORIES[curCat] || CATEGORIES.generic;
-    const catZh = catDef.zh;
+    const outfit = resolveOutfit(smart);
+    if (outfit === "chunli" && !smart.chara) { smart.chara = "春丽"; smart.charaJa = "春麗"; if (!smart.game) smart.game = "街霸6"; }
     let [zhTitle, zhDesc] = await Promise.all([
       translate(glossSrc(title), "zh-CN"),
       translate(glossSrc([desc, memo].filter(Boolean).join("\n")), "zh-CN"),
@@ -711,18 +706,19 @@ $("convert").addEventListener("click", async () => {
     zhTitle = fixZh(zhTitle); zhDesc = fixZh(zhDesc);
     // 曲名はイベント名と同格の必須タグ（原題のまま全SNSへ）。中国語圏タグの日本語イベント名は現地表記へ（コミケ→Comiket）
     const zhEvent = t => t === "コミケ" ? "Comiket" : t;
-    const tags = uniq([...smart.events.map(zhEvent), ...(smart.song ? [smart.song] : []), ...smart.zh, ...catZh]);
-
-    // ジャンル別バズ型でタイトル候補を生成（機械翻訳の直訳より優先）
+    // ジャンル別バズ型でタイトル候補を生成（機械翻訳の直訳より優先）。タグは種類×衣装の辞書から（私服はコスタグを外す）
     const genre = resolveGenre(smart);
-    const e = { event: smart.events[0] || "", chara: smart.chara, chara2: smart.chara2, game: smart.game, song: smart.song };
+    const kk = kindKey(genre);
+    const cosFilter = arr => outfit === "plain" ? arr.filter(t => !COS_TAG_RE.test(t)) : arr;
+    const tags = cosFilter(uniq([...smart.events.map(zhEvent), ...(smart.song ? [smart.song] : []), ...smart.zh, ...KIND_TAGS[kk].zh, ...OUTFIT_TAGS[outfit].zh]));
+    const e = { event: smart.events[0] || "", chara: outfit === "plain" ? "" : smart.chara, chara2: outfit === "plain" ? "" : smart.chara2, game: smart.game, song: smart.song };
     const buzz = BUZZ[genre];
     const biliCands = uniq([...buzz.biliTitles.map(f => f(e)), zhTitle]).filter(Boolean);
     const coverCands = uniq([...buzz.redCovers.map(f => f(e)), [...zhTitle].slice(0, 12).join("")]).filter(Boolean);
 
     // bilibili（第1候補をセット・他は下の候補チップから選べる）
     $("bili-title").value = [...biliCands[0]].slice(0, 80).join("");
-    $("bili-desc").value = (zhDesc ? zhDesc + "\n\n" : "") + "我是来自日本的coser！喜欢的话请一键三连支持一下🙏";
+    $("bili-desc").value = (zhDesc ? zhDesc + "\n\n" : "") + (outfit === "plain" ? "我是来自日本的atata！" : "我是来自日本的coser！") + "喜欢的话请一键三连支持一下🙏";
     $("bili-tags").value = tags.slice(0, 10).join(",");
     renderSugg("bili-sugg", biliCands.slice(1), "bili-title", `💡 ${buzz.label}型の候補（タップで差し替え・最後は直訳）`);
 
@@ -736,8 +732,8 @@ $("convert").addEventListener("click", async () => {
     $("weibo-body").value = zhTitle + (zhDesc ? "\n" + zhDesc : "") + "\n\n" + tags.slice(0, 8).map(t => "#" + t + "#").join(" ");
 
     // TikTok（日本語・一次投稿）
-    const jpTags = uniq([...smart.events, ...(smart.song ? [smart.song] : []), ...(catDef.jp || [])]).slice(0, 8);
-    const hooks = (TT_HOOKS[genre] || TT_HOOKS.generic)({ event: e.event, song: e.song, charaJa: smart.charaJa, chara2Ja: smart.chara2Ja, gameJa: smart.gameJa });
+    const jpTags = cosFilter(uniq([...smart.events, ...(smart.song ? [smart.song] : []), ...KIND_TAGS[kk].jp, ...OUTFIT_TAGS[outfit].jp, ...(outfit !== "plain" && smart.charaJa ? [smart.charaJa] : [])])).slice(0, 8);
+    const hooks = (TT_HOOKS[genre] || TT_HOOKS.generic)({ event: e.event, song: e.song, charaJa: e.chara ? smart.charaJa : "", chara2Ja: e.chara2 ? smart.chara2Ja : "", gameJa: smart.gameJa });
     $("tt-hook").value = hooks[0] || "";
     $("tt-cap").value = (memo || title) + "\n\n" + jpTags.map(t => "#" + t).join(" ");
     renderSugg("tt-sugg", hooks.slice(1), "tt-hook", "💡 冒頭フックの候補（タップで差し替え）");
@@ -747,7 +743,7 @@ $("convert").addEventListener("click", async () => {
     setJaNote("bili", ""); setJaNote("red", ""); setJaNote("weibo", "");
     $("ja-box").style.display = "none";
     updateCounts();
-    const found = smart.labels.length ? `　🎯 検出: ${uniq(smart.labels).join("・")}｜バズ型: ${buzz.label}` : "";
+    const found = `　🎛 ${KINDS[curKind === "auto" ? (Object.keys(KIND_GENRE).find(k => KIND_GENRE[k] === genre) || "auto") : curKind]}×${OUTFITS[outfit]}` + (smart.labels.length ? `｜🎯 検出: ${uniq(smart.labels).join("・")}` : "") + `｜型: ${buzz.label}`;
     setStatus("変換が完了しました ✅ 各欄は手直しできます" + found);
   } catch (e) {
     setStatus("エラー: " + e.message, true);
@@ -787,7 +783,7 @@ const PC_CTX = `【高精度モード（追加の思考指示）】
 ・出力前にセルフレビューを1周: ①忠実性（言っていない見どころ・体験を足していないか）②冒頭3秒と完走率の観点でフックが機能するか③タグ・字数制限④人設（ガチ恋営業になっていないか）⑤種類の逸脱（芝居・ダンス等をVlog/現地レポ化していないか・意味づけを足していないか・登場キャラを落としていないか）——問題があれば直してから出す`;
 
 function buildPrompt(forApi) {
-  const cat = CATEGORIES[curCat] || CATEGORIES.generic;
+  const outfitLabel = curOutfit !== "auto" ? OUTFITS[curOutfit] : "";
   const title = $("v-title").value.trim();
   const desc = $("v-desc").value.replace(/https?:\/\/\S+/g, "").trim();
   const memo = $("v-memo").value.trim();
@@ -800,10 +796,15 @@ function buildPrompt(forApi) {
   const kindLabel = curKind !== "auto" ? KINDS[curKind] : "";
   p += "【動画の種類（最初に確定する・最重要）】" + (kindLabel
     ? "本人指定＝「" + kindLabel + "」。必ずこの種類の動画として書き、他の種類の言い回しに変えない。"
-    : "本人未指定。タイトル・概要欄・メモ・スクショに書いてあることだけから、芝居・小ネタ／ダンス／メイク・変身／ゲームプレイ／現地レポ・Vlog／正片・写真MV／その他 のどれか1つに決めてから書く（決めた種類は出力に書かなくてよい）。")
-    + "イベント名（TGS・EVO・コミケ等）が出てきても、動画の中身が会場の記録でなければ「現地レポ・Vlog」扱いにしない（例: TGSの仕事の合間に撮ったコス芝居→芝居。TGSは标题の文脈とタグに使うだけ）。\n";
+    : "本人未指定。タイトル・概要欄・メモ・スクショに書いてあることだけから、芝居・小ネタ／ダンス・踊ってみた／メイク・変身／ゲームプレイ・実況／日常・Vlog／イベント現地レポ／正片・写真MV／その他 のどれか1つに決めてから書く（決めた種類は出力に書かなくてよい）。")
+    + "イベント名（TGS・EVO・コミケ等）が出てきても、動画の中身が会場の記録でなければ「イベント現地レポ」扱いにしない（例: TGSの仕事の合間に撮ったコス芝居→芝居。TGSは标题の文脈とタグに使うだけ）。\n";
+  p += "【衣装（軸2）】" + (outfitLabel ? "本人指定＝「" + outfitLabel + "」。" : "未指定→スクショと本文から判定する（コスプレと確信できなければコスプレ扱いにしない）。")
+    + (curOutfit === "chunli" ? "春麗のコス＝キャラ名・作品名（春丽/街霸6）を标题とタグに入れる。" : "")
+    + (curOutfit === "other" ? "春麗以外のコス＝キャラ名・作品名はタイトル・本文・スクショの表記から取り（辞書: ジュリ=朱莉・キャミィ=嘉米）、確信が無い作品名は当て字にせず原語のまま。#春丽 は付けない。" : "")
+    + (curOutfit === "plain" ? "私服・コスプレなし＝#cosplay/#cos正片/二次元系のタグと『cos服』『还原』などコス扱いの表現を付けない。衣装をキャラ名で呼ばない。身分としての『日本coser』『日本女生』はOK。" : "")
+    + "\n";
   p += "【逸脱の禁止（本人FB 2026-09-21・忠実性と同格の最優先ルール）】\n";
-  p += "・「Vlog」「密着」「記録（记录）」「◯◯的一天」「直击现场」「现场的样子」などの現地レポ表現は、種類が「現地レポ・Vlog」のときだけ使う。それ以外の動画には一切付けない\n";
+  p += "・「Vlog」「密着」「記録（记录）」「◯◯的一天」は種類が「日常・Vlog」のとき、「直击现场」「现场的样子」は「イベント現地レポ」のときだけ使う。それ以外の動画には一切付けない\n";
   p += "・芝居・ダンス・メイクのような「見ればわかる短い動画」には、意味づけ・ストーリー・教訓・見どころ解説を足さない。标题＝何をしている動画かが一目でわかる一言＋キャラ名/作品名（例:【cosplay】春丽：朱莉，听我说！！）。简介＝自己紹介1行＋元の投稿文の訳＋一键三连で終える（3〜4行で十分。長くしない）\n";
   p += "・元の投稿文に無い出来事（「現場の様子を記録した」「一日を追った」「〜に挑戦した」等）を書かない。概要欄が一言なら、简介もその訳＋一言まで\n";
   p += "・弹幕を誘う問いは、動画の中身に直結する軽い一言だけ（例: 芝居なら「你们站哪边？」）。内容と無関係なアンケート（好きなキャラ投票・次のコス希望など）は作らない。無ければ省略してよい\n";
@@ -811,7 +812,7 @@ function buildPrompt(forApi) {
   p += "【元動画のタイトル（日本語）】\n" + (title || "（なし）") + "\n";
   if (desc) p += "【概要欄・投稿文】\n" + desc + "\n";
   if (memo) p += "【動画の内容メモ（最優先で反映）】\n" + memo + "\n";
-  p += "【カテゴリ】" + cat.label + "\n\n";
+  p += "\n";
   const genre = resolveGenre(det);
   const buzz = BUZZ[genre];
   const ent = { event: det.events[0] || "", chara: det.chara, chara2: det.chara2, game: det.game, song: det.song };
@@ -835,7 +836,8 @@ function buildPrompt(forApi) {
   if (det.events.length) p += "・【必須タグ】検出済みイベント名。全SNSのタグに必ず含めること: " + uniq(det.events).map(t => "#" + t).join(" ") + "\n";
   if (det.song) p += "・【必須】曲名を検出:「" + det.song + "」— 原題のままタイトルと全SNSのタグに必ず入れる（曲名検索からの流入が最大の入口）。\n";
   if (det.labels.length) p += "・本文から検出した要素（参考）: " + uniq(det.labels).join("・") + "\n";
-  p += "・タグ候補（参考・取捨選択する）: " + cat.zh.map(t => "#" + t).join(" ") + "\n\n";
+  const tagPool = uniq([...KIND_TAGS[kindKey(genre)].zh, ...OUTFIT_TAGS[curOutfit === "auto" ? resolveOutfit(det) : curOutfit].zh]);
+  p += "・タグ候補（種類×衣装から。参考・取捨選択する）: " + tagPool.map(t => "#" + t).join(" ") + "\n\n";
   if (forApi || window.innerWidth >= 900) p += PC_CTX + "\n\n";
   p += "必ず下の形式で出力してください。見出し行（===…===）は一字も変えずそのままコピーすること（別の表記・別の言語に直さない）。見出し行の直後は中身だけを書き、标题・タイトル系は必ず1行で:\n";
   p += M.TH + "\n（15字前後の1行）\n" + M.TC + "\n（本文＋#タグ5〜8個）\n";
@@ -1132,10 +1134,13 @@ $("claude-open").addEventListener("click", e => {
   if (qp.get("title")) $("v-title").value = qp.get("title");
   if (qp.get("desc")) $("v-desc").value = qp.get("desc");
   if (qp.get("memo")) $("v-memo").value = qp.get("memo");
+  // 旧パラメータ cat= は軸1/軸2へ読み替え（vlog-pipelineのshortsコマンド互換）
+  const CAT_MAP = { chunli: { outfit: "chunli" }, game: { kind: "game" }, dance: { kind: "dance" }, daily: { kind: "daily" } };
   const c = qp.get("cat");
-  if (c && CATEGORIES[c]) { curCat = c; localStorage.setItem("videopost-cat", c); renderCats(); }
-  const k = qp.get("kind");
-  if (k && KINDS[k]) { curKind = k; renderKinds(); }
+  if (c && CAT_MAP[c]) { if (CAT_MAP[c].kind) curKind = CAT_MAP[c].kind; if (CAT_MAP[c].outfit) curOutfit = CAT_MAP[c].outfit; }
+  const k = qp.get("kind"); if (k && KINDS[k]) curKind = k;
+  const o = qp.get("outfit"); if (o && OUTFITS[o]) curOutfit = o;
+  renderAxes();
   setStatus("vlog-pipelineのショートを読み込みました ✅ 🤖ボタンで投稿文を作ってください");
 })();
 </script>

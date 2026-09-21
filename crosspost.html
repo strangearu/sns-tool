@@ -193,9 +193,12 @@
     <label class="head" for="memo" style="margin-top:14px">③ 写真の内容メモ（上の写真を見ながら一言でOK・本文に使われます）</label>
     <textarea id="memo" style="min-height:70px" placeholder="例: 真っ赤なドレスのコスプレ。スタジオで撮影、ライティングがお気に入り"></textarea>
 
-    <label class="head" style="margin-top:14px">④ カテゴリ（小紅書のタグと封面文字が最適化されます）</label>
-    <div class="cats" id="cats"></div>
+    <label class="head" style="margin-top:14px">④ 投稿の種類（何の写真か・迷ったら自動判定）</label>
+    <div class="cats" id="kinds"></div>
+    <label class="head" style="margin-top:14px">⑤ 衣装（何を着ているか）</label>
+    <div class="cats" id="outfits"></div>
     <div class="cat-tags" id="cat-tags"></div>
+    <p class="hint" style="margin-top:6px">種類×衣装でタグ・タイトルの型・書き方の制限が決まります。「现场／实录／出征」は「イベント会場で撮った写真」の時だけ。「私服・コスなし」ではコスプレタグを付けません。</p>
 
     <div class="actions">
       <button class="btn-main" id="api-go">🚀 その場で完成（写真ごとAI送信）</button>
@@ -370,7 +373,7 @@
   <footer>
     📱 このページはブラウザだけで動きます（PC不要・どこからでも使えます）。<br>
     スマホのホーム画面に追加しておくとアプリのように使えます。<br>
-    <span style="opacity:.6">version 2026-08-19a（日本語訳を各SNSカード内に表示）</span>
+    <span style="opacity:.6">version 2026-09-21b（種類×衣装の2軸・逸脱禁止）</span>
   </footer>
 </div>
 
@@ -383,46 +386,41 @@ const DEFAULT_TAGS = {
 };
 const LIMITS = { ig: 2200, red: 1000, weibo: 2000, bili: 2000 };
 
-// ---- カテゴリ別タグ・封面文字（app.pyのCATEGORIESと同じ正本をブラウザ内に埋め込み） ----
-const CATEGORIES = {
-  // ig = 韓国リーチ用の韓国語タグ＋世界で伸びる英語タグ混在 / weibo = 中国で伸びる话题・超话タグ混在
-  chunli: {
-    label: "春麗・格ゲーコス",
-    red: ["cosplay","cos正片","春丽","春丽cos","街头霸王","街霸6","sf6","不知火舞","格斗游戏","二次元","日本coser","游戏cos"],
-    ig: ["cosplay","chunli","chunlicosplay","streetfighter","streetfighter6","sf6","fgc","cosplayphotography","cosplayer","gamecosplay","코스프레","춘리","스트리트파이터","일본코스프레","게임코스프레","코스어","소통","선팔","コスプレ","春麗"],
-    weibo: ["cosplay","cos正片","春丽","街头霸王","街霸6","不知火舞","格斗游戏","二次元","coser","cosplay超话","动漫","漫展"],
-    coverSamples: ["春丽cos正片来啦💙","日本coser挑战春丽","这套春丽你打几分？","街霸春丽👊"]
-  },
-  daily: {
-    label: "日常・ファン化",
-    red: ["日常","日常碎片","生活记录","vlog","日系穿搭","ootd","日本生活","coser日常","自拍","女生日常","分享生活","二次元"],
-    ig: ["dailylife","ootd","cosplayer","cosplay","japanesegirl","lifestyle","selfie","instagood","코스프레","데일리","일상","셀카","데일리룩","일상스타그램","얼스타그램","소통","선팔","맞팔","좋아요반사","日常","コーデ"],
-    weibo: ["日常","生活记录","每日穿搭","穿搭日记","coser日常","自拍","女生日常","分享生活","二次元日常"],
-    coverSamples: ["coser的日常碎片","今天的穿搭🌷","下播啦~","日本生活vlog"]
-  },
-  dance: {
-    label: "ダンス・チャレンジ",
-    red: ["舞蹈","韩舞","kpop","舞蹈挑战","翻跳","日本coser","宅舞","二次元"],
-    ig: ["dance","dancecover","dancechallenge","kpop","kpopdance","kpopchallenge","챌린지","커버댄스","케이팝","댄스","틱톡챌린지","일본코스프레","cosplay","ダンス","踊ってみた"],
-    weibo: ["舞蹈","韩舞","kpop","舞蹈挑战","翻跳","宅舞","coser"],
-    coverSamples: ["挑战最火的舞💃","春丽跳kpop？！","这个舞太上头了","完整版来了"]
-  },
-  studio: {
-    label: "スタジオ撮影・摄影",
-    red: ["人像摄影","摄影","棚拍","摄影棚","写真","日系写真","布光","摄影分享","模特","约拍","cos摄影","作品分享"],
-    ig: ["portrait","portraitphotography","studiophotography","cosplay","photoshoot","lighting","behindthescenes","cosplayphotography","photographer","인물사진","스튜디오","코스프레","코스프레촬영","포트레이트","사진작가","소통","선팔","撮影","作例"],
-    weibo: ["人像摄影","摄影","棚拍","摄影棚","写真","日系写真","布光","约拍","摄影师","人像摄影超话"],
-    coverSamples: ["棚拍练习","这组布光好绝","人像写真分享","约拍作品来啦📷"]
-  },
-  generic: {
-    label: "汎用（コスプレ撮影）",
-    red: ["cosplay","cos正片","二次元","人像摄影","摄影","日本coser","写真"],
-    ig: ["cosplay","cosplayphoto","portrait","portraitphotography","코스프레","일본코스프레","코스어","소통","コスプレ","ポートレート"],
-    weibo: ["cosplay","cos正片","二次元","人像摄影","摄影","日本coser","coser","漫展"],
-    coverSamples: []
-  }
+// ---- 軸1「投稿の種類」× 軸2「衣装」のタグ辞書（旧カテゴリを2026-09-21に廃止・本人承認の案A） ----
+// ig = 韓国リーチ用の韓国語タグ＋世界で伸びる英語タグ混在 / weibo = 中国で伸びる话题・超话タグ混在（bilibili動態はweiboプール共用）
+const KIND_TAGS = {
+  photo:  { red: ["cosplay","cos正片","二次元","人像摄影","摄影","写真"],
+    ig: ["cosplay","cosplayphoto","portrait","portraitphotography","cosplayphotography","코스프레","일본코스프레","코스어","소통","선팔"],
+    weibo: ["cosplay","cos正片","二次元","人像摄影","摄影"] },
+  selfie: { red: ["日常","日常碎片","生活记录","自拍","女生日常","分享生活"],
+    ig: ["dailylife","selfie","instagood","데일리","일상","셀카","일상스타그램","소통","선팔","맞팔"],
+    weibo: ["日常","生活记录","自拍","女生日常","分享生活"] },
+  event:  { red: ["日本coser","现场"], ig: ["cosplayer","event"], weibo: ["coser","现场"] },
+  notice: { red: [], ig: [], weibo: [] },
+  generic:{ red: ["日本coser"], ig: [], weibo: ["coser"] }
 };
-let curCat = localStorage.getItem("crosspost-cat") || "chunli";
+const OUTFIT_TAGS = {
+  chunli: { red: ["春丽","春丽cos","街头霸王","街霸6","格斗游戏","日本coser","游戏cos"],
+    ig: ["chunli","chunlicosplay","streetfighter","streetfighter6","sf6","fgc","gamecosplay","춘리","스트리트파이터","게임코스프레","コスプレ","春麗"],
+    weibo: ["春丽","街头霸王","街霸6","格斗游戏","coser","cosplay超话"] },
+  other:  { red: ["cosplay","日本coser","游戏cos"], ig: ["cosplay","cosplayer","코스프레","일본코스프레","コスプレ"], weibo: ["cosplay","coser","cosplay超话"] },  // キャラ名は本文検出（CONTENT_RULES）から
+  plain:  { red: ["日系穿搭","ootd","日本生活"], ig: ["ootd","japanesegirl","lifestyle","데일리룩","얼스타그램","コーデ"], weibo: ["每日穿搭","穿搭日记"] }
+};
+// 私服・コスなしのとき外すタグ（コスプレ扱いにしない）
+const COS_TAG_RE = /cos|コス|코스|二次元|coser|春丽|春麗|chunli|춘리|街霸|街头霸王|street\s*fighter|sf6|fgc|朱莉|嘉米|不知火舞|铁拳|拳皇/i;
+// 封面文字の例（種類×衣装）
+const COVER_SAMPLES = {
+  photo:  { chunli: ["春丽cos正片来啦💙","日本coser的春丽正片","这套春丽你打几分？"], other: ["日本coser的cos正片","新作正片来啦✨"], plain: ["今日份写真📷","日本女生的日常照"] },
+  selfie: { chunli: ["春丽下班啦~","今天的春丽日常"], other: ["coser的日常碎片","下播啦~"], plain: ["今天的穿搭🌷","日常碎片"] },
+  event:  { chunli: ["直击◯◯现场🔥","◯◯我来啦！"], other: ["直击◯◯现场🔥","◯◯现场打卡"], plain: ["◯◯现场打卡","◯◯我来啦！"] },
+  notice: { chunli: ["新周边来啦","摄影会预约开始"], other: ["新周边来啦","摄影会预约开始"], plain: ["新消息📢","预约开始"] },
+  generic:{ chunli: ["日本coser的春丽"], other: ["日本coser来啦"], plain: ["今天的记录"] }
+};
+function coverSamples(kind, outfit) { const k = COVER_SAMPLES[kind] || COVER_SAMPLES.generic; return k[outfit === "auto" ? "other" : outfit] || []; }
+// 軸の状態（投稿ごとに違うので保存しない＝前回の選択が残る事故を防ぐ）
+const KINDS = { auto: "自動判定", photo: "正片・作品写真", selfie: "自撮り・日常", event: "イベント会場で撮った写真", notice: "告知（グッズ・撮影会・配信）" };
+const OUTFITS = { auto: "自動（写真・本文から判定）", chunli: "春麗", other: "他キャラのコス", plain: "私服・コスなし" };
+let curKind = "auto", curOutfit = "auto";
 let photos = [];  // 参考表示用: {url} | {dataUrl}
 
 const $ = id => document.getElementById(id);
@@ -431,37 +429,48 @@ const $ = id => document.getElementById(id);
 function init() {
   const saved = JSON.parse(localStorage.getItem("crosspost-tags") || "{}");
   for (const k of ["ig", "red", "weibo", "bili"]) $("tags-" + k).value = saved[k] ?? DEFAULT_TAGS[k];
-  renderCats();
+  renderAxes();
 }
 init();
 
-// ---- カテゴリ選択 ----
-function renderCats() {
-  const box = $("cats");
-  box.innerHTML = "";
-  if (!CATEGORIES[curCat]) curCat = "chunli";
-  for (const key of Object.keys(CATEGORIES)) {
+// ---- 軸1・軸2のチップUI ----
+function renderChips(boxId, dict, getCur, setCur) {
+  const box = $(boxId); if (!box) return; box.innerHTML = "";
+  for (const key of Object.keys(dict)) {
     const b = document.createElement("button");
-    b.className = "cat-btn" + (key === curCat ? " active" : "");
-    b.textContent = CATEGORIES[key].label;
-    b.addEventListener("click", () => {
-      curCat = key;
-      localStorage.setItem("crosspost-cat", key);
-      renderCats();
-    });
+    b.className = "cat-btn" + (key === getCur() ? " active" : "");
+    b.textContent = dict[key];
+    b.addEventListener("click", () => { setCur(key); renderAxes(); });
     box.appendChild(b);
   }
-  const c = CATEGORIES[curCat];
-  $("cat-tags").textContent = "📕 小紅書タグ: " + c.red.map(t => "#" + t).join(" ");
-  const cover = $("cover-red");
-  if (cover && c.coverSamples && c.coverSamples.length) {
-    cover.placeholder = "例: " + c.coverSamples.join(" / ");
-  }
 }
-
-function catTags(platform) {
-  const c = CATEGORIES[curCat];
-  return c && c[platform] ? c[platform].slice() : [];
+function renderAxes() {
+  renderChips("kinds", KINDS, () => curKind, k => { curKind = k; });
+  renderChips("outfits", OUTFITS, () => curOutfit, k => { curOutfit = k; });
+  const kk = curKind === "auto" ? "photo" : curKind, oo = curOutfit === "auto" ? "other" : curOutfit;
+  $("cat-tags").textContent = "📕 小紅書タグ候補: " + axisTags("red", kk, oo).map(t => "#" + t).join(" ") + (curKind === "auto" || curOutfit === "auto" ? "（自動判定の分は写真・本文で決まります）" : "");
+  const cover = $("cover-red"), cs = coverSamples(kk, oo);
+  if (cover && cs.length) cover.placeholder = "例: " + cs.join(" / ");
+}
+// 実効値の解決（⚡用。🚀🤖は「自動」のままAIに写真で判定させる）
+function resolveKind(smart, text) {
+  if (curKind !== "auto") return curKind;
+  if (smart.events.length && /現場|会場|行ってきた|行ってきました|レポ|参戦|来場|ブース|打卡/.test(text)) return "event";
+  if (/告知|お知らせ|予約|受付|発売|通販|BOOTH|募集/i.test(text)) return "notice";
+  if (/自撮り|セルフィ|日常|オフショ|私服|今日の/.test(text)) return "selfie";
+  return "photo";
+}
+function resolveOutfit(text) {
+  if (curOutfit !== "auto") return curOutfit;
+  if (/春麗|チュンリー|春丽|chun[\s\-]?li/i.test(text)) return "chunli";
+  if (CONTENT_RULES.some(r => r.char && r.re.test(text)) || /コス|cosplay|coser|衣装/i.test(text)) return "other";
+  return "plain";
+}
+function axisTags(platform, kind, outfit) {
+  const kk = KIND_TAGS[kind] ? kind : "generic", oo = OUTFIT_TAGS[outfit] ? outfit : "other";
+  const pool = platform === "bili" ? "weibo" : platform;
+  const outfitTags = (kk === "notice" && oo === "plain") ? [] : OUTFIT_TAGS[oo][pool];  // 告知×私服に服装タグは不要
+  return uniq([...outfitTags, ...KIND_TAGS[kk][pool]]);
 }
 
 // ==== スマートタグエンジン（本文・メモを読んでタグを考える） ====
@@ -670,7 +679,7 @@ $("convert").addEventListener("click", async () => {
   setStatus("翻訳中…（数秒かかります）");
   try {
     const smart = await convertSimple(raw, memo);
-    const found = smart && smart.labels.length ? `　🎯 内容から検出: ${uniq(smart.labels).join("・")}` : "";
+    const found = (smart && smart.axisLabel ? `　🎛 ${smart.axisLabel}` : "") + (smart && smart.labels.length ? `｜🎯 内容から検出: ${uniq(smart.labels).join("・")}` : "");
     setStatus("変換が完了しました ✅ 各欄は手直しできます" + found);
     checkRed();
   } catch (e) {
@@ -690,27 +699,43 @@ const ALL_MARKS = [RED_MARK, TITLE_MARK, BODY_MARK, IG_MARK, WB_MARK, BILI_TITLE
 // PC（幅900px以上）とAPI直モードではプロンプトに推敲指示を足して精度を上げる
 const PC_CTX = `【高精度モード（追加の思考指示）】
 ・封面文字とタイトルはまず頭の中で3案比較し、一番強い1つだけを出力する
-・出力前にセルフレビューを1周: ①忠実性（原文・写真にない体験・情報を足していないか）②限流語（最・第一・绝对・微信等）③タグが内容と合っているか④字数制限⑤人設（ガチ恋営業になっていないか）——問題があれば直してから出す
+・出力前にセルフレビューを1周: ①忠実性（原文・写真にない体験・情報を足していないか）②限流語（最・第一・绝对・微信等）③タグが内容と合っているか④字数制限⑤人設（ガチ恋営業になっていないか）⑥種類の逸脱（正片を现场/实录化していないか・物語を足していないか・登場キャラを落としていないか）——問題があれば直してから出す
 ・あたたの実データでは「写真1枚＋50字以内の一言」が勝ち型。翻訳先でも盛らない一言の空気を保ち、その分タイトル・封面で引きを作る`;
 
 function buildClaudePrompt(forApi) {
-  const cat = CATEGORIES[curCat] || CATEGORIES.generic;
+  const kindLabel = curKind !== "auto" ? KINDS[curKind] : "", outfitLabel = curOutfit !== "auto" ? OUTFITS[curOutfit] : "";
   const raw = $("src").value.replace(/https?:\/\/t\.co\/\S+/g, "").trim();
   const memo = $("memo").value.trim();
+  // タグ候補・封面例の辞書キー（自動のときは本文からの推定。最終判定はAIが写真で行う）
+  const pk = curKind === "auto" ? "photo" : curKind, po = curOutfit === "auto" ? resolveOutfit(raw + "\n" + memo) : curOutfit;
   const textThin = ([...raw].length + [...memo].length) < 40;
   let p = "あなたは日本のコスプレイヤー「あたた」の中国SNS投稿を作る専属アシスタントです。目的は中国（小紅書）でのフォロワー獲得。\n";
   p += "【人設・ブランド（全SNS共通・最優先で守る）】あたた＝「日本一美しいゲーマー」。格闘ゲームガチ勢×洗練されたコスプレ、K-POPアイドル的な清潔感ある美人路線。中国語圏では「日本から発信している日本人coser」という親近感が最大の武器（例:「日本的coser来报到」的な自己紹介感）。トーンは自信があって親しみやすい・ポジティブ。恋愛感情を煽る文言（ガチ恋営業・匂わせ・「私のこと好き?」系）は絶対に使わない。色気や露出を売りにする書き方もブランド毀損なのでしない。売るのは「憧れ」。\n";
   p += "【衣装辞書（あたた固有・写真にその衣装が写っている時だけ使う）】春麗の水着衣装=「Outfit 4」（タグ: #春丽outfit4 / 英語圏: chun-li outfit 4）。EVOなどで着ているおなじみの定番衣装=「Outfit 2」（タグ: #春丽outfit2）。Outfit番号はファンと検索の共通語なので、該当する時はタイトルかタグに必ず入れる。\n";
   p += "【固有名詞・用語辞書（翻訳時必須）】名前「あたた」は英語・中国語の文中では必ず小文字ローマ字の「atata」——ひらがなのまま出さない・「阿塔塔」等の音訳もしない。コミケ/コミックマーケット→中国語は「CM（Comic Market）」か回次表記（C108等）・英語は「Comiket」（汎用語の「漫展」だけに置き換えない）。定訳: スト6=街霸6・ストリートファイター=街头霸王・KOF=拳皇・鉄拳=铁拳・ランクマ=排位・マスターランク=大师段位・チェキ=拍立得・踊ってみた=翻跳・春麗=春丽・ジュリ=朱莉・キャミィ=嘉米・TGS=东京电玩展(TGS)。上記以外の人名・イベント名・作品名は中国語圏で定着した公式表記を使い、確信が無ければ原語のまま残す（誤った当て字は禁止）。\n";
   p += "【写真の読み取り（最初にやること）】添付した写真から次を観察する: ①キャラ・作品名（確信がある場合のみ名指し。不確かなら「格ゲーコス」等の一般語で）②衣装・ウィッグ・メイクの特徴 ③ロケ地/背景の雰囲気 ④表情・ポーズ・構図 ⑤色調と光。本文はこの「写真から見えている事実」を素材に書く。\n";
-  if (textThin) p += "【写真起点モード】元の投稿文がほぼ無い（写真だけ/一言だけ）。Xでは写真だけで語るのがあたたの勝ちパターンだが、小紅書・IG・Weiboでは文章が必要。だから写真があなたの主素材——写真の観察結果（キャラ・衣装・色・雰囲気・表情）から、そのSNSのネイティブが自分で書くような一人称の分享文を組み立てること。ただし写真から見えないこと（撮影裏話・苦労話・かかった時間・誰といたか・本人の感想）は絶対に作らない。「見えているものを魅力的に語る」のが仕事で、「見えないことを想像で足す」のは禁止。\n";
+  if (textThin) p += "【写真起点モード】元の投稿文がほぼ無い（写真だけ/一言だけ）。Xでは写真だけで語るのがあたたの勝ちパターンだが、小紅書・IG・Weiboでは文章が必要。だから写真があなたの主素材——ただし書くのは「見えているもの（キャラ・衣装・色・場所の雰囲気・表情）を一人称で1〜2文」まで。分享文を膨らませない。写真から見えないこと（撮影裏話・苦労話・かかった時間・誰といたか・本人の感想）は絶対に作らない。「見えているものを短く魅力的に言う」のが仕事で、「見えないことを想像で足す」のは禁止。\n";
   p += "【忠実性（最重要・全SNS共通）】本文は【元の投稿/メモ】に書いてあること＋写真から確実に見えること（キャラ・衣装・場所の雰囲気）だけで構成する。本人が言っていない体験談・撮影のコツ・裏話・感想・清単（◯个心得/◯選）を発明しない。アレンジしてよいのは語り口・構成・絵文字・問いかけ・タグまで。元ネタが一言だけなら無理に膨らませず短い投稿にする（その方が自然）。\n\n";
   p += "【元の投稿/メモ】\n" + (raw || "（なし・写真起点で作る）") + (memo ? "\n（撮影メモ・最優先で反映）" + memo : "") + "\n\n";
-  p += "【カテゴリ】" + cat.label + "\n";
+  p += "【投稿の種類（軸1・最初に確定する・最重要）】" + (kindLabel
+    ? "本人指定＝「" + kindLabel + "」。必ずこの種類の投稿として書き、他の種類の言い回しに変えない。"
+    : "本人未指定。写真と本文に書いてあることだけから、正片・作品写真／自撮り・日常／イベント会場で撮った写真／告知（グッズ・撮影会・配信）のどれか1つに決めてから書く（決めた種類は出力に書かなくてよい）。")
+    + "イベント名（TGS・EVO・コミケ等）が本文にあっても、写真が会場で撮られたものでなければ「イベント現地」扱いにしない（例: TGS期間中に投稿したスタジオ正片→正片。イベント名はタグと文脈にだけ使う）。\n";
+  p += "【衣装（軸2）】" + (outfitLabel ? "本人指定＝「" + outfitLabel + "」。" : "未指定→写真と本文から判定する（コスプレと確信できなければコスプレ扱いにしない）。")
+    + (curOutfit === "chunli" ? "春麗のコス＝キャラ名・作品名（春丽/街霸6）をタイトルとタグに入れ、衣装辞書（Outfit番号）を適用する。" : "")
+    + (curOutfit === "other" ? "春麗以外のコス＝キャラ名・作品名は本文・写真の表記から取り（辞書: ジュリ=朱莉・キャミィ=嘉米）、確信が無い作品名は当て字にせず原語のまま。#春丽 は付けない。" : "")
+    + (curOutfit === "plain" ? "私服・コスプレなし＝#cosplay/#cos正片/二次元系のタグと『cos服』『还原』などコス扱いの表現を付けない。衣装をキャラ名で呼ばない。身分としての『日本coser』『日本女生』はOK。" : "")
+    + "\n";
+  p += "【逸脱の禁止（本人FB 2026-09-21・忠実性と同格の最優先ルール）】\n";
+  p += "・「现场」「实录」「出征」「直击」「打卡」は種類が「イベント会場で撮った写真」のときだけ。それ以外の投稿には一切付けない\n";
+  p += "・正片・自撮りには物語・出来事・感想を足さない。タイトルは事実型でよい（例「日本coser的春丽正片」「日本coser的日常碎片」）。物語型（挑战/实录/日记/出征）は本文に実際の物語（大会出場・挑戦・記録）がある時だけ\n";
+  p += "・本文は【元の投稿/メモ】の訳＋写真から見えることの一言まで。元が一言なら本文も一言＋タグでよい（膨らませない）\n";
+  p += "・末尾の問いかけは写真の中身に直結する選択式1つだけ（例「这套和上次的，你们更喜欢哪个？」）。内容と無関係なアンケート（次のコス希望・好きなキャラ投票など）は作らない。無ければ省略してよい\n";
+  p += "・登場キャラは全員書く（例: 春麗とジュリの2人写真なら両方をタイトルかタグに）\n";
   p += "【小紅書の方針】封面文字＝サムネに乗せる12字以内のフック（クリック率が決まる最重要。1枚目の写真の内容と呼応させる）。タイトル＝20字以内で検索キーワード（キャラ名・作品名）必須＋吸引詞。本文＝広告でなく友達への「分享」トーン、絵文字入り、**短めが正解: 2〜3文・80字以内目安（タグ除く。2026-07競合実測: 上位ノートは本文短め〜一言＋タグ構成。長い分享文で盛らない。引きは封面とタイトルの仕事——本文で説明・補足をしない）**。露出は控えめに（審査・限流対策）。外部SNSのIDは書かない。\n";
   p += "【小紅書の質基準（発布前審査と同じ基準で作る）】\n";
-  p += "・タイトルは爆款型から内容に合うものを選ぶ: 物語型「◯◯出征EVO/挑战◯◯/◯◯实录/◯◯日记」/身分型「日本coser的◯◯」/数字・好奇型「我花3k假发运费…？」/情緒型。本人の実測（2026-07）では「春丽・街霸などの検索KW＋物語性」が最強——出征応援ノートが通常の10倍（1万views・收藏318）。\n";
-  p += "・【本人実測の鉄則】元のX投稿が写真＋一言でも、REDのタイトルは必ず検索KW入りで立てる。KWなしの一言ノートは首页推荐に乗らず300views止まり、KW＋物語タイトルは1,000〜10,000views。\n";
+  p += "・タイトルは爆款型から内容に合うものを選ぶ: 物語型「◯◯出征EVO/挑战◯◯/◯◯实录/◯◯日记」/身分型「日本coser的◯◯」/数字・好奇型「我花3k假发运费…？」/情緒型。本人の実測（2026-07）では「春丽・街霸などの検索KW＋物語性」が最強——出征応援ノートが通常の10倍（1万views・收藏318）。※型は投稿の種類に合う時だけ。正片・自撮りは身分型＋事実型でよく、物語型を無理に当てない。\n";
+  p += "・【本人実測の鉄則】元のX投稿が写真＋一言でも、REDのタイトルは必ず検索KW入りで立てる（KWは必須・物語性は種類に合う時だけ）。KWなしの一言ノートは首页推荐に乗らず300views止まり、KW＋物語タイトルは1,000〜10,000views。\n";
   p += "・【IP不在時の鉄則（2026-07-21実測）】写真がオリジナル衣装・私服などIPキャラ不在のときは、タイトルに必ず身分KW「日本coser」を入れてアカウントの垂直（coser/二次元）に繋ぐ（例:「日本coser的粉发猫娘日常」）。ジャンル語だけのタイトルは5,000粉でも配布されない（実例:「粉发猫娘上线啦」=193views。赞率16%でも初期プールに入れず死んだ）。\n";
   p += "・【2026-07バズ実測（8万views/7,466赞「春丽夏日海边☀️」）】流入の96%は首页推荐＝おすすめ一本勝負（検索は0.2%）。合格ライン=封面クリック率23%・赞率9%・收藏率2%。配布は二波構造（3日目深夜に本波）で、審査材料は初日の初速互動——だから末尾の問いかけは「選択式で答えやすく」が必須（実例「你们喜欢这套夏日版，还是经典款？」→コメント51件で過去最多）。\n";
   p += "・【狙う層の使い分け（受众実測）】海・水着・露出強めの正片＝一般男性プール（バズ時の受众は男性99%・25〜44歳68%・興味は生活記録/体育/时尚）。化妆過程・仿妆・変身・衣装制作・日常系＝二次元・女性層向け。写真の系統を見て、タイトルとタグをその層に寄せる: 男性プール向け=正片・Outfit系・シンプルな季節KW（夏日/海边）／女性層向け=#cos妆 #仿妆 #变身 系タグ＋プロセスや変化を見せるタイトル（例「日本coser用什么化妆」型）。\n";
@@ -721,12 +746,13 @@ function buildClaudePrompt(forApi) {
   p += "【Instagramの方針】1文目が検索インデックスと「…続き」折りたたみ前に見える最重要行——写真の内容が伝わる英語1文を置く。本文は1〜3行の短文を空行で区切るリズム（長い段落は読まれない）。日本語↔英語併記。保存・シェアを促す一言は内容に合う時だけ控えめに。\n";
   p += "【bilibili動態の方針（2026-07競合実測で較正）】動態＝B站のタイムライン投稿。位置づけは「活動シグナル＋ファン雑談」であり成長装置ではない（3.2万粉のcoserでも動態は30〜50いいねが実測値）。だから**気取らない雑談が正解**: 簡体字・30〜80字の短文、仲間内トーン（自虐かわいい・「〜哟」「=v=」的なゆるさ・絵文字やB站スタンプ感）。型は ①イベント/大会の現場打卡 ②動画公開の前後告知・舞台裏 ③自撮り1枚+一言雑談 のどれかに寄せる。末尾の問いかけは軽く。**タイトル＝图文动態の標題欄用に20字以内で1本必ず出す**（検索KW=キャラ名/作品名/cosplayを1つ入れる。ただし小紅書の爆款タイトルの使い回しはNG——動態の空気に合わせた「雑談の見出し」にする 例:「粉毛猫猫coser上线」「今天也是春丽」）。新作動画が文脈にある時だけ「主页最新视频」へ自然に誘導（URLは書かない）。**タグは #话题# 形式で3〜5個だけ**（ネイティブ実測は0〜3個。キャラ名・作品名など検索の核だけに絞り、タグの列で雑談感を壊さない）。\n";
   p += "【IGの日本語文の文体（本人の全X投稿から実測）】短く言い切る・体言止めOK。絵文字は0〜2個（よく使う: ❗️😭🔥🫶✌️🥹✨）、顔文字・「笑」・「…」は使わない。テンションは「！！」連打で。強調は「めちゃくちゃ」「〜すぎる」。ガチ恋を煽る言い回しはしない。\n";
-  if (cat.coverSamples && cat.coverSamples.length) p += "【封面文字の例】" + cat.coverSamples.join(" / ") + "\n";
+  const cs = coverSamples(pk, po);
+  if (cs.length) p += "【封面文字の例（種類×衣装）】" + cs.join(" / ") + "\n";
   p += "【タグ候補（参考リスト・この中から内容に合うものだけ選ぶ。全部は付けない）】\n";
-  p += "・小紅書(4〜7個・2026-07競合実測: 上位ノートは3〜7個が主流。核=#cos＋作品名＋キャラ名＋ジャンル1-2。人気作品名は中国語と原語の両表記を入れる 例:#异形舞台 #alienstage): " + cat.red.map(t => "#" + t).join(" ") + "\n";
-  p += "・Instagram(15〜25個): " + cat.ig.map(t => "#" + t).join(" ") + "\n";
-  p += "・Weibo(5〜8個): " + cat.weibo.map(t => "#" + t + "#").join(" ") + "\n";
-  p += "・bilibili動態(3〜5個・Weiboと同プールから): " + cat.weibo.map(t => "#" + t + "#").join(" ") + "\n";
+  p += "・小紅書(4〜7個・2026-07競合実測: 上位ノートは3〜7個が主流。核=#cos＋作品名＋キャラ名＋ジャンル1-2。人気作品名は中国語と原語の両表記を入れる 例:#异形舞台 #alienstage): " + axisTags("red", pk, po).map(t => "#" + t).join(" ") + "\n";
+  p += "・Instagram(15〜25個): " + axisTags("ig", pk, po).map(t => "#" + t).join(" ") + "\n";
+  p += "・Weibo(5〜8個): " + axisTags("weibo", pk, po).map(t => "#" + t + "#").join(" ") + "\n";
+  p += "・bilibili動態(3〜5個・Weiboと同プールから): " + axisTags("weibo", pk, po).map(t => "#" + t + "#").join(" ") + "\n";
   p += "【タグの方針（重要）】タグは毎回その投稿の内容に合わせてあなたが取捨選択すること。候補は参考で、全部付ける必要はない。\n";
   p += "・【必須・本人名タグ】内容を問わず全SNSに本人名タグを必ず入れる: IG=#西井綾音、小紅書・Weibo・bilibili動態=#西井绫音（EVO以降、中国で実名検索が発生している実測あり。検索の受け皿として毎回入れる）。\n";
   p += "・本文にイベント名（大会・即売会・撮影会・◯◯杯など。例: EVO、コミケ、C108、TGS、RAGE）が入っていたら、そのイベント名タグを【全SNSに必ず】入れる。イベントタグは検索とバズの入口なので最優先。\n";
@@ -1159,27 +1185,40 @@ async function convertSimple(raw, memo) {
   // 中国語圏SNSのタグでは日本語表記のイベント名を現地で通じる表記へ（コミケ→Comiket）
   const zhEvent = t => t === "コミケ" ? "Comiket" : t;
 
-  // 優先順: 元タグ・イベント名 → 内容から検出 → カテゴリ → 定番（枠が余れば）
-  // ※カテゴリ/定番のうち、本文に出てこないキャラのタグは自動で外す
-  const igTags = uniq(["西井綾音", ...srcTags, ...smart.events, ...smart.ig, ...filterExcl(catTags("ig"), smart), ...filterExcl(getDefaultTags("ig"), smart)]).slice(0, 25);
+  // 軸1（種類）・軸2（衣装）の実効値。衣装=春麗指定なら検出テキストに春麗を足し、キャラタグの自動除外に掛からないようにする
+  const axisText = cleaned + "\n" + memo;
+  const outfit = resolveOutfit(axisText), kind = resolveKind(smart, axisText);
+  const smartX = outfit === "chunli" ? detectSmart(axisText + "\n春麗") : smart;
+  const cosFilter = arr => outfit === "plain" ? arr.filter(t => !COS_TAG_RE.test(t)) : arr;
+  const pool = pf => filterExcl(cosFilter(uniq([...axisTags(pf, kind, outfit), ...getDefaultTags(pf)])), smartX);
+  // 優先順: 元タグ・イベント名 → 内容から検出 → 種類×衣装 → 定番（枠が余れば）
+  // ※本文に出てこないキャラのタグは自動で外す（衣装=春麗指定は除外対象外）。私服はコスタグを外す
+  const igTags = uniq(["西井綾音", ...srcTags, ...smart.events, ...cosFilter(smartX.ig), ...pool("ig")]).slice(0, 25);
   $("out-ig").value = body + "\n.\n" + en + "\n\n" + igTags.map(t => "#" + t).join(" ");
 
-  const redTags = uniq(["西井绫音", ...smart.events.map(zhEvent), ...smart.red, ...tagsZh, ...filterExcl(catTags("red"), smart), ...filterExcl(getDefaultTags("red"), smart)]).slice(0, 8);
-  // タイトル/封面は本文の頭を流用しない（「タイトルに本文が混ざる」2026-07-21FBで廃止）。検出KWから爆款型で組み立てる（手直し前提）
-  const charaRule = CONTENT_RULES.find(r => r.char && r.re.test(cleaned + "\n" + memo));
+  const redTags = uniq(["西井绫音", ...smart.events.map(zhEvent), ...cosFilter(smartX.red), ...tagsZh, ...pool("red")]).slice(0, 8);
+  // タイトル/封面は本文の頭を流用しない（「タイトルに本文が混ざる」2026-07-21FBで廃止）。種類×衣装の型で組み立てる（手直し前提）
+  const charaRule = outfit === "plain" ? null : CONTENT_RULES.find(r => r.char && r.re.test(axisText + (outfit === "chunli" ? "\n春麗" : "")));
   const ev = smart.events[0] || "", kw = (charaRule && charaRule.red[0]) || "";
-  const autoTitle = ev ? "日本coser的" + ev + "实录" : "日本coser的" + (kw || "cos") + "日记";
-  const autoCover = ev ? "直击" + ev + "现场" : (kw ? kw + "cos来啦" : "日本coser来啦");
+  const who = outfit === "plain" ? "日本女生" : "日本coser";
+  const AUTO = {
+    photo:  [who + "的" + (kw ? kw + "正片" : (outfit === "plain" ? "写真分享" : "cos正片")), kw ? kw + "cos正片来啦" : (outfit === "plain" ? "今日份写真📷" : "cos正片来啦"), "今天的" + (kw || (outfit === "plain" ? "写真" : "cos"))],
+    selfie: [who + "的日常碎片", "今天的日常🌷", "今天的" + (kw || "日常")],
+    event:  [who + "的" + (ev || "现场") + "实录", "直击" + (ev || "") + "现场", "打卡" + (ev || "现场")],
+    notice: [who + "的新消息", "重要通知📢", "新消息"],
+  };
+  const [autoTitle, autoCover, autoBili] = AUTO[kind] || AUTO.photo;
   $("title-red").value = [...autoTitle].slice(0, 20).join("");
   $("cover-red").value = [...autoCover].slice(0, 12).join("");
   $("out-red").value = zh + "\n\n" + redTags.map(t => "#" + t).join(" ");
 
-  const wbTags = uniq(["西井绫音", ...smart.events.map(zhEvent), ...smart.weibo, ...tagsZh, ...filterExcl(catTags("weibo"), smart), ...filterExcl(getDefaultTags("weibo"), smart)]).slice(0, 8);
+  const wbTags = uniq(["西井绫音", ...smart.events.map(zhEvent), ...cosFilter(smartX.weibo), ...tagsZh, ...pool("weibo")]).slice(0, 8);
   $("out-weibo").value = zh + "\n\n" + wbTags.map(t => "#" + t + "#").join(" ");
 
-  const biliTags = uniq(["西井绫音", ...smart.events.map(zhEvent), ...smart.weibo, ...tagsZh, ...filterExcl(catTags("weibo"), smart), ...filterExcl(getDefaultTags("bili"), smart)]).slice(0, 5);
-  $("title-bili").value = [...(ev ? "打卡" + ev : "今天的" + (kw || "cos"))].slice(0, 20).join("");
+  const biliTags = uniq(["西井绫音", ...smart.events.map(zhEvent), ...cosFilter(smartX.weibo), ...tagsZh, ...pool("bili")]).slice(0, 5);
+  $("title-bili").value = [...autoBili].slice(0, 20).join("");
   $("out-bili").value = zh + "\n\n" + biliTags.map(t => "#" + t + "#").join(" ");
+  smart.axisLabel = KINDS[kind] + "×" + OUTFITS[outfit];
 
   for (const k of ["ig", "red", "weibo", "bili"]) {
     $("card-" + k).classList.add("show");
