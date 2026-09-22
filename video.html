@@ -318,7 +318,7 @@
     <div id="ja-trans" style="white-space:pre-wrap;font-size:13px;line-height:1.9"></div>
   </div>
 
-  <footer>📱 このページはブラウザだけで動きます。動画本体は各サイトへそのままアップロードしてください。<br><span style="opacity:.6">version 2026-09-22a（bilibili标签チップ＋種類×衣装の2軸。この表示が無ければ古いキャッシュ→アプリ完全終了して開き直し）</span></footer>
+  <footer>📱 このページはブラウザだけで動きます。動画本体は各サイトへそのままアップロードしてください。<br><span style="opacity:.6">version 2026-09-22b（bilibili标签チップ＋種類×衣装の2軸。この表示が無ければ古いキャッシュ→アプリ完全終了して開き直し）</span></footer>
 </div>
 
 <script>
@@ -1073,11 +1073,15 @@ function updateCounts() {
 
 // ==== コピー ====
 async function copyText(text) {
-  if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return; }
+  if (navigator.clipboard && window.isSecureContext) {
+    try { await navigator.clipboard.writeText(text); return; } catch (e) { /* 失敗時はフォールバックへ（前回コピーが残る事故を防ぐ・crosspostと同じ） */ }
+  }
   const ta = document.createElement("textarea");
   ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
   document.body.appendChild(ta); ta.focus(); ta.select();
-  document.execCommand("copy"); document.body.removeChild(ta);
+  ta.setSelectionRange(0, ta.value.length);
+  const ok = document.execCommand("copy"); document.body.removeChild(ta);
+  if (!ok) throw new Error("copy failed");
 }
 async function copyBtn(text, btn) {
   const orig = btn.textContent;
