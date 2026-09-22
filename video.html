@@ -132,7 +132,7 @@
   <header>
     <p style="text-align:left;margin-bottom:10px"><a href="index.html" style="color:var(--accent);text-decoration:none;font-weight:700;font-size:13px">← マネージャーHubに戻る</a></p>
     <h1>🎬 動画クロス投稿ツール</h1>
-    <p>動画1本から、TikTok・bilibili・小紅書・Weibo向けの投稿文を作ります（Vlogショートの一次投稿にも、転載にも）｜v15b</p>
+    <p>動画1本から、TikTok・bilibili・小紅書・Weibo向けの投稿文を作ります（Vlogショートの一次投稿にも、転載にも）｜v15c</p>
   </header>
 
   <div class="panel">
@@ -245,7 +245,7 @@
         <div class="sugg" id="bili-sugg"></div>
         <span class="field-label">简介（説明文）</span>
         <textarea id="bili-desc"></textarea>
-        <span class="field-label">标签（タグ・最大10個。PC投稿画面用=カンマ区切り／アプリは下のチップを1つずつ貼る）</span>
+        <span class="field-label">标签（タグ・最大10個。PC投稿画面用=カンマ区切り／アプリは下のチップを1つずつ＝#1つでハッシュタグになる）</span>
         <div class="row">
           <input type="text" id="bili-tags">
           <button class="copy-btn" data-target="bili-tags" style="background:#6b7280">コピー</button>
@@ -261,7 +261,7 @@
           </div>
         </div>
         <div id="bili-app-msg" class="hint" style="display:none;font-weight:700"></div>
-        <p class="hint">📺 スマホの手順: <b>📲でコピー → bilibiliアプリの＋ → 投稿 → ギャラリーから動画を選ぶ → 标题・简介に貼り付け → 标签は「添加标签」に上のチップから1つずつ貼る</b>（チップをタップするとそのタグだけコピー＝中国語を打たなくてOK。※bilibiliアプリは共有シートからの動画受け取り非対応・実機確認済み）。标题は検索KW＋【】ジャンル表記が伸びる文化。简介末尾の「一键三连」お願いはbilibiliの定番です。</p>
+        <p class="hint">📺 スマホの手順: <b>📲でコピー → bilibiliアプリの＋ → 投稿 → ギャラリーから動画を選ぶ → 标题・简介に貼り付け → タグは上のチップから1つずつ貼る</b>（#付きでコピーされるので貼るだけでハッシュタグになる。動画は#1つ・動態だけ#タグ#。中国語を打たなくてOK。※bilibiliアプリは共有シートからの動画受け取り非対応・実機確認済み）。标题は検索KW＋【】ジャンル表記が伸びる文化。简介末尾の「一键三连」お願いはbilibiliの定番です。</p>
       </div>
     </div>
 
@@ -318,7 +318,7 @@
     <div id="ja-trans" style="white-space:pre-wrap;font-size:13px;line-height:1.9"></div>
   </div>
 
-  <footer>📱 このページはブラウザだけで動きます。動画本体は各サイトへそのままアップロードしてください。<br><span style="opacity:.6">version 2026-09-22b（bilibili标签チップ＋種類×衣装の2軸。この表示が無ければ古いキャッシュ→アプリ完全終了して開き直し）</span></footer>
+  <footer>📱 このページはブラウザだけで動きます。動画本体は各サイトへそのままアップロードしてください。<br><span style="opacity:.6">version 2026-09-23a（bilibili标签チップ＋種類×衣装の2軸。この表示が無ければ古いキャッシュ→アプリ完全終了して開き直し）</span></footer>
 </div>
 
 <script>
@@ -1107,13 +1107,11 @@ function biliMsg(text, isError) {
 $("bili-app-copy").addEventListener("click", async () => {
   const title = $("bili-title").value.trim();
   const desc = $("bili-desc").value.trim();
-  const tags = $("bili-tags").value.split(/[,，、\s]+/)
-    .map(t => t.trim().replace(/^#+|#+$/g, "")).filter(Boolean)
-    .map(t => "#" + t + "#").join(" ");
-  const text = [title, desc, tags].filter(Boolean).join("\n\n");
+  // タグは本文に含めない（まとめて貼ってもハッシュタグにならない＝下のチップから#付きで1つずつ・2026-09-23本人実機）
+  const text = [title, desc].filter(Boolean).join("\n\n");
   if (!text) { biliMsg("先に文面を作ってください（🚀/🤖/⚡のどれかで生成）", true); return; }
   await copyBtn(text, $("bili-app-copy"));
-  biliMsg("📋 コピー済み → bilibiliアプリの＋ → 投稿 → ギャラリーから動画を選ぶ → 标题・简介に貼り付け → 标签は上のチップから1つずつ");
+  biliMsg("📋 コピー済み → bilibiliアプリの＋ → 投稿 → ギャラリーから動画を選ぶ → 标题・简介に貼り付け → タグは上のチップから1つずつ（#付き）");
 });
 
 // bilibili标签を1つずつコピーするチップ（アプリの「添加标签」は1個ずつ入力＝中国語を打たずに貼れるように・2026-09-22本人FB）
@@ -1123,13 +1121,14 @@ function renderBiliTagChips() {
   const tags = $("bili-tags").value.split(/[,，、 ]+/).map(t => t.trim().replace(/^#+|#+$/g, "")).filter(Boolean);
   if (!tags.length) return;
   const lb = document.createElement("span"); lb.className = "sg-label";
-  lb.textContent = "🏷 标签はアプリの「添加标签」に1つずつ貼る（タップでコピー→貼ったら✓・最大10個）";
+  lb.textContent = "🏷 タグは1つずつ貼る（#付きでコピー＝貼るだけでハッシュタグになる・貼ったら✓・最大10個）";
   box.appendChild(lb);
   tags.forEach(t => {
-    const b = document.createElement("button"); b.className = "sg"; b.type = "button"; b.textContent = t;
+    const v = "#" + t;  // bilibili動画のタグは#1つで1個ずつ入力（#tag#は動態だけ・2026-09-23本人実機）
+    const b = document.createElement("button"); b.className = "sg"; b.type = "button"; b.textContent = v;
     b.addEventListener("click", async () => {
-      try { await copyText(t); b.textContent = "✓ " + t; b.classList.add("done"); }
-      catch (e) { b.textContent = "✗ " + t; }
+      try { await copyText(v); b.textContent = "✓ " + v; b.classList.add("done"); }
+      catch (e) { b.textContent = "✗ " + v; }
     });
     box.appendChild(b);
   });
