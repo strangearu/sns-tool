@@ -349,7 +349,7 @@
     <div class="countdown" id="countdown">
       <div class="lbl">🏆 次の大目標まで</div>
       <div class="days" id="cd-days">--</div>
-      <div class="date" id="cd-date">10/15(木) 海外遠征 出発</div>
+      <div class="date" id="cd-date">10/27(火) イベント参加</div>
     </div>
 
     <div class="card-x accent">
@@ -515,7 +515,7 @@
 
   /* ===== 次の大目標カウントダウン（名称は告知済みのイベント名か一般名だけ。固有名・金額は書かない。終わったら週次の鮮度チェックで次の目標へ） ===== */
   (function () {
-    const target = new Date("2026-10-15T00:00:00+09:00");
+    const target = new Date("2026-10-27T00:00:00+09:00");
     const days = Math.ceil((target - new Date()) / 86400000);
     const cd = $("countdown"), el = $("cd-days");
     if (days > 0) el.innerHTML = days + '<small> 日</small>';
