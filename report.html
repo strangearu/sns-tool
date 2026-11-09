@@ -81,6 +81,8 @@
   .rep .tag { flex:none; font-size:10px; font-weight:800; color:#fff; border-radius:99px; padding:3px 9px; }
   .rep .tag.weekly { background:var(--accent); }
   .rep .tag.monthly { background:var(--gold); }
+  .rep .tag.diary { background:#16a34a; }
+  .rep .body h3 { font-size:13.5px; margin:10px 0 4px; }
   .rep .rt { font-weight:800; font-size:14px; flex:1; min-width:0; }
   .rep .rd { font-size:11px; color:var(--sub); flex:none; }
   .rep .arrow { color:var(--sub); font-size:12px; transition:transform .2s; flex:none; }
@@ -113,13 +115,14 @@
   <div class="ph">
     <span class="brand">Manager Report</span>
     <h1>📋 定例レポート</h1>
-    <p>週報=毎週月曜9:30 ／ 月報=毎月1日に自動更新。過去分もここに残ります。</p>
+    <p>週報=毎週月曜9:30 ／ 月報=毎月1日に自動更新 ／ 日記=経営の窓口で話した週の記録。過去分もここに残ります。</p>
   </div>
 
   <div class="tabs">
     <button data-f="all" class="on">すべて</button>
     <button data-f="weekly">週報</button>
     <button data-f="monthly">月報</button>
+    <button data-f="diary">日記</button>
   </div>
 
   <div class="status" id="status">読み込み中…</div>
@@ -164,10 +167,10 @@
 
   function render(filter) {
     const rows = all.filter(r => filter === "all" || r.type === filter);
-    if (!rows.length) { list.innerHTML = '<div class="empty">まだレポートがありません。<br>月曜9:30の週報をお楽しみに 📮</div>'; return; }
+    if (!rows.length) { list.innerHTML = '<div class="empty">' + (filter === "diary" ? "まだ日記がありません。<br>経営の窓口で今週のことを話すと、ここに残ります 📓" : "まだレポートがありません。<br>月曜9:30の週報をお楽しみに 📮") + '</div>'; return; }
     list.innerHTML = rows.map((r, i) =>
       '<details class="rep"' + (i === 0 ? ' open' : '') + '>'
-      + '<summary><span class="tag ' + r.type + '">' + (r.type === "weekly" ? "週報" : "月報") + '</span>'
+      + '<summary><span class="tag ' + r.type + '">' + ({weekly: "週報", monthly: "月報", diary: "日記"}[r.type] || r.type) + '</span>'
       + '<span class="rt">' + r.title.replace(/[<>&]/g, "") + '</span>'
       + '<span class="rd">' + r.date + '</span><span class="arrow">▶</span></summary>'
       + '<div class="body">' + md(r.body) + '</div></details>'
