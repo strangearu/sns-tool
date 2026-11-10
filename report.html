@@ -96,6 +96,14 @@
   .rep .body strong { color:var(--accent2); }
   .rep .body hr { border:none; border-top:1px dashed var(--line); margin:14px 0; }
   .rep .body em { color:var(--sub); font-size:12px; font-style:normal; }
+  .unlock { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px 16px; text-align:center; box-shadow:var(--shadow); }
+  .unlock p { font-size:12.5px; color:var(--sub); line-height:1.7; margin-bottom:12px; }
+  .unlock input { width:100%; max-width:320px; font-size:16px; padding:11px 12px; border:1px solid var(--line); border-radius:12px; background:var(--card-solid); color:var(--text); font-family:inherit; }
+  .unlock button { display:block; margin:12px auto 0; border:none; border-radius:99px; padding:10px 26px; font-size:13.5px; font-weight:800; color:#fff; background:var(--accent); cursor:pointer; font-family:inherit; }
+  .unlock button[disabled] { opacity:.5; }
+  .unlock .err { color:#e11d48; font-size:12px; margin-top:10px; min-height:1em; }
+  .lockrow { text-align:center; margin:4px 0 12px; }
+  .lockrow button { border:1px solid var(--line); background:var(--card); color:var(--sub); border-radius:99px; padding:6px 14px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; }
   .empty { color:var(--sub); font-size:12.5px; text-align:center; padding:30px 10px; line-height:1.8; }
   footer { text-align:center; color:var(--sub); font-size:10.5px; margin-top:24px; line-height:1.8; }
 
@@ -115,14 +123,14 @@
   <div class="ph">
     <span class="brand">Manager Report</span>
     <h1>📋 定例レポート</h1>
-    <p>週報=毎週月曜9:30 ／ 月報=毎月1日に自動更新。過去分もここに残ります。</p>
+    <p>週報=毎週月曜9:30 ／ 月報=毎月1日に自動更新。過去分もここに残ります。<br>日記は、開くたびにパスコードを入れます（この端末には覚えさせません）。</p>
   </div>
 
   <div class="tabs">
     <button data-f="all" class="on">すべて</button>
     <button data-f="weekly">週報</button>
     <button data-f="monthly">月報</button>
-    <button data-f="diary" hidden>日記</button>
+    <button data-f="diary">🔒 日記</button>
   </div>
 
   <div class="status" id="status">読み込み中…</div>
@@ -165,8 +173,54 @@
     return html;
   }
 
+  // 日記は別ファイル（diary.enc.json）。パスコードは端末に保存せず、開くたびに入力。
+  // 開いた中身はこのページを開いている間だけメモリに持ち、閉じる・別のアプリへ移って5分で消える。
+  let diary = null, diaryUpdated = "", hiddenAt = 0;
+  const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  async function decrypt(enc, pass) {
+    const km = await crypto.subtle.importKey("raw", new TextEncoder().encode(pass), "PBKDF2", false, ["deriveKey"]);
+    const key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: b64(enc.salt), iterations: enc.iter, hash: "SHA-256" },
+      km, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+    const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(enc.iv) }, key, b64(enc.ct));
+    return JSON.parse(new TextDecoder().decode(pt));
+  }
+  function lockDiary() {
+    diary = null;
+    if (document.querySelector(".tabs button.on").dataset.f === "diary") render("diary");
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) hiddenAt = Date.now();
+    else if (diary && hiddenAt && Date.now() - hiddenAt > 5 * 60 * 1000) lockDiary();
+  });
+  window.addEventListener("pagehide", () => { diary = null; });
+  function showUnlock() {
+    list.innerHTML = '<form class="unlock" id="unlock" autocomplete="off">'
+      + '<p>🔒 日記はパスコードを入れると開きます。<br>この端末には保存されません。</p>'
+      + '<input type="password" id="dpass" placeholder="ハブのパスコード" autocomplete="off" autocapitalize="off" spellcheck="false">'
+      + '<button type="submit">開く</button><div class="err" id="derr"></div></form>';
+    const f = document.getElementById("unlock"), inp = document.getElementById("dpass"), err = document.getElementById("derr");
+    f.addEventListener("submit", async ev => {
+      ev.preventDefault();
+      const pass = inp.value; inp.value = "";
+      if (!pass) return;
+      const btn = f.querySelector("button"); btn.disabled = true; err.textContent = "開いています…";
+      try {
+        const r = await fetch("diary.enc.json?r=" + Date.now(), { cache: "no-store" });
+        if (!r.ok) throw new Error("nofile");
+        const data = await decrypt(await r.json(), pass);
+        diary = data.reports || []; diaryUpdated = data.updated || "";
+        render("diary");
+      } catch (e) {
+        btn.disabled = false;
+        err.textContent = e.message === "nofile" ? "日記のファイルが見つかりません" : "パスコードが違います";
+      }
+    });
+  }
+
   function render(filter) {
-    const rows = all.filter(r => filter === "all" || r.type === filter);
+    if (filter === "diary" && !diary) { showUnlock(); return; }
+    const rows = filter === "diary" ? diary : all.filter(r => filter === "all" || r.type === filter);
     if (!rows.length) { list.innerHTML = '<div class="empty">' + (filter === "diary" ? "まだ日記がありません。<br>経営の窓口で今週のことを話すと、ここに残ります 📓" : "まだレポートがありません。<br>月曜9:30の週報をお楽しみに 📮") + '</div>'; return; }
     list.innerHTML = rows.map((r, i) =>
       '<details class="rep"' + (i === 0 ? ' open' : '') + '>'
@@ -175,6 +229,10 @@
       + '<span class="rd">' + r.date + '</span><span class="arrow">▶</span></summary>'
       + '<div class="body">' + md(r.body) + '</div></details>'
     ).join("");
+    if (filter === "diary") {
+      list.insertAdjacentHTML("afterbegin", '<div class="lockrow"><button id="relock">🔒 日記を閉じる</button></div>');
+      document.getElementById("relock").addEventListener("click", lockDiary);
+    }
   }
 
   document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
@@ -189,13 +247,7 @@
     const enc = await r.json();
     const pass = localStorage.getItem("hub-pass");
     if (!pass) { st.textContent = "🔒 ハブのトップで一度パスコードを入れると表示されます"; return; }
-    const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
-    const km = await crypto.subtle.importKey("raw", new TextEncoder().encode(pass), "PBKDF2", false, ["deriveKey"]);
-    const key = await crypto.subtle.deriveKey(
-      { name: "PBKDF2", salt: b64(enc.salt), iterations: enc.iter, hash: "SHA-256" },
-      km, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
-    const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(enc.iv) }, key, b64(enc.ct));
-    const data = JSON.parse(new TextDecoder().decode(pt));
+    const data = await decrypt(enc, pass);
     all = data.reports || [];
     st.textContent = "最終更新: " + (data.updated || "-") + "（" + all.length + "件）";
     render("all");
