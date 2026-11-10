@@ -1,5 +1,5 @@
 // My Hub Service Worker — オフラインでも開けるように主要ファイルをキャッシュ
-const CACHE = "myhub-v63";
+const CACHE = "myhub-v64";
 const ASSETS = [
   "./",
   "./index.html",
